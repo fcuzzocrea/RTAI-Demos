@@ -1,18 +1,9 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += ktest_rt.o kctest_rt.o  kuctest_rt.o
 
-CC = $(shell rtai-config --cc)
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
+ktest_rt-objs := ktest.o
 
-all: kctest.o ktest.o kuctest.o
+kctest_rt-objs := kctest.o
 
-%.o: %.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-clean:
-	rm -f *.o
-
-.PHONY: clean
+kuctest_rt-objs := kuctest.o

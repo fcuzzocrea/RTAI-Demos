@@ -26,8 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_shm.h>
 #include "ctest.h"
 
-EXPORT_NO_SYMBOLS;
-
 static struct rt_tasklet_struct pt;
 
 static int ptloops;
