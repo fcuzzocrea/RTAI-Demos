@@ -1,0 +1,5 @@
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
+
+obj-m += signal_rt.o
+
+signal_rt-objs := signal.o
