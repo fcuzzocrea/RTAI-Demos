@@ -9,7 +9,7 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all:: testmsg
+all:: testmsg uptestmsg
 
 ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)),)
 
@@ -50,7 +50,10 @@ endif
 testmsg: testmsg.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lpthread -llxrt
 
+uptestmsg: uptestmsg.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lpthread -llxrt
+
 clean::
-	$(RM) testmsg
+	$(RM) testmsg uptestmsg
 
 .PHONY: clean

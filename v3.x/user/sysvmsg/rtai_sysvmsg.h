@@ -23,16 +23,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #ifndef _RTAI_SYSV_MSG_H
 #define _RTAI_SYSV_MSG_H
 
-#define SYSV_MSG_IDX     1
+#define SYSV_MSG_IDX  1
 
-#define SYSV_MSGGET  0
-#define SYSV_MSGCTL  1
-#define SYSV_MSGSND  2
-#define SYSV_MSGRCV  3
+#define SYSV_MSGGET   0
+#define SYSV_MSGCTL   1
+#define SYSV_MSGSND   2
+#define SYSV_MSGRCV   3
 
 #ifdef __KERNEL__
 
-#include <linux/ipc.h>
+//#include <linux/ipc.h>
 
 /* ipcs ctl commands */
 #define MSG_STAT 11
@@ -92,12 +92,6 @@ struct msginfo {
 #define __MSGSEG ((MSGPOOL*1024)/ MSGSSZ) /* max no. of segments */
 #define MSGSEG (__MSGSEG <= 0xffff ? __MSGSEG : 0xffff)
 
-/*
- * what below is just for declaration purpose, direct kernel space usage not
- * implemented to keep all the Linux process stuff. Making these APIs available
- * in kernel space is trivial, just a matter of cancelling the cited process
- * stuff.
- */
 
 int rt_msgget (key_t key, int msgflg);
 
@@ -189,5 +183,11 @@ static inline ssize_t rt_msgrcv(int msqid, struct msgbuf *msgp, size_t msgsz, lo
 }
 
 #endif /* __KERNEL__ */
+
+// RTAI styled conditional calls comes just by nature, i.e. insuring IPC_NOWAIT.
+
+#define rt_msgsnd_if(msqid, mtype, mtext, msgsz, msgflg)  rt_msgsnd_nu(msqid, mtype, mtext, msgsz, msgflg | IPC_NOWAIT)
+
+#define rt_msgrcv_if(msqid, mtype, mtext, msgsz, msgtyp, msgflg)  rt_msgrcv_nu(msqid, mtype, mtext, msgsz, msgtyp, msgflg | IPC_NOWAIT)
 
 #endif /* _RTAI_SYSV_MSG_MSG_H */

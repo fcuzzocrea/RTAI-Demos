@@ -29,11 +29,11 @@ MODULE_LICENSE("GPL");
 #include <rtai_malloc.h>
 #include "rtai_sysvmsg.h"
 
-#define SLEEP_TIME  4000000
+#define SLEEP_TIME  2000000
 
 #define NTASKS  10
 
-#define MAXSIZ  2000
+#define MAXSIZ  500
 
 static SEM barrier;
 
@@ -50,16 +50,15 @@ static double randu(void)
 static void mfun(int t)
 {
 	char tname[6] = "MFUN", mname[6] = "RMBX";
-	int smbx, *rmbx, *msg, mtype, i;
+	int smbx, rmbx, *msg, mtype, i;
 
-	rmbx = rt_malloc(NTASKS*sizeof(int));
 	msg  = rt_malloc((MAXSIZ + 1)*sizeof(int));
 
 	randu();
 	tname[4] = mname[4] = t + '0';
 	tname[5] = mname[5] = 0;
-	smbx    = rt_msgget(nam2num("SMSG"), 0);
-	rmbx[t] = rt_msgget(nam2num(mname), 0);
+	smbx = rt_msgget(nam2num("SMSG"), 0);
+	rmbx = rt_msgget(nam2num(mname), 0);
 
 	msg[0] = t;
 	rt_sem_wait_barrier(&barrier);
@@ -73,7 +72,7 @@ static void mfun(int t)
 			goto prem;
 		}
 		msg[0] = msg[1] = 0;
-		if (rt_msgrcv_nu(rmbx[t], &mtype, msg, sizeof(int)*(MAXSIZ + 1), 1, 0) < 0) {
+		if (rt_msgrcv_nu(rmbx, &mtype, msg, sizeof(int)*(MAXSIZ + 1), 1, 0) < 0) {
 			rt_printk("RECEIVE FAILED, TASK: %d\n", t);
 			goto prem;
 		}
@@ -86,7 +85,6 @@ static void mfun(int t)
 		rt_sleep(nano2count(SLEEP_TIME));
 	}
 prem: 
-	rt_free(rmbx);
 	rt_free(msg);
 	rt_printk("TASK %d ENDS.\n", t);
 }
@@ -171,14 +169,14 @@ void cleanup_module(void)
 	end = NTASKS;
 	rt_msgsnd_nu(smbx, 1, msg, sizeof(msg), 0);
 
-	for (i = 0; i < NTASKS; i++) {
-		rt_msgctl(rmbx[i], IPC_RMID, NULL);
-		rt_printk("TASK %d, LOOPS: %d.\n", i, cnt[i]); 
-	}
-	rt_msgctl(smbx, IPC_RMID, NULL);
-
 	current->state = TASK_INTERRUPTIBLE;
 	schedule_timeout(HZ);
+
+	for (i = 0; i < NTASKS; i++) {
+		rt_msgctl(rmbx[i], IPC_RMID, NULL);
+		printk("TASK %d, LOOPS: %d.\n", i, cnt[i]); 
+	}
+	rt_msgctl(smbx, IPC_RMID, NULL);
 
 	stop_rt_timer();
 	rt_sem_delete(&barrier);
@@ -188,5 +186,5 @@ void cleanup_module(void)
 	}
 	rt_task_delete(&bthread);
 
-	rt_printk("MAIN TASK ENDS.\n");
+	rt_printk("MODULE ENDS.\n");
 }

@@ -318,10 +318,10 @@ int ipc_parse_version (int *cmd)
 #endif /* __ia64__ */
 
 static struct rt_fun_entry rtai_sysvmsg_fun[] = {
-	[SYSV_MSGGET] = { 1, rt_msgget  },
-	[SYSV_MSGCTL] = { 1, _rt_msgctl  },
-	[SYSV_MSGSND] = { 1, _rt_msgsnd },
-	[SYSV_MSGRCV] = { 1, _rt_msgrcv }
+	[SYSV_MSGGET]       = { 1,  rt_msgget },
+	[SYSV_MSGCTL]       = { 1, _rt_msgctl },
+	[SYSV_MSGSND]       = { 1, _rt_msgsnd },
+	[SYSV_MSGRCV]       = { 1, _rt_msgrcv }
 };
 
 /* init module */
@@ -343,8 +343,3 @@ void cleanup_module(void)
 	reset_rt_fun_ext_index(rtai_sysvmsg_fun, SYSV_MSG_IDX);
 	printk("%s: unloaded.\n", MODULE_NAME);
 }
-
-EXPORT_SYMBOL(rt_msgget);
-EXPORT_SYMBOL(_rt_msgctl);
-EXPORT_SYMBOL(_rt_msgsnd);
-EXPORT_SYMBOL(_rt_msgrcv);

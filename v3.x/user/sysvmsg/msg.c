@@ -984,7 +984,7 @@ void __exit msg_exit (void)
 #endif
 }
 
+EXPORT_SYMBOL( rt_msgget);
 EXPORT_SYMBOL(_rt_msgctl);
-EXPORT_SYMBOL(_rt_msgrcv);
 EXPORT_SYMBOL(_rt_msgsnd);
-EXPORT_SYMBOL(rt_msgget);
+EXPORT_SYMBOL(_rt_msgrcv);
