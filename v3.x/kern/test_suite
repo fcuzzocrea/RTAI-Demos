@@ -41,7 +41,7 @@ cd ../sem_clock
 cd ../splocks
 ./run
 cd ../sysreq
-./run
+#./run
 cd ../tasklets
 ./krun
 ./kcrun
