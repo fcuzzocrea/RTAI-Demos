@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <signal.h>
 #include <rtai_msg.h>
 
@@ -70,21 +69,12 @@ void *CommandChrono_task(void *args)
 	int ackn = 0;
 	RT_TASK *get = (RT_TASK *)0, *put = (RT_TASK *)0, *task;
 
-	struct sched_param mysched;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		printf("ERROR IN SETTING THE POSIX SCHEDULER\n");
-		exit(1);
- 	}       
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
- 	if (!(mytask = rt_task_init(nam2num("CHRTSK"), 1, 0, 0))) {
+ 	if (!(mytask = rt_thread_init(nam2num("CHRTSK"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT TASK CommandChrono_task\n");
 		exit(1);
 	}
 	printf("INIT TASK CommandChrono_task %p.\n", mytask);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	Chronostatus = stoppedInitial;
 	while (ackn != ('c' + 'd')) {
