@@ -47,7 +47,7 @@ int main (int argc, char* argv[])
     shm = (int *)rtai_malloc(nam2num(SHMNAM), SHMSIZ);
     if (shm == NULL) {
 	printf("rtai_malloc() failed (maybe /dev/rtai_shm is missing)!\n");
-	exit(-1);
+	return -1;
     }
 
     signal(SIGINT, endme);
