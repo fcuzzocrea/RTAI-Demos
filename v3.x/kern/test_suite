@@ -10,6 +10,8 @@ cd ../fp
 ./run
 cd ../i386
 ./test_suite
+cd ../latency
+./run
 cd ../mbx
 ./run
 cd ../mbx_del
@@ -26,6 +28,8 @@ cd ../../namedstuff
 cd ../netrpc
 ./run
 cd ../pqueue
+./run
+cd ../preempt
 ./run
 cd ../prioinher
 ./run 0
