@@ -29,7 +29,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 
 #include <sys/mman.h>
 #include <sys/io.h>
@@ -55,19 +54,18 @@ static inline int _tmr_get_count(int tmr)
 	return count | (inb(0x40) << 8);
 }
 
-static pthread_t thread;
 int main(void)
 {
 	RT_TASK *rtask;
 	MBX *mbx;
 	int maxisr = 0, maxsched = 0, ovrun = 0, semcnt;
 	struct { int isr, sched; } latency;
-	int timer_period, timer_freq, h_timer_freq;
+	int timer_period, timer_freq, h_timer_freq, thread;
 	int count, perns, pervar, maxpervar = 0;
 	RTIME tp, t;
 	
 	rt_allow_nonroot_hrt();
-        pthread_create(&thread, NULL, endt, NULL);
+        thread = rt_thread_create(endt, NULL, 10000);
 	iopl(3);
 
 	if (!(rtask = rt_task_init_schmod(nam2num("RTASK"), 0, 0, 0, SCHED_FIFO, ALLOWED_CPUS))) {

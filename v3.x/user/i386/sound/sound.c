@@ -23,10 +23,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <pthread.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/io.h>
+#include <sys/wait.h>
 #include <math.h>
 
 #include <rtai_mbx.h>
@@ -60,9 +60,9 @@ static void *intr_handler(void *args)
 	char temp;
 	unsigned int msg;
 
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	rt_allow_nonroot_hrt();
 	ioperm(PORT_ADR, 1, 1);
+	iopl(3);
 
  	if (!(mytask = rt_task_init_schmod(nam2num("SOUND"), 1, 0, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT SOUND TASK\n");
@@ -99,20 +99,19 @@ static void *intr_handler(void *args)
 	return 0;
 }
 
-static pthread_t thread;
 static int end;
 
 static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
-	unsigned int player, msg, cnt;
+	unsigned int player, msg, cnt, thread;
 	RT_TASK *mytask;
 	MBX *mbx;
 	char data[BUFSIZE];
 
 	signal(SIGINT, endme);
-//	rt_allow_nonroot_hrt();
+	rt_allow_nonroot_hrt();
 
 	if ((player = open("../../../share/linux.au", O_RDONLY)) < 0) {
 		printf("ERROR OPENING SOUND FILE (linux.au)\n");
@@ -128,7 +127,7 @@ int main(void)
 	mbx = rt_typed_named_mbx_init("SNDMBX", 2000, FIFO_Q);
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
-	pthread_create(&thread, NULL, intr_handler, NULL);
+	thread = rt_thread_create(intr_handler, NULL, 10000);
 	rt_mbx_receive(mbx, &data, 1);
 
 	while (!end) {	
@@ -147,6 +146,6 @@ int main(void)
 	stop_rt_timer();
 	close(player);
 	printf("\nEND MASTER TASK %p\n", mytask);
-        pthread_join(thread, NULL);
+        waitpid(thread, 0, 0);
 	return 0;
 }
