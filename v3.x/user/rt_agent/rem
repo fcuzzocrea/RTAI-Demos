@@ -1,2 +1,2 @@
-rmmod rt_agent
+rmmod agent_rt
 ../remod
