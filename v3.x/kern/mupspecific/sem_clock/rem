@@ -1,6 +1,5 @@
-sync
-rmmod clock
-rmmod cmdclk
-rmmod cmdcrn
-rmmod dispclk
+rmmod clock_rt
+rmmod cmdclk_rt
+rmmod cmdcrn_rt
+rmmod dispclk_rt
 ../../remod

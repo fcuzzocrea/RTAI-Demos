@@ -1,26 +1,11 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += clock_rt.o cmdclk_rt.o cmdcrn_rt.o dispclk_rt.o
 
-CC = $(shell rtai-config --cc)
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
-LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
-LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
+clock_rt-objs := clock.o
 
-all: clock.o cmdclk.o cmdcrn.o dispclk.o keybrd screen
+cmdclk_rt-objs := cmdclk.o
 
-%.o: %.c
-	$(CC) $(MODULE_CFLAGS) -c $<
+cmdcrn_rt-objs := cmdcrn.o
 
-keybrd: keybrd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
-
-screen: screen.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
-
-clean:
-	rm -f *.o keybrd screen
-
-.PHONY: clean
+dispclk_rt-objs := dispclk.o
