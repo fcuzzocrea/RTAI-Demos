@@ -1,2 +1,2 @@
-rmmod fp
+rmmod fp_rt
 ../remod

@@ -1,2 +1,2 @@
-rmmod mbx
+rmmod mbx_rt
 ../remod

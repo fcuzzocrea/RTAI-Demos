@@ -10,10 +10,11 @@ echo "Now start the realtime the fifo based fast ticking <enter>,"
 echo "<ctrl-C> to end it:>"
 read junk
 sync
-insmod ./latency_rt.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./latency_rt.ko;
+else insmod ./latency_rt.o; fi
 ./display
 sync
-rmmod latency_rt
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

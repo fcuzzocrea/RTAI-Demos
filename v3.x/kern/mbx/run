@@ -10,7 +10,9 @@ echo
 echo "Now start the realtime process <enter> and wait for its end."
 read junk
 sync
-insmod ./mbx.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./mbx_rt.ko;
+else insmod ./mbx_rt.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

@@ -1,2 +1,2 @@
-rmmod mbx_del
+rmmod mbxdel_rt
 ../remod
