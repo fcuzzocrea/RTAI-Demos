@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2000  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2005  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -22,20 +22,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/syscall.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
-
-#include <asm/io.h>
+#include <sys/poll.h>
 
 #include <rtai_lxrt.h>
-#include <rtai_msg.h>
-#include "./syserver.h"
+
+#define WAITIME  1     // seconds
+#define BUFSIZE  1000  // bytes
+#define HDRSIZE  50    // must be <= BUFSIZE
+#define NRECS    10000
 
 int main(void)
 {
-	char s[1000];
+	char s[BUFSIZE];
 	int i, fd;
 	long long ll;
 	float f;
@@ -43,72 +46,70 @@ int main(void)
 	RT_TASK *mytask;
 	RTIME t;
         struct timeval timout;
+	struct timespec tns;
 
-	struct sched_param mysched;
-
-	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		puts("ERROR IN SETTING THE SCHEDULER");
-		perror("errno");
-		exit(0);
- 	}       
- 	if (!(mytask = rt_task_init(nam2num("HRTSK"), 2, 0, 0))) {
+ 	if (!(mytask = rt_task_init_schmod(nam2num("HRTSK"), 0, 0, 0, SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT TEST BUDDY TASK\n");
 		exit(1);
 	}
-	rt_start_unix_server(mytask, 99, 10000);
-	rt_grow_and_lock_stack(4000);
-
+	rt_linux_syscall_server_create(mytask);
+	rt_grow_and_lock_stack(40000);
 	rt_make_hard_real_time();
 	rt_task_use_fpu(mytask, 1);
 
-	rt_printf("(SCANF) Input a: string, integer, long long, float, double: ");
-	rt_scanf("%s %i %lld %f %lf", s, &i, &ll, &f, &d);
-	rt_printf("(SELECT) Got string, integer, long long, now we wait 1 s using select.\n");
-        timout.tv_sec = 1;
+	printf("(SCANF) Input a: string, integer, long long, float, double: ");
+	scanf("%s %i %lld %f %lf", s, &i, &ll, &f, &d);
+	printf("(SELECT) Got string, integer, long long, now we wait %d s using select.\n", WAITIME);
+        timout.tv_sec = WAITIME;
         timout.tv_usec = 0;
-	rt_select(1, NULL, NULL, NULL, &timout);
-	rt_printf("(PRINTF) Select expired and we print what we read: %s %i %lld %f %lf\n", s, i, ll, f, d);
-	rt_printf("(OPEN) Open a file.\n");
-	fd = rt_open("rtfile", O_RDWR | O_CREAT | O_TRUNC, 0666);
-	rt_printf("(WRITE) Write a 50 bytes header of 'B's.\n");
-	memset(s, 'B', 50);
-	rt_write(fd, s, 50);
-	memset(s, 'A', 1000);
-	rt_printf("(WRITE) Write 10 MB of 'A's to the opened file.\n");
+	select(1, NULL, NULL, NULL, &timout);
+	printf("(PRINTF) Select expired and we print what we read: %s %i %lld %f %lf\n", s, i, ll, f, d);
+	printf("(OPEN) Open a file.\n");
+	fd = open("rtfile", O_RDWR | O_CREAT | O_TRUNC, 0666);
+	printf("(WRITE) Write a %d bytes header of 'B's.\n", HDRSIZE);
+	memset(s, 'B', HDRSIZE);
+	write(fd, s, HDRSIZE);
+	memset(s, 'A', BUFSIZE);
+	printf("(WRITE) Write %d MB of 'A's to the opened file.\n", BUFSIZE*NRECS);
 	t = rt_get_cpu_time_ns();
-	for (i = 0; i < 10000; i++) {
-		rt_write(fd, s, 1000);
+	for (i = 0; i < NRECS; i++) {
+		write(fd, s, BUFSIZE);
 	}
-	rt_printf("(PRINTF) WRITE TIME: %lld (ms).\n", (rt_get_cpu_time_ns() - t + 500000)/1000000);
-	rt_printf("(WRITE) Write a 50 bytes trailer of 'E's.\n");
-	memset(s, 'E', 50);
-	rt_write(fd, s, 50);
-	rt_printf("(SYNC) Sync file to disk.\n");
-	rt_sync();
-	rt_printf("(LSEEK) Position file at its beginning.\n");
-	rt_lseek(fd, 0, SEEK_SET);
-	rt_printf("(READ) Read the first 51 bytes (header plus + 'A').\n");
-	rt_read(fd, s, 51);
-	s[51] = 0;
-	rt_printf("(READ) Here is the header  %s.\n", s);
-	rt_lseek(fd, -1, SEEK_CUR);
-	rt_printf("(READ) Read the written 10 MB of 'A's back.\n");
+	printf("(PRINTF) WRITE TIME: %lld (ms).\n", (rt_get_cpu_time_ns() - t + 500000)/1000000);
+	printf("(WRITE) Write a %d bytes trailer of 'E's.\n", HDRSIZE);
+	memset(s, 'E', HDRSIZE);
+	write(fd, s, HDRSIZE);
+	printf("(SYNC) Sync file to disk.\n");
+	sync();
+	printf("(LSEEK) Position file at its beginning.\n");
+	lseek(fd, 0, SEEK_SET);
+	printf("(POLL) Got the beginning, now we wait %d s using poll.\n", WAITIME);
+	poll(0, 0, WAITIME*1000);
+	printf("(READ) Poll expired, read the first %d bytes (header + first 'A').\n", HDRSIZE + 1);
+	read(fd, s, HDRSIZE + 1);
+	s[HDRSIZE + 1] = 0;
+	printf("(READ) Here is the header  %s.\n", s);
+	lseek(fd, -1, SEEK_CUR);
+	printf("(READ) Read the written %d MB of 'A's back.\n", BUFSIZE*NRECS);
 	t = rt_get_cpu_time_ns();
-	for (i = 0; i < 10000; i++) {
-		rt_read(fd, s, 1000);
+	for (i = 0; i < NRECS; i++) {
+		read(fd, s, BUFSIZE);
 	}
-	rt_printf("(PRINTF) READ TIME %lld (ms).\n", (rt_get_cpu_time_ns() - t + 500000)/1000000);
-	rt_lseek(fd, -1, SEEK_CUR);
-	rt_printf("(READ) Read the last 51 bytes (last 'A' + trailer).\n");
-	rt_read(fd, s, 51);
-	s[51] = 0;
-	rt_printf("(READ) Here is the trailer %s.\n", s);
-	rt_printf("(CLOSE) Close the file and end the test.\n");
-	rt_close(fd);
-	rt_make_soft_real_time();
-	rt_end_unix_server();
-	rt_task_delete(mytask);
+	printf("(PRINTF) READ TIME %lld (ms).\n", (rt_get_cpu_time_ns() - t + 500000)/1000000);
+	lseek(fd, -1, SEEK_CUR);
+	printf("(READ) Read the last %d bytes (last 'A' + trailer).\n", HDRSIZE + 1);
+	read(fd, s, HDRSIZE + 1);
+	s[HDRSIZE + 1] = 0;
+	printf("(READ) Here is the trailer %s.\n", s);
+	printf("(CLOSE) Close the file and end the test.\n");
+	close(fd);
+	printf("(NANOWAITIME) File closed, let's wait %d s using nanosleep.\n", WAITIME);
+	tns.tv_sec = WAITIME;
+	tns.tv_nsec = 0;
+        nanosleep(&tns, NULL);
+	printf("(PRINTF) Test done, exiting.\n");
 
+	rt_make_soft_real_time();
+	rt_task_delete(mytask);
 	return 0;
 }

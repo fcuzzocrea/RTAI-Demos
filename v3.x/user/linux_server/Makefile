@@ -8,15 +8,12 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: syserver client
-
-syserver: syserver.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+all: client
 
 client: client.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean:
-	rm -f *.o syserver client
+	rm -f *.o client
 
 .PHONY: clean
