@@ -27,7 +27,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <sys/time.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -54,7 +53,7 @@ void msleep(int ms)
         select(1, NULL, NULL, NULL, &timout);
 }
 
-static pthread_t thread;
+static int thread;
 
 int main(int argc, char *argv[])
 {
@@ -64,7 +63,7 @@ int main(int argc, char *argv[])
 	int i, rcvport;
         struct sockaddr_in addr;
 
-        pthread_create(&thread, NULL, endme, NULL);
+        thread = rt_thread_create(endme, NULL, 2000);
 
         if (!(sndtsk = rt_task_init_schmod(nam2num("SNDTSK"), 1, 0, 0, SCHED_FIFO, 0xF))) {
                 printf("CANNOT INIT SENDER TASK\n");

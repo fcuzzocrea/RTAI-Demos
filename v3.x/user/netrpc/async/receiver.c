@@ -23,10 +23,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -68,7 +68,7 @@ if (SERVER) {
 	return (void *)0;
 }
 
-static pthread_t athread;
+static int athread;
 
 int main(int argc, char *argv[])
 {
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 	}
 
         mbx = rt_mbx_init(nam2num("MBX"), 100);
-        pthread_create(&athread, NULL, async_fun, NULL);
+        athread = rt_thread_create(async_fun, NULL, 10000);
         sndnode = 0;
         if (argc == 3 && strstr(argv[2], "SndNode=")) {
                 inet_aton(argv[2] + 8, &addr.sin_addr);
@@ -133,7 +133,7 @@ if (SERVER) {
 	}
 
 	rt_make_soft_real_time();
-        pthread_join(athread, NULL);
+        waitpid(athread, 0, 0);
 	rt_receive(0, &i);
 	rt_release_port(sndnode, sndport);
 	stop_rt_timer();
