@@ -1,15 +1,8 @@
 #include <linux/module.h>
 
-#include <asm/rtai.h>
-#include <asm/rtai_fpu.h>
+#include <rtai.h>
 
-#define IRQ 0
-
-#ifdef CONFIG_SMP
-static int vector = 0x31; // SMPwise it is likely 0x31
-#else
-static int vector = 0x20; // UPwise it is likely 0x20
-#endif
+/*+++++++++++++++++++++ OUR LITTLE STAND ALONE LIBRARY +++++++++++++++++++++++*/
 
 extern struct desc_struct idt_table[];
 
@@ -19,24 +12,39 @@ extern struct desc_struct idt_table[];
 #define __LXRT_GET_DATASEG(reg) "movl $" STR(__USER_DS) ",%" #reg "\n\t"
 #endif  /* KERNEL_VERSION < 2.6.0 */
 
-static unsigned long cr0;
-static FPU_ENV saved_fpu_reg, my_fpu_reg;
-static float fcnt = 0.0;
+#define save_cr0(x) \
+	do { \
+		__asm__ __volatile__ ("movl %%cr0,%0; clts": "=r" (x)); \
+	} while (0)
 
-static void c_handler (void)
-{
-	static int cnt;
-	adp_root->irqs[IRQ].acknowledge(IRQ);
-	save_cr0_and_clts(cr0);
-	save_fpenv(saved_fpu_reg);
-	restore_fpenv(my_fpu_reg);
-	fcnt++;
-	rt_printk("HEY HERE I AM %d\n", ++cnt);
-	save_fpenv(my_fpu_reg);
-	restore_fpenv(saved_fpu_reg);
-	restore_cr0(cr0);
-	rt_pend_linux_irq(IRQ);
-}
+#define rest_cr0(x) \
+	do { \
+		if (x & 8) { \
+                       unsigned long flags; \
+                       adeos_hw_local_irq_save(flags); \
+			__asm__ __volatile__ ("movl %%cr0, %0": "=r" (x)); \
+			__asm__ __volatile__ ("movl %0, %%cr0": :"r" (8 | x)); \
+                       adeos_hw_local_irq_restore(flags); \
+		} \
+	} while (0)
+
+#define save_fpenv(x) \
+	do { \
+		if (cpu_has_fxsr) { \
+			__asm__ __volatile__ ("fxsave %0; fnclex": "=m" (x)); \
+		} else { \
+			__asm__ __volatile__ ("fnsave %0; fwait": "=m" (x)); \
+		} \
+	} while (0)
+
+#define rest_fpenv(x) \
+	do { \
+		if (cpu_has_fxsr) { \
+			__asm__ __volatile__ ("fxrstor %0": : "m" (x)); \
+		} else { \
+			__asm__ __volatile__ ("frstor %0": : "m" (x)); \
+		} \
+	} while (0)
 
 static void asm_handler (void)
 {
@@ -80,15 +88,44 @@ void rtai_reset_gate_vector (unsigned vector, struct desc_struct e)
 	idt_table[vector] = e;
 }
 
+/*++++++++++++++++++ END OF OUR LITTLE STAND ALONE LIBRARY +++++++++++++++++++*/
+
+#define IRQ 0
+
+#ifdef CONFIG_SMP
+static int vector = 0x31; // SMPwise it is likely 0x31
+#else
+static int vector = 0x20; //  UPwise it is likely 0x20
+#endif
+
+static unsigned long cr0;
+union i387_union saved_fpu_reg, my_fpu_reg;
+static float fcnt = 0.0;
+
+static void c_handler (void)
+{
+	static int cnt;
+	adp_root->irqs[IRQ].acknowledge(IRQ);
+	save_cr0(cr0);
+	save_fpenv(saved_fpu_reg);
+	rest_fpenv(my_fpu_reg);
+	fcnt++;
+	printk("HEY HERE I AM %d\n", ++cnt);
+	save_fpenv(my_fpu_reg);
+	rest_fpenv(saved_fpu_reg);
+	rest_cr0(cr0);
+	rt_pend_linux_irq(IRQ);
+}
+
 static struct desc_struct desc;
 
 int xinit_module(void)
 {
 	unsigned long flags;
 	printk("TIMER IRQ/VECTOR %d/%d\n", IRQ, vector);
-        save_cr0_and_clts(cr0);
+        save_cr0(cr0);
         save_fpenv(my_fpu_reg);
-        restore_cr0(cr0);
+        rest_cr0(cr0);
 	flags = adeos_critical_enter(NULL);
 	desc = rtai_set_gate_vector(vector, 14, 0, asm_handler);
 	adeos_critical_exit(flags);

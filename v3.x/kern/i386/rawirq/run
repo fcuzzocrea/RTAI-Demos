@@ -7,13 +7,13 @@ read junk
 cd ../..; ./ldmod; cd -
 sync
 echo
-echo "Now start the realtime process <enter> and wait for its end."
+echo "Now start the realtime process <enter> ...."
+echo "... <enter> again to end and to remove the modules."
 read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./dsp_rt.ko;
 else insmod ./dsp.o; fi
 echo
-echo "Done. Press <enter> to remove the modules."
 read junk
 ./rem
