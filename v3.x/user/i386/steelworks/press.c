@@ -76,6 +76,7 @@ static void *encoder_irq(void *args)
 
 	rt_allow_nonroot_hrt();
 	iopl(3);
+//	ioperm(LPT_PORT, 3, 1);
 	rt_make_hard_real_time();
 	while (end != 2) {
 		rt_sem_wait(sem);
