@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <fcntl.h>
 #include <stdio.h>
 #include <signal.h>
-#include <pthread.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <sys/io.h>
 
@@ -56,8 +56,8 @@ static void *intr_handler(void *args)
 	int playfifo, cntrfifo;
 	char data, temp;
 
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	ioperm(PORT_ADR, 1, 1);
+//	ioperm(PORT_ADR, 1, 1);
+	iopl(3);
 
  	if (!(mytask = rt_task_init_schmod(nam2num("SOUND"), 1, 0, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT SOUND TASK\n");
@@ -100,7 +100,6 @@ static void *intr_handler(void *args)
 	return 0;
 }
 
-static pthread_t thread;
 static int end;
 
 static void endme(int dummy) { end = 1; }
@@ -108,7 +107,7 @@ static void endme(int dummy) { end = 1; }
 int main(void)
 {
 	unsigned int player;
-	int playfifo, cntrfifo;
+	int playfifo, cntrfifo, thread;
 	char data;
 
 	signal(SIGINT, endme);
@@ -125,7 +124,7 @@ int main(void)
 		printf("ERROR OPENING FIFO1\n");
 		exit(1);
 	}
-	pthread_create(&thread, NULL, intr_handler, NULL);
+	thread = rt_thread_create(intr_handler, NULL, 10000);
 	read(cntrfifo, &data, 1);
 	printf("\nINIT MASTER TASK\n\n(CTRL-C TO END EVERYTHING)\n");
 
@@ -141,6 +140,6 @@ int main(void)
 	close(cntrfifo);
 	close(player);
 	printf("\nEND MASTER TASK\n");
-        pthread_join(thread, NULL);
+	waitpid(thread, 0, 0);
 	return 0;
 }
