@@ -11,10 +11,10 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 all: usi_process usi_tasklet
 
 usi_process: usi_process.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 usi_tasklet: usi_tasklet.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean:
 	rm -f *.o usi_process usi_tasklet

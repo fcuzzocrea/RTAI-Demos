@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/mman.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <unistd.h>
 
 #include <rtai_lxrt.h>
@@ -36,15 +37,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 static SEM *dspsem;
 static volatile int ovr, intcnt;
 
-#define CLI()  do { __asm__ __volatile__ ("cli"); } while (0)
-
 #define DIAG_FLAGS
 #ifdef DIAG_FLAGS
 #define CHECK_FLAGS() \
 	do { \
 		unsigned long flags; \
 		__asm__ __volatile__("pushfl; popl %0": "=g" (flags)); \
-		if (flags & (1 << 9)) rt_printk("<> BAD! ENABLED <>\n"); \
+		if (flags & 0x200) rt_printk("<> BAD! ENABLED <>\n"); \
 	} while (0);
 #else
 #define CHECK_FLAGS()
@@ -63,7 +62,9 @@ static void *timer_handler(void *args)
 	rt_make_hard_real_time();
 
 	rt_request_irq_task(TIMER_IRQ, handler, RT_IRQ_TASK, 1);
+	rtai_cli();
 	while (ovr != RT_IRQ_TASK_ERR) {
+		CHECK_FLAGS();
 		do {
 			ovr = rt_irq_wait_timed(TIMER_IRQ, nano2count(TIMEOUT));
 			if (ovr == RT_IRQ_TASK_ERR) break;
@@ -77,6 +78,7 @@ static void *timer_handler(void *args)
 		} while (ovr > 0);
 		rt_pend_linux_irq(TIMER_IRQ);
 	}
+	rtai_sti();
 	rt_release_irq_task(TIMER_IRQ);
 	rt_make_soft_real_time();
 	rt_task_delete(handler);
@@ -94,6 +96,7 @@ int main(void)
                 printf("CANNOT INIT MAIN TASK > MAIN <\n");
                 exit(1);
         }
+
 	if (!(dspsem = rt_sem_init(nam2num("DSPSEM"), 0))) {
 		printf("CANNOT INIT SEMAPHORE > DSPSEM <\n");
 		exit(1);
@@ -104,7 +107,7 @@ int main(void)
 		printf("OVERRUNS %d, INTERRUPT COUNT %d\n", ovr, intcnt);
 	}
 	rt_release_irq_task(TIMER_IRQ);
-        rt_thread_join(thread);
+	rt_thread_join(thread);
 	rt_task_delete(maint);
 	rt_sem_delete(dspsem);
 	printf("TEST ENDS\n");

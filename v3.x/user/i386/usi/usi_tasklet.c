@@ -37,8 +37,26 @@ static struct rt_tasklet_struct *tasklet;
 static SEM *dspsem;
 static volatile int ovr, intcnt;
 
+#define DIAG_FLAGS
+#ifdef DIAG_FLAGS
+#define CHECK_FLAGS() \
+        do { \
+                unsigned long flags; \
+                __asm__ __volatile__("pushfl; popl %0": "=g" (flags)); \
+                if (flags & 0x200) rt_printk("<> BAD! ENABLED <>\n"); \
+        } while (0);
+#else
+#define CHECK_FLAGS()
+#endif
+
 static void timer_handler(unsigned long data)
 {
+	static int first;
+	if (!first) {
+		first = 1;
+		rtai_cli();
+	}
+	CHECK_FLAGS();
 	while ((ovr = rt_irq_wait_if(TIMER_IRQ)) > 0) {
 		/* overrun processing, if any, goes here */
 		rt_sem_signal(dspsem);
