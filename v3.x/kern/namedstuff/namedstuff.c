@@ -9,7 +9,6 @@
 #include <rtai_mbx.h>
 
 MODULE_LICENSE("GPL");
-EXPORT_NO_SYMBOLS;
 
 //#define DELETE
 

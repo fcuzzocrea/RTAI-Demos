@@ -1,2 +1,2 @@
-rmmod namedstuff
+rmmod namedstuff_rt
 ../remod
