@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2005  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2005  Michael Neuhauser <mike@firmix.at>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -18,20 +18,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 
 #ifdef DIAG_FLAGS
-
-#define CHECK_FLAGS() \
-	do { \
-		unsigned long flags, ibut; \
-#ifdef CONFIG_X86
-		ibit = 9;
-		__asm__ __volatile__("pushfl; popl %0": "=g" (flags)); \
-#endif
-#ifdef CONFIG_ARM
-		ibit = 7;
-		__asm__ __volatile__("mrs %0, cpsr: "=r" (flags): : "memory"); \
-#endif
-		if (flags & (1 << ibit)) rt_printk("< BAD! ENABLED >\n"); \
-	} while (0);
-#else
-#define CHECK_FLAGS()
-#endif
+ 
+#	ifdef CONFIG_X86
+#		define CHECK_FLAGS() do { \
+ 			unsigned long flags; \
+ 			__asm__ __volatile__("pushfl; popl %0": "=g" (flags)); \
+ 			if (flags & (1 << 9)) rt_printk("< BAD! ENABLED >\n"); \
+ 		} while (0);
+#	elif defined(CONFIG_ARM)
+#		include <asm/ptrace.h>
+#		define CHECK_FLAGS() do { \
+ 			unsigned long flags; \
+ 			__asm__ __volatile__("mrs %0, cpsr" : "=r" (flags)); \
+			if (!(flags & I_BIT)) rt_printk("< BAD! ENABLED >\n"); \
+		} while (0);
+#	else
+#		error "sorry, architecture is not supported"
+#	endif
+ 
+#else /* !DIAG_FLAGS */
+ 
+#	define CHECK_FLAGS()	do { /* nop */ } while (0)
+ 
+#endif /* DIAG_FLAGS */
