@@ -6,6 +6,8 @@ cd ../forked
 ./run
 cd ../hardsoftsw
 ./run
+cd ../heaps
+./run
 cd ../i386
 ./test_suite
 cd ../intertaskmsg

@@ -3,6 +3,7 @@ TARGETS = \
 	forcesoft \
 	forked \
 	hardsoftsw \
+	heaps \
 	intertaskmsg \
 	latency \
 	master_slave \
