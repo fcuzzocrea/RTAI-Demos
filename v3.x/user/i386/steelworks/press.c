@@ -25,10 +25,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <sys/io.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <pthread.h>
 #include <curses.h>
 
 #include <rtai_lxrt.h>
@@ -63,7 +63,6 @@ static void *encoder_irq(void *args)
 	struct sched_param mysched;
 	int mycount = 0;
 
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
 	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
 		puts("ERROR IN SETTING THE SCHEDULER UP");
@@ -76,7 +75,7 @@ static void *encoder_irq(void *args)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	rt_allow_nonroot_hrt();
-	ioperm(LPT_PORT, 3, 1);
+	iopl(3);
 	rt_make_hard_real_time();
 	while (end != 2) {
 		rt_sem_wait(sem);
@@ -217,7 +216,6 @@ static void msleep(int ms)
 	select(1, NULL, NULL, NULL, &timout);
 }
 
-static pthread_t thread;
 
 static void endme(int dummy) { end = 1; }
 
@@ -227,6 +225,7 @@ int main(void)
         MBX *mbx;
         RT_TASK *mytask;
 	char start;
+	int thread;
 
 	signal(SIGINT, endme);
         if (!(mytask = rt_task_init(nam2num("MAIN"), 1, 0, 0))) {
@@ -241,7 +240,7 @@ int main(void)
 		printf("CANNOT FIND SEMAPHORE\n");
 		exit(1);
 	}
-	pthread_create(&thread, NULL, encoder_irq, NULL);
+	thread = rt_thread_create(encoder_irq, NULL, 10000);
 	get_data();
 	screen_init();
 	paint_screen();
@@ -266,7 +265,7 @@ int main(void)
 	cleanup_module();
 	screen_end();
 	printf("\n");
-        pthread_join(thread, NULL);
+        waitpid(thread, 0, 0);
 
 	return 0;
 }
