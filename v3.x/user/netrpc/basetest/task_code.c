@@ -22,10 +22,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <unistd.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <pthread.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -66,7 +66,7 @@ static void *task_code(void *arg)
 
 	task_no = *((int *)arg);
 	buf[8] = 0;
-        if (!(mytask = rt_task_init_schmod(nam2num(task[task_no]), NUM_TASKS - task_no, 0, 0, SCHED_FIFO, 0xF))) {
+        if (!(mytask = rt_thread_init(nam2num(task[task_no]), NUM_TASKS - task_no, 0, SCHED_FIFO, 0xF))) {
                 printf("CANNOT INIT TASK TASK %d\n", task_no);
                 exit(1);
         }
@@ -128,7 +128,7 @@ printf("TASK_NO %d REL ITS EXEC COMNODE PORT %lx, %d\n", task_no, comnode, srvpo
 	return (void *)0;
 }
 
-static pthread_t thread[NUM_TASKS];
+static int thread[NUM_TASKS];
 
 void msleep(int ms)
 {
@@ -156,7 +156,7 @@ printf("TASK CODE GOT INIT COMNODE PORT %lx, %d\n", comnode, srvport);
 	mbx_out  = RT_get_adr(comnode, srvport, "MBXOUT");
         for (i = 0; i < NUM_TASKS; i++) {
 		sems[i] = RT_get_adr(comnode, srvport, sem[i]);
-		if (pthread_create(&thread[i], NULL, task_code, (void *)&i)) {
+		if ((thread[i] = rt_thread_create(task_code, (void *)&i, 10000)) < 0) {
                         printf("ERROR IN CREATING THREAD %d\n", i);
                         exit(1);
                 }
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         }
         init_module();
         for (i = 0; i < NUM_TASKS; i++) {
-		pthread_join(thread[i], NULL);
+		waitpid(thread[i], 0, 0);
         }
 	while ((srvport = rt_request_port(comnode)) <= 0) {
 		msleep(100);

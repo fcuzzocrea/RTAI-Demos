@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <pthread.h>
+#include <sys/wait.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -66,7 +66,7 @@ static void *start_task_code(void *args)
         RT_TASK *task;
 
 	buf[8] = 0;
-	if (!(task = rt_task_init_schmod(getpid(), 10, 0, 0, SCHED_FIFO, 0xF))) {
+	if (!(task = rt_thread_init(getpid(), 10, 0, SCHED_FIFO, 0xF))) {
                 printf("CANNOT INIT START_TASK BUDDY\n");
                 exit(1);
         }
@@ -137,7 +137,7 @@ void msleep(int ms)
         select(1, NULL, NULL, NULL, &timout);
 }
 
-static pthread_t thread;
+static int thread;
 
 static int init_module(void)
 {
@@ -166,7 +166,7 @@ printf("START TASK GOT INIT COMNODE PORT %lx, %d\n", comnode, srvport);
 	}     
 printf("START TASK REL INIT COMNODE PORT %lx, %d\n", comnode, srvport);
 	rt_release_port(comnode, srvport);
-        pthread_create(&thread, NULL, start_task_code, NULL);
+        thread = rt_thread_create(start_task_code, NULL, 10000);
 	return 0;
 }
 
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
                 tasknode = addr.sin_addr.s_addr;
         }
 	init_module();
-	pthread_join(thread, NULL);
+	waitpid(thread, 0, 0);
         while ((srvport = rt_request_port(comnode)) <= 0) {
                 msleep(100);
         }
