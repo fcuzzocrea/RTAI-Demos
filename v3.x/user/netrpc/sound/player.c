@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -44,7 +43,7 @@ static void *endme(void *args)
 	return 0;
 }
 
-static pthread_t thread;
+static int thread;
 
 int main(int argc, char *argv[])
 {
@@ -54,7 +53,7 @@ int main(int argc, char *argv[])
 	MBX *mbx;
 	char data[BUFSIZE];
 
-        pthread_create(&thread, NULL, endme, NULL);
+        thread = rt_thread_create(endme, NULL, 2000);
 	if ((player = open("../../../share/linux.au", O_RDONLY)) < 0) {
 		printf("ERROR OPENING SOUND FILE (linux.au)\n");
 		exit(1);

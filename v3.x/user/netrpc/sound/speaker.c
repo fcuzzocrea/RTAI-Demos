@@ -56,7 +56,8 @@ int main(void)
 	char data, temp;
 	unsigned int msg, i;
 
-	ioperm(PORT_ADR, 1, 1);
+//	ioperm(PORT_ADR, 1, 1);
+	iopl(3);
         if (!(spktsk = rt_task_init_schmod(nam2num("SPKTSK"), 1, 0, 0, SCHED_FIFO, 0xF))) {
                 printf("CANNOT INIT SPEAKER TASK\n");
                 exit(1);
