@@ -23,14 +23,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <signal.h>
 #include <rtai_sem.h>
 #include <rtai_msg.h>
 #include "period.h"
 
-pthread_t task[NTASKS];
+int task[NTASKS];
 
 int ntasks = NTASKS;
 
@@ -49,7 +49,6 @@ void *thread_fun(void *arg)
 	unsigned long mytask_name;
 	int mytask_indx, jit, maxj, maxjp, count;
 
-        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	mytask_indx = *((int *)arg);
 	mytask_name = taskname(mytask_indx);
 	cpus_allowed = 1 - cpus_allowed; 
@@ -128,7 +127,7 @@ int main(void)
 
 	for (i = 0; i < ntasks; i++) {
 		indx[i] = i;
-		if (pthread_create(&task[i], NULL, thread_fun, &indx[i])) {
+		if ((task[1] = rt_thread_create(thread_fun, &indx[i], 10000)) < 0) {
 			printf("ERROR IN CREATING THREAD %d\n", indx[i]);
 			exit(1);
  		}       
@@ -159,7 +158,7 @@ int main(void)
 	rt_task_delete(mytask);
 	printf("MASTER %lu %p ENDS\n", mytask_name, mytask);
 	for (i = 0; i < ntasks; i++) {
-		pthread_join(task[i], NULL);
+		waitpid(task[i], 0, 0);
 	}
 	return 0;
 }

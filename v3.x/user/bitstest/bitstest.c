@@ -24,13 +24,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <pthread.h>
 
 #include <rtai_bits.h>
 
 #define SLEEP_TIME  200000
 
-static pthread_t thread0, thread1, thread;
+static int thread0, thread1, thread;
 
 static BITS *bits;
 
@@ -118,11 +117,11 @@ int main(void)
 	bits = rt_bits_init(nam2num("BITS"), 0xFFFF0000);
 	rt_set_oneshot_mode();
 	start_rt_timer(nano2count(SLEEP_TIME));
-	pthread_create(&thread0, NULL, fun0, NULL);
+	thread0 = rt_thread_create(fun0, NULL, 10000);
 	rt_sleep(nano2count(SLEEP_TIME));
-	pthread_create(&thread1, NULL, fun1, NULL);
+	thread1 = rt_thread_create(fun1, NULL, 10000);
 	rt_sleep(nano2count(SLEEP_TIME));
-	pthread_create(&thread, NULL, fun, NULL);
+	thread = rt_thread_create(fun, NULL, 10000);
 	printf("TYPE <ENTER> TO TERMINATE\n");
 	getchar();
 	stop_rt_timer();
