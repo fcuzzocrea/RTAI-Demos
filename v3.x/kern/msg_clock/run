@@ -19,10 +19,22 @@ echo
 echo "Now start the msg clock <enter>."
 read junk
 sync
-insmod ./dispclk.o
-insmod ./cmdclk.o
-insmod ./cmdcrn.o
-insmod ./clock.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then
+
+insmod ./dispclk_rt.ko;
+insmod ./cmdclk_rt.ko;
+insmod ./cmdcrn_rt.ko;
+insmod ./clock_rt.ko;
+
+else
+
+insmod ./dispclk_rt.o;
+insmod ./cmdclk_rt.o;
+insmod ./cmdcrn_rt.o;
+insmod ./clock_rt.o;
+
+fi
 ./keybrd
 echo
 echo "Done. Press <enter> to remove the modules."

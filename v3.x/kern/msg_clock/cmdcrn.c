@@ -136,3 +136,6 @@ void cleanup_module(void)
 {
 	rt_task_delete(&Chrono);
 }
+
+EXPORT_SYMBOL(CommandChrono_Put);
+EXPORT_SYMBOL(CommandChrono_Get);

@@ -32,7 +32,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include "clock.h"
 
 MODULE_LICENSE("GPL");
-EXPORT_NO_SYMBOLS;
 
 #define Keyboard 0
 #define Screen   1
@@ -49,10 +48,10 @@ EXPORT_NO_SYMBOLS;
 #define READ_ON_CPUS   3  // 1: on cpu 0 only, 2: on cpu 1 only, 3: on any.
 #define WRITE_ON_CPUS  3  // 1: on cpu 0 only, 2: on cpu 1 only, 3: on any.
 
-#define CLOCK_RUN_ON_CPUS  (smp_num_cpus > 1 ? CLOCK_ON_CPUS  : 1)
-#define CHRONO_RUN_ON_CPUS (smp_num_cpus > 1 ? CHRONO_ON_CPUS : 1)
-#define READ_RUN_ON_CPUS   (smp_num_cpus > 1 ? READ_ON_CPUS   : 1)
-#define WRITE_RUN_ON_CPUS  (smp_num_cpus > 1 ? WRITE_ON_CPUS  : 1)
+#define CLOCK_RUN_ON_CPUS  (num_online_cpus() > 1 ? CLOCK_ON_CPUS  : 1)
+#define CHRONO_RUN_ON_CPUS (num_online_cpus() > 1 ? CHRONO_ON_CPUS : 1)
+#define READ_RUN_ON_CPUS   (num_online_cpus() > 1 ? READ_ON_CPUS   : 1)
+#define WRITE_RUN_ON_CPUS  (num_online_cpus() > 1 ? WRITE_ON_CPUS  : 1)
 
 static SEM keybrd_sem;
 

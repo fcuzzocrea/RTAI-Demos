@@ -122,3 +122,6 @@ void cleanup_module(void)
 {
 	rt_task_delete(&Clock);
 }
+
+EXPORT_SYMBOL(CommandClock_Put);
+EXPORT_SYMBOL(CommandClock_Get);
