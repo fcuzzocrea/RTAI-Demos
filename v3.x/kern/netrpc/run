@@ -20,11 +20,25 @@ echo
 echo "Now start the realtime process <enter> and wait for its end."
 read junk
 sync
-insmod $MODULES/rtai_netrpc.o ThisNode="127.0.0.1"
+if (`rtai-config --linux-version | grep -q 2.6`);
+then
+
+insmod $MODULES/rtai_netrpc.ko ThisNode="127.0.0.1";
 sync
-insmod ./comnode.o
-insmod ./task_code.o ComNode="127.0.0.1"
-insmod ./start_task.o ComNode="127.0.0.1" TaskNode="127.0.0.1"
+insmod ./comnode_rt.ko;
+insmod ./task_code_rt.ko ComNode="127.0.0.1";
+insmod ./start_task_rt.ko ComNode="127.0.0.1" TaskNode="127.0.0.1";
+
+else
+
+insmod $MODULES/rtai_netrpc.o ThisNode="127.0.0.1";
+sync
+insmod ./comnode_rt.o;
+insmod ./task_code_rt.o ComNode="127.0.0.1";
+insmod ./start_task_rt.o ComNode="127.0.0.1" TaskNode="127.0.0.1";
+
+fi
+
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

@@ -14,30 +14,64 @@ MODULES=$prefix/modules
 #sync paranoia might be useful
 
 sync
+if (`rtai-config --linux-version | grep -q 2.6`);
+then 
+
+$insmod $MODULES/rtai_hal.ko;
+sync
+if [ "$arch" = "i386" ]; then
+$insmod $MODULES/rtai_lxrt.ko;
+#$insmod $MODULES/rtai_up.ko;
+#$insmod $MODULES/rtai_smp.ko;
+#$insmod $MODULES/rtai_mup.ko;
+else
+$insmod $MODULES/rtai_up.ko;
+fi
+sync
+$insmod $MODULES/rtai_sem.ko;
+sync
+$insmod $MODULES/rtai_mbx.ko;
+sync
+$insmod $MODULES/rtai_msg.ko;
+sync
+$insmod $MODULES/rtai_fifos.ko;
+sync
+$insmod $MODULES/rtai_tbx.ko;
+sync
+$insmod $MODULES/rtai_bits.ko;
+sync
+$insmod $MODULES/rtai_mq.ko;
+sync
+$insmod $MODULES/rtai_shm.ko;
+
+else
+
 $insmod $MODULES/rtai_hal.o
 sync
 if [ "$arch" = "i386" ]; then
-$insmod $MODULES/rtai_lxrt.o
-#$insmod $MODULES/rtai_up.o
-#$insmod $MODULES/rtai_smp.o
-#$insmod $MODULES/rtai_mup.o
+$insmod $MODULES/rtai_lxrt.o;
+#$insmod $MODULES/rtai_up.o;
+#$insmod $MODULES/rtai_smp.o;
+#$insmod $MODULES/rtai_mup.o;
 else
-$insmod $MODULES/rtai_up.o
+$insmod $MODULES/rtai_up.o;
 fi
 sync
-$insmod $MODULES/rtai_sem.o
+$insmod $MODULES/rtai_sem.o;
 sync
-$insmod $MODULES/rtai_mbx.o
+$insmod $MODULES/rtai_mbx.o;
 sync
-$insmod $MODULES/rtai_msg.o
+$insmod $MODULES/rtai_msg.o;
 sync
-$insmod $MODULES/rtai_fifos.o
+$insmod $MODULES/rtai_fifos.o;
 sync
-$insmod $MODULES/rtai_tbx.o
+$insmod $MODULES/rtai_tbx.o;
 sync
-$insmod $MODULES/rtai_bits.o
+$insmod $MODULES/rtai_bits.o;
 sync
-$insmod $MODULES/rtai_mq.o
+$insmod $MODULES/rtai_mq.o;
 sync
-$insmod $MODULES/rtai_shm.o
+$insmod $MODULES/rtai_shm.o;
+
+fi
 sync
