@@ -11,7 +11,7 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 all: preempt display
 
 preempt: preempt.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 display: display.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)

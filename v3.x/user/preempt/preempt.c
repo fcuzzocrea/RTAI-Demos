@@ -22,17 +22,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_fifos.h>
 #include <rtai_sem.h>
 
+#define CPUMAP 0x1
+
+#define USEDFRAC 50  // %
+
+#define SHOWPREEMPT  0
+#if SHOWPREEMPT
+#define BEGIN(x)  rt_printk(x)
+#define END(x)    rt_printk(x)
+#else
+#define BEGIN(x)
+#define END(x)
+#endif
+
 #define FIFO 1
 
-#define NAVRG 800
-
-#define USE_FPU 0
+#define NAVRG 1000
 
 #define FASTMUL  2
 
 #define SLOWMUL  12
-
-#define USEDFRAC 10
 
 #ifdef CONFIG_UCLINUX
 #define TICK_TIME 1000000
@@ -54,7 +63,7 @@ static void *slow_fun(void *arg)
         int jit;
         RTIME svt, t;
 
-        if (!(Slow_Task = rt_task_init_schmod(nam2num("SLWTSK"), 3, 0, 0, SCHED_FIFO, 0xF))) {
+        if (!(Slow_Task = rt_task_init_schmod(nam2num("SLWTSK"), 3, 0, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT SLOW TASK\n");
                 exit(1);
         }
@@ -68,8 +77,10 @@ static void *slow_fun(void *arg)
                 svt = t;
                 if (jit) { jit = - jit; }
                 if (jit > slowjit) { slowjit = jit; }
-                rt_busy_sleep((SLOWMUL*TICK_TIME)/USEDFRAC);
+                rt_busy_sleep((SLOWMUL*TICK_TIME*USEDFRAC)/100);
+		END("SE\n");
                 rt_task_wait_period();                                        
+		BEGIN("SB\n");
         }
 	rt_sem_wait_barrier(barrier);
 	rt_make_soft_real_time();
@@ -82,7 +93,7 @@ static void *fast_fun(void *arg)
         int jit;
         RTIME svt, t;
 
-        if (!(Fast_Task = rt_task_init_schmod(nam2num("FSTSK"), 2, 0, 0, SCHED_FIFO, 0xF))) {
+        if (!(Fast_Task = rt_task_init_schmod(nam2num("FSTSK"), 2, 0, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT FAST TASK\n");
                 exit(1);
         }
@@ -96,8 +107,10 @@ static void *fast_fun(void *arg)
                 svt = t;
                 if (jit) { jit = - jit; }
                 if (jit > fastjit) { fastjit = jit; }
-                rt_busy_sleep((FASTMUL*TICK_TIME)/USEDFRAC);
+                rt_busy_sleep((FASTMUL*TICK_TIME*USEDFRAC)/100);
+		END("FE\n");
                 rt_task_wait_period();                                        
+		BEGIN("FB\n");
         }                      
 	rt_sem_wait_barrier(barrier);
 	rt_make_soft_real_time();
@@ -116,7 +129,7 @@ static void *latency_fun(void *arg)
 
 	min_diff = 1000000000;
 	max_diff = -1000000000;
-        if (!(Latency_Task = rt_task_init_schmod(nam2num("LTCTSK"), 1, 0, 0, SCHED_FIFO, 0xF))) {
+        if (!(Latency_Task = rt_task_init_schmod(nam2num("LTCTSK"), 0, 0, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT LATENCY TASK\n");
                 exit(1);
         }
@@ -128,7 +141,9 @@ static void *latency_fun(void *arg)
 		average = 0;
 		for (skip = 0; skip < NAVRG; skip++) {
 			expected += period;
+			END("HE\n");
 			rt_task_wait_period();
+			BEGIN("HB\n");
 			diff = (int)count2nano(rt_get_time() - expected);
 			if (diff < min_diff) {
 				min_diff = diff;
