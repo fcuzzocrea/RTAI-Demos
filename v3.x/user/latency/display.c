@@ -30,6 +30,7 @@ int main(void)
 	struct timeval tv;
 	unsigned int msg, ch;
 	MBX *mbx;
+	long long max = 0;
 	struct sample { long long min; long long max; int index; } samp;
 
 	tv.tv_sec = 0;
@@ -46,7 +47,8 @@ int main(void)
 
 	while (1) {
 		rt_mbx_receive(mbx, &samp, sizeof(samp));
-		printf("*** min: %d, max: %d average: %d  <Hit [RETURN] to stop> ***\n", (int) samp.min, (int) samp.max, samp.index);
+		if (max < samp.max) max = samp.max;
+		printf("*** min: %d, max: %lld/%lld average: %d  <Hit [RETURN] to stop> ***\n", (int) samp.min, samp.max, max, samp.index);
 		FD_ZERO(&input);
 		FD_SET(0, &input);
 		tv.tv_usec = 20000;

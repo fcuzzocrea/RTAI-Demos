@@ -26,16 +26,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
 
-#define OVERALL
-
 #define AVRGTIME    1
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SKIP ((1000000000*AVRGTIME)/PERIOD)
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)
 
 #define MAXDIM 10
-
 static double a[MAXDIM], b[MAXDIM];
 
 static double dot(double *a, double *b, int n)
@@ -53,7 +50,7 @@ static int hard_timer_running;
 int main(int argc, char *argv[])
 {
 	int diff;
-	int skip;
+	int sample;
 	int average;
 	int min_diff;
 	int max_diff;
@@ -72,7 +69,7 @@ int main(int argc, char *argv[])
 	}
 
  	if (!(task = rt_task_init_schmod(nam2num("LATCAL"), 0, 0, 0, SCHED_FIFO, 0xF))) {
-		printf("CANNOT INIT MASTER TASK\n");
+		printf("CANNOT INIT MASTER LATENCY TASK\n");
 		exit(1);
 	}
 
@@ -107,21 +104,14 @@ int main(int argc, char *argv[])
 
 	rt_make_hard_real_time();
 	period = nano2count(PERIOD);
-	rt_task_make_periodic(task, expected = rt_get_time() + 5*period, period);
-
-#ifdef OVERALL
-	min_diff = 1000000000;
-	max_diff = -1000000000;
-#endif
+	rt_task_make_periodic(task, expected = rt_get_time() + 20*period, period);
 	svt = rt_get_cpu_time_ns();
 	while (1) {
-#ifndef OVERALL
 		min_diff = 1000000000;
 		max_diff = -1000000000;
-#endif
 		average = 0;
 
-		for (skip = 0; skip < SKIP; skip++) {
+		for (sample = 0; sample < SMPLSXAVRG; sample++) {
 			expected += period;
 			rt_task_wait_period();
 
@@ -143,7 +133,7 @@ int main(int argc, char *argv[])
 		}
 		samp.min = min_diff;
 		samp.max = max_diff;
-		samp.index = average/SKIP;
+		samp.index = average/SMPLSXAVRG;
 		rt_mbx_send_if(mbx, &samp, sizeof(samp));
 		if (rt_receive_if(rt_get_adr(nam2num("LATCHK")), (unsigned int *)&average)) {
 			rt_return(rt_get_adr(nam2num("LATCHK")), (unsigned int)average);
