@@ -1,5 +1,5 @@
 sync
-rmmod tbx1
-rmmod tbx2
-rmmod tbx3
+rmmod tbx1_rt
+rmmod tbx2_rt
+rmmod tbx3_rt
 ../remod
