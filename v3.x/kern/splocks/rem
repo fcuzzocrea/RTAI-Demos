@@ -1,3 +1,3 @@
 sync
-rmmod splocks
+rmmod splocks_rt
 ../remod

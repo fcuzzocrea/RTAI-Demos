@@ -1,18 +1,5 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += splocks_rt.o
 
-CC = $(shell rtai-config --cc)
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
-
-all: splocks.o
-
-%.o: %.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-clean:
-	rm -f *.o
-
-.PHONY: clean
+splocks_rt-objs := splocks.o
