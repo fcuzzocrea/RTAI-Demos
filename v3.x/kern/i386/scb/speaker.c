@@ -11,7 +11,6 @@
 #include "pcsp_tables.h"
 
 MODULE_LICENSE("GPL");
-EXPORT_NO_SYMBOLS;
 
 #define SCBSUPRT  USE_GFP_ATOMIC
 #define SCBSIZ    2000

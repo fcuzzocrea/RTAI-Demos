@@ -11,7 +11,6 @@
 #include "pcsp_tables.h"
 
 MODULE_LICENSE("GPL");
-EXPORT_NO_SYMBOLS;
 
 #define ONESHOT
 
@@ -21,7 +20,7 @@ EXPORT_NO_SYMBOLS;
 #define DIVISOR 5
 
 #define RUNNABLE_ON_CPUS 3  // 1: on cpu 0 only, 2: on cpu 1 only, 3: on any.
-#define RUN_ON_CPUS (smp_num_cpus > 1 ? RUNNABLE_ON_CPUS : 1)
+#define RUN_ON_CPUS (num_online_cpus() > 1 ? RUNNABLE_ON_CPUS : 1)
 
 #define STACK_SIZE 4000
 

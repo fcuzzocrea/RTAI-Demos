@@ -15,7 +15,9 @@ echo "*** INTERACTIVE CALIBRATION OF VARIOUS TIMING PARAMETERS (user) ***"
 echo "Press <enter> to load modules:"
 read junk
 cd ../..; ./ldmod; cd -
-insmod ./calmod.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./calmod_rt.ko;
+else insmod ./calmod_rt.o; fi
 echo
 echo "Now start the realtime process and follow the menu."
 read junk

@@ -194,7 +194,7 @@ static int srq;
 int init_module(void)
 {
 	rt_mount_rtai();
-	params.mp        = smp_num_cpus > 1;
+	params.mp        = num_online_cpus() > 1;
 	params.freq_apic = FREQ_APIC;
 	params.cpu_freq  = CPU_FREQ;
 	rtf_create(0, FIFOBUFSIZE);
