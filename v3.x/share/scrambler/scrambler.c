@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_netrpc.h>
 //#include "/home/rtai-cvs/kilauea/rtai-core/ipc/netrpc/rtnet/rtnetP.h"
-#include <scrambler.h>
+#include "scrambler.h"
 
 MODULE_LICENSE("GPL");
 
