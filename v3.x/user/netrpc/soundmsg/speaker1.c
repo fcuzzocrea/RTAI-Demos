@@ -67,13 +67,13 @@ int main(void)
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
+	printf("\nSPEAKER TASK RUNNING\n");
 	rt_make_hard_real_time();
 
 	period = nano2count(PERIOD);
 	rt_task_make_periodic(spktsk, rt_get_time() + 5*period, period);
 
 	rt_returnx(rt_receivex(0, &msg, sizeof(int), &len), &msg, 1);
-	printf("\nSPEAKER TASK RUNNING\n");
         for (i = 0; i < 100; i++) {
 		rt_returnx(rt_receivex(0, &msg, sizeof(int), &len), &msg, 1);
         }

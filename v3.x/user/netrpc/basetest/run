@@ -19,8 +19,13 @@ echo "Press <enter> to load modules:"
 read junk
 cd ../..; ./ldmod; cd -
 sync
-insmod $MODULES/rtai_netrpc.o ThisNode="127.0.0.1"
-insmod ../../../share/scrambler/scrambler.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod $MODULES/rtai_netrpc.ko ThisNode="127.0.0.1";
+insmod ../../../share/scrambler/scrambler.ko;
+else 
+insmod $MODULES/rtai_netrpc.o ThisNode="127.0.0.1";
+insmod ../../../share/scrambler/scrambler.o;
+fi
 echo
 echo "Now start the realtime process"
 echo "<enter>, then wait for its end."

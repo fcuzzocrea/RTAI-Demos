@@ -5,11 +5,8 @@ cd ../basetest
 ./run
 cd ../resumefromintr
 ./run
-./rem
 ./run
-./rem
 ./run
-./rem
 cd ../sound
 ./run
 cd ../soundmsg
