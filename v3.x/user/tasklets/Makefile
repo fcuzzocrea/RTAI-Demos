@@ -9,7 +9,7 @@ MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: kctest.o ktasklet.o btest stest uctest utasklet utest
+all: btest stest uctest utasklet utest kctest.o ktasklet.o
 
 %.o: %.c
 	$(CC) $(MODULE_CFLAGS) -c $<
