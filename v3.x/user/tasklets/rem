@@ -1,4 +1,4 @@
-rmmod ktasklet
-rmmod kctest
+rmmod ktasklet_rt
+rmmod kctest_rt
 rmmod rtai_tasklets
 ../remod

@@ -27,8 +27,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_tasklets.h>
 #include "ctest.h"
 
-EXPORT_NO_SYMBOLS;
-
 #define SUPRT USE_VMALLOC
 
 #define ONE_SHOT
