@@ -18,8 +18,9 @@ echo "*** A TASKLET BASED USER SPACE INTERRUPT HANDLER ***"
 echo "Press <enter> to load modules:"
 read junk
 cd ../..; ./ldmod; cd -
-insmod $MODULES/rtai_tasklets.o
-insmod $MODULES/rtai_usi.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod $MODULES/rtai_tasklets.ko; insmod $MODULES/rtai_usi.ko;
+else insmod $MODULES/rtai_tasklets.o; insmod $MODULES/rtai_usi.o; fi
 echo
 echo "Now start the realtime tasklet <enter>."
 read junk
