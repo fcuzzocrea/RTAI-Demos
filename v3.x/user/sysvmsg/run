@@ -19,7 +19,7 @@ cd ../; ./ldmod; cd -
 echo
 echo "Now start the realtime process <enter>:"
 read junk
-insmod ./rtai_sysvipc.o
+insmod ./rtai_sysvmsg.ko
 $SUDO ./testmsg
 echo
 echo "Done. Press <enter> to remove the modules."

@@ -1,2 +1,2 @@
-rmmod rtai_sysvipc
+rmmod util
 ../remod

@@ -1,46 +1,56 @@
 /*
+ * Taken from:
  * linux/ipc/util.c
  * Copyright (C) 1992 Krishna Balasubramanian
  *
- * Sep 1997 - Call suser() last after "normal" permission checks so we
- *            get BSD style process accounting right.
- *            Occurs in several places in the IPC code.
- *            Chris Evans, <chris@ferret.lmh.ox.ac.uk>
- * Nov 1999 - ipc helper functions, unified SMP locking
- *	      Manfred Spraul <manfreds@colorfullife.com>
- */
-
-/*
  * 2.16.2004: adapted to RTAI hard real time by:
  * Paolo Mantegazza (mantegazza@aero.polimi.it)
  */
 
+
+#include <linux/kernel.h>
 #include <linux/config.h>
-#include <linux/mm.h>
-#include <linux/shm.h>
+#include <linux/module.h>
 #include <linux/init.h>
-#include <linux/smp_lock.h>
-#include <linux/vmalloc.h>
-#include <linux/slab.h>
 #include <linux/highuid.h>
 
-#if defined(CONFIG_SYSVIPC)
+MODULE_LICENSE("GPL");
 
 #include "util.h"
 
 /**
- *	ipc_init	-	initialise IPC subsystem
+ *	ipc_alloc	-	allocate ipc space
+ *	@size: size desired
  *
- *	The various system5 IPC resources (semaphores, messages and shared
- *	memory are initialised
+ *	Allocate memory from the appropriate pools and return a pointer to it.
+ *	NULL is returned if the allocation fails
  */
  
-void __init ipc_init (void)
+void* ipc_alloc(int size)
 {
-	sem_init();
-	msg_init();
-	shm_init();
-	return;
+	void* out;
+	if(size > PAGE_SIZE)
+		out = vmalloc(size);
+	else
+		out = kmalloc(size, GFP_KERNEL);
+	return out;
+}
+
+/**
+ *	ipc_free	-	free ipc space
+ *	@ptr: pointer returned by ipc_alloc
+ *	@size: size of block
+ *
+ *	Free a block created with ipc_alloc. The caller must know the size
+ *	used in the allocation call.
+ */
+ 
+void ipc_free(void* ptr, int size)
+{
+	if(size > PAGE_SIZE)
+		vfree(ptr);
+	else
+		kfree(ptr);
 }
 
 /**
@@ -209,41 +219,6 @@ struct kern_ipc_perm* ipc_rmid(struct ipc_ids* ids, int id)
 }
 
 /**
- *	ipc_alloc	-	allocate ipc space
- *	@size: size desired
- *
- *	Allocate memory from the appropriate pools and return a pointer to it.
- *	NULL is returned if the allocation fails
- */
- 
-void* ipc_alloc(int size)
-{
-	void* out;
-	if(size > PAGE_SIZE)
-		out = vmalloc(size);
-	else
-		out = kmalloc(size, GFP_KERNEL);
-	return out;
-}
-
-/**
- *	ipc_free	-	free ipc space
- *	@ptr: pointer returned by ipc_alloc
- *	@size: size of block
- *
- *	Free a block created with ipc_alloc. The caller must know the size
- *	used in the allocation call.
- */
- 
-void ipc_free(void* ptr, int size)
-{
-	if(size > PAGE_SIZE)
-		vfree(ptr);
-	else
-		kfree(ptr);
-}
-
-/**
  *	ipcperms	-	check IPC permissions
  *	@ipcp: IPC permission set
  *	@flag: desired permission set.
@@ -308,10 +283,10 @@ void kernel_to_ipc64_perm (struct kern_ipc_perm *in, struct ipc64_perm *out)
 void ipc64_perm_to_ipc_perm (struct ipc64_perm *in, struct ipc_perm *out)
 {
 	out->key	= in->key;
-	out->uid	= NEW_TO_OLD_UID(in->uid);
-	out->gid	= NEW_TO_OLD_GID(in->gid);
-	out->cuid	= NEW_TO_OLD_UID(in->cuid);
-	out->cgid	= NEW_TO_OLD_GID(in->cgid);
+	out->uid	= in->uid;
+	out->gid	= in->gid;
+	out->cuid	= in->cuid;
+	out->cgid	= in->cgid;
 	out->mode	= in->mode;
 	out->seq	= in->seq;
 }
@@ -319,19 +294,19 @@ void ipc64_perm_to_ipc_perm (struct ipc64_perm *in, struct ipc_perm *out)
 #if !defined(__ia64__) && !defined(__hppa__)
 
 /**
- *	ipc_parse_version	-	IPC call version
- *	@cmd: pointer to command
+ *      ipc_parse_version       -       IPC call version
+ *      @cmd: pointer to command
  *
- *	Return IPC_64 for new style IPC and IPC_OLD for old style IPC. 
- *	The cmd value is turned from an encoding command and version into
- *	just the command code.
+ *      Return IPC_64 for new style IPC and IPC_OLD for old style IPC.
+ *      The cmd value is turned from an encoding command and version into
+ *      just the command code.
  */
- 
+
 int ipc_parse_version (int *cmd)
 {
 #ifdef __x86_64__
 	if (!(current->thread.flags & THREAD_IA32))
-		return IPC_64; 
+		return IPC_64;
 #endif
 	if (*cmd & IPC_64) {
 		*cmd ^= IPC_64;
@@ -343,102 +318,32 @@ int ipc_parse_version (int *cmd)
 
 #endif /* __ia64__ */
 
-#else
-/*
- * Dummy functions when SYSV IPC isn't configured
- */
-
-void sem_exit (void)
-{
-    return;
-}
-
-asmlinkage long sys_semget (key_t key, int nsems, int semflg)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_semop (int semid, struct sembuf *sops, unsigned nsops)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_semtimedop(int semid, struct sembuf *sops, unsigned nsops,
-			       const struct timespec *timeout)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_semctl (int semid, int semnum, int cmd, union semun arg)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_msgget (key_t key, int msgflg)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_msgsnd (int msqid, struct msgbuf *msgp, size_t msgsz, int msgflg)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_msgrcv (int msqid, struct msgbuf *msgp, size_t msgsz, long msgtyp,
-		       int msgflg)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_msgctl (int msqid, int cmd, struct msqid_ds *buf)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_shmget (key_t key, size_t size, int shmflag)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *addr)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_shmdt (char *shmaddr)
-{
-	return -ENOSYS;
-}
-
-asmlinkage long sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
-{
-	return -ENOSYS;
-}
-
-#endif /* CONFIG_SYSVIPC */
-
 static struct rt_fun_entry rtai_sysvmsg_fun[] = {
-	[SYSV_MSGGET]	= { 1, rt_msgget},
-	[SYSV_MSGCTL]	= { 1, rt_msgctl},
-	[SYSV_MSGSND]	= { 1, rt_msgsnd_ },
-	[SYSV_MSGRCV] 	= { 1, rt_msgrcv_ }
+	[SYSV_MSGGET] = { 1, rt_msgget  },
+	[SYSV_MSGCTL] = { 1, rt_msgctl  },
+	[SYSV_MSGSND] = { 1, rt_msgsnd_ },
+	[SYSV_MSGRCV] = { 1, rt_msgrcv_ }
 };
 
 /* init module */
-int init_module(void)
+int init_rtai_sysvmsg(void)
 {
 	if (set_rt_fun_ext_index(rtai_sysvmsg_fun, SYSV_MSG_IDX)) {
 		rt_printk("%d is a wrong index module for lxrt.\n", SYSV_MSG_IDX);
 		return -EACCES;
 	}			
-        ipc_init();
-	printk("%s: loaded.\n",MODULE_NAME);
-	return(0);
+	msg_init();
+	printk("%s: loaded.\n", MODULE_NAME);
+	return 0;
 }
 
 /*  cleanup module */
-void cleanup_module(void)
+void cleanup_rtai_sysvmsg(void)
 {
+	msg_exit();
 	reset_rt_fun_ext_index(rtai_sysvmsg_fun, SYSV_MSG_IDX);
 	printk("%s: unloaded.\n", MODULE_NAME);
 }
+
+module_init(init_rtai_sysvmsg);
+module_exit(cleanup_rtai_sysvmsg);

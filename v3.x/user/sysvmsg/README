@@ -1,12 +1,19 @@
-                     *** RTAI UNIX SYSV IPC MESSAGES ***
+                 *** RTAI UNIX SYSV IPC MESSAGES ***
 
 This is an interesting exercise showing how simple it could be to adapt a 
 piece of Linux code to RTAI.
+
+REMARK: statement in the first release:
 By diffing the files found here with their Linux twins, found in its "ipc" 
 subdirectory, it is possible to see that, by appropriately #defining a few 
-interfaces, code reuse is almost total. It includes even the msg specific
-proc file, its Linux name has been changed to: "/proc/rtai/sysvmsg" to avoid 
-clashing against the original one.
+interfaces, code reuse is almost total. 
+What above relates to linux-2.4.xx. Since here we keep that same msg.c but
+can use it with Linux-2.6.xx you must not take what jut said literally, 
+even if it remains fairly close.
+End of REMARK.
+
+It includes even the msg specific proc file, its Linux name has been changed 
+to: "/proc/rtai/sysvmsg" to avoid clashing against the original one.
 In fact there are a few unrequested changes due to my preference for a
 different calling structure for "msgsnd" and "msgrcv". I hate the idea of 
 defining a structure for the msg type and its content. Just setting it up 
@@ -18,7 +25,7 @@ From the technical point of view the most important changes are related to:
 - the use of real time spinlocks with irq protection, because in hard real 
   time mode we can preempt, thus breaking the "just one process in kernel 
   space" axiom;
-- the use of either rt_task_suspend/resume or rt_receive_until/rt_send to 
+- the use of either rt_task_suspend/resume or rt_receive/rt_send to 
   easily substitute Linux schedule/wake_up_process;
 - last, but more subtle, avoiding immediate rescheduling when using 
   rt_task_resume/rt_send in place of Linux wake_up_process, as it will lead 
@@ -38,11 +45,12 @@ specific application.
 
 No need to explain the implemented msg functions. Simply use the standard
 "man" command coming with any Linux/GPL. The changes to the call parameters
-in rt_msgsnd and rt_msgrcv_ can be easily inferred by lokking at i
+in rt_msgsnd and rt_msgrcv_ can be easily inferred by looking at
 rtai_sysvmsg.h.
 
 Not checked yet is the standard RTAI symmetric usage of SYSV msg in kernel and
-user space, but it should work as it is already (likely daring too much? :-).
+user space, but it should work once care is taken to parametrise for the use
+of appropriates mem copying functions, like in RTAI mailboxes.
 
 There is a simple test to verify it works nicely. It is parametrizable, both 
 in term of tasks msg size and looping speed. The related self explaining 
