@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_posix.h>
 
 MODULE_LICENSE("GPL");
-EXPORT_NO_SYMBOLS;
 
 #define TICK 1000000
 

@@ -10,7 +10,9 @@ cd -
 sync
 echo "Now start the realtime process <enter>."
 read junk
-insmod ./jepplin.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./jepplin_rt.ko;
+else insmod ./jepplin_rt.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

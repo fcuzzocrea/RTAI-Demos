@@ -1,3 +1,5 @@
-rmmod condtest
-rmmod rwlocks
+rmmod condtest_rt
+rmmod jepplin_rt
+rmmod mqtest_rt
+rmmod rwlocks_rt
 ../remod
