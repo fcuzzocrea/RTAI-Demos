@@ -36,7 +36,7 @@ static void endme (int dummy) { end = 1; }
 
 int main(int argc,char *argv[])
 {
-	int fd1;
+	int fd0, fd1;
 	char nm[RTF_NAMELEN+1];
         struct pollfd pollkb;
 	struct sample { long min, max, avrg, jitters[2]; } samp;
@@ -44,6 +44,11 @@ int main(int argc,char *argv[])
 	pollkb.fd = 0;
 	pollkb.events = POLLIN;
 	if ((fd1 = open(rtf_getfifobyminor(1,nm,sizeof(nm)), O_RDONLY)) < 0) {
+		fprintf(stderr, "Error opening %s\n",nm);
+		exit(1);
+	}
+
+	if ((fd0 = open(rtf_getfifobyminor(0,nm,sizeof(nm)), O_RDONLY)) < 0) {
 		fprintf(stderr, "Error opening %s\n",nm);
 		exit(1);
 	}
@@ -59,6 +64,6 @@ int main(int argc,char *argv[])
 			break;
                 }
         }
-	rtf_sem_post(fd1);
+	rtf_sem_post(fd0);
 	return 0;
 }

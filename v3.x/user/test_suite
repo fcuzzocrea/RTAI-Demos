@@ -10,6 +10,8 @@ cd ../i386
 ./test_suite
 cd ../intertaskmsg
 ./run
+cd ../latency
+./run
 cd ../linux_server
 ./run
 cd ../msg_clock
@@ -19,6 +21,8 @@ cd ../master_slave
 cd ../netrpc
 ./test_suite
 cd ../pqueue
+./run
+cd ../preempt
 ./run
 cd ../rt_agent
 ./run

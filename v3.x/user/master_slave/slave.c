@@ -58,10 +58,11 @@ int main(int argc, char* argv[])
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
- 	if (!(btsk = rt_task_init(nam2num("BTSK"), 0, 0, 0))) {
+ 	if (!(btsk = rt_task_init_schmod(nam2num("BTSK"), 0, 0, 0, SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT BUDDY TASK\n");
 		exit(1);
 	}
+//	rt_make_hard_real_time();
 	printf("BUDDY TASK: name = %lx, address = %p.\n", btsk_name, btsk);
 	rt_sleep(nano2count(1000000000));
 
@@ -72,6 +73,7 @@ int main(int argc, char* argv[])
 
 	printf("BUDDY TASK RESUMES MASTER TASK\n");
 	rt_task_resume(mtsk);
+	printf("BUDDY TASK RESUMED MASTER TASK\n");
 
 	printf("BUDDY TASK SLEEP/LOOPS POLLING FOR SEM CREATED BY MASTER TASK\n");
  	while (!(sem = rt_get_adr(sem_name))) {

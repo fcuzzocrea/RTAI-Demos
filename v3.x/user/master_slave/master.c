@@ -28,11 +28,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
 
-#define PERIODIC_LOOPS 100
+#define PERIODIC_LOOPS 1000
 
-#define SLEEP_LOOPS 100
+#define SLEEP_LOOPS 1000
 
 #define MBX_LOOPS 3000
+
+#define PERIOD 50000
 
 #define DELAY 50000
 
@@ -67,18 +69,22 @@ int main(int argc, char* argv[])
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
- 	if (!(mtsk = rt_task_init(mtsk_name, 0, 0, 0))) {
+ 	if (!(mtsk = rt_task_init_schmod(mtsk_name, 0, 0, 0, SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
 	}
+//	rt_make_hard_real_time();
 	printf("MASTER TASK INIT: name = %lx, address = %p.\n", mtsk_name, mtsk);
 
 	printf("MASTER TASK STARTS THE ONESHOT TIMER\n");
 	rt_set_oneshot_mode();
 	start_rt_timer(nano2count(10000000));
+	rt_make_hard_real_time();
+	rt_sleep(1000000);
+
 
 	printf("MASTER TASK MAKES ITSELF PERIODIC WITH A PERIOD OF 1 ms\n");
-	rt_task_make_periodic(mtsk, rt_get_time(), nano2count(1000000)); 
+	rt_task_make_periodic(mtsk, rt_get_time(), nano2count(PERIOD)); 
 	rt_sleep(nano2count(1000000000));
 
 	count = PERIODIC_LOOPS;
@@ -105,6 +111,7 @@ int main(int argc, char* argv[])
 
 	printf("MASTER TASK SUSPENDS ITSELF, TO BE RESUMED BY BUDDY TASK\n");
 	rt_task_suspend(mtsk);
+	printf("MASTER TASK RESUMED BY BUDDY TASK\n");
 
  	if (!(sem = rt_sem_init(sem_name, 0))) {
 		printf("CANNOT CREATE SEMAPHORE %lx\n", sem_name);

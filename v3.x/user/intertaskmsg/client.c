@@ -6,6 +6,8 @@
 #include <sched.h>
 #include <rtai_msg.h>
 
+#define PRINTF printf //rt_printk
+
 int main(int argc, char* argv[])
 {
 	unsigned long clt_name = nam2num("CLT");
@@ -22,67 +24,67 @@ int main(int argc, char* argv[])
 		exit(1);
  	}       
 
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
 	// Give a lower priority than SRV and proxy.	
  	if (!(clt = rt_task_init(clt_name, 1, 0, 0))) {
-		printf("CANNOT INIT CLIENT TASK\n");
+		PRINTF("CANNOT INIT CLIENT TASK\n");
 		exit(3);
 	}
+	mlockall(MCL_CURRENT | MCL_FUTURE);
+//	rt_make_hard_real_time();
 
 	if ((my_pid = rt_Alias_attach("CLIENT")) <= 0) {
-		printf("Cannot attach name CLT\n");
+		PRINTF("Cannot attach name CLT\n");
 		exit(4);
 	}
 
 	rt_sleep(nano2count(1000000000));
 
-	printf("CLT starts (task = %p, pid = %d)\n", clt, my_pid);
+	PRINTF("CLT starts (task = %p, pid = %d)\n", clt, my_pid);
 
  	if ((pid = rt_Name_locate("", "SRV")) <= 0) {
-		printf("Cannot locate SRV\n");
+		PRINTF("Cannot locate SRV\n");
 		exit(5);
 	}
 
 	len = rt_Send(pid, 0, &proxy, 0, sizeof(proxy));
 	if (len == sizeof(proxy)) {
-		printf("CLT got the proxy %04X\n", proxy);
-		count = 4;
+		PRINTF("CLT got the proxy %04X\n", proxy);
+		count = 10;
 		while (count--) {
 			err = rt_Trigger(proxy);
 			if (err!=pid) {
-				printf("Failed to send the proxy\n");
+				PRINTF("Failed to send the proxy\n");
 			}
 		}
 	} else {
-		printf("Failed to receive the proxy pid\n");
+		PRINTF("Failed to receive the proxy pid\n");
 	}
 
-	count = 4;
+	count = 10;
 	while (count--) {
-  		printf("CLT sends to SRV\n" );
+  		PRINTF("CLT sends to SRV\n" );
 		strcpy(msg, "Hello Beautifull Linux World");
 		memset(rep, 0, sizeof(rep));
 		len = rt_Send( pid, msg, rep, sizeof(msg), sizeof(rep));
 		if (len < 0) {
-			printf("CLT: rt_Send() failed\n");
+			PRINTF("CLT: rt_Send() failed\n");
 			break;
 		}
-		printf("CLT: reply from SRV [%s] %d\n", rep, len);
+		PRINTF("CLT: reply from SRV [%s] %d\n", rep, len);
 		if (count) {
 			rt_sleep(nano2count(1000000000));
 		}
 	}
 
 	if (rt_Name_detach(my_pid)) {
-		printf("CLT cannot detach name\n");
+		PRINTF("CLT cannot detach name\n");
 	}
 
 	while (rt_get_adr(nam2num("SRV"))) {
 		rt_sleep(nano2count(1000000));
 	}
 	if (rt_task_delete(clt)) {
-		printf("CLT cannot delete task\n");
+		PRINTF("CLT cannot delete task\n");
 	}
 
 	stop_rt_timer();

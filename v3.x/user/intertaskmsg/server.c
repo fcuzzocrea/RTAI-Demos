@@ -16,6 +16,8 @@
 #include <ctype.h>
 #include <rtai_msg.h>
 
+#define PRINTF printf //rt_printk
+
 static char msg[512], rep[512];
 
 int main(int argc, char* argv[])
@@ -27,56 +29,55 @@ int main(int argc, char* argv[])
 	RTIME period;
 	char *pt;
 	
-	mlockall(MCL_CURRENT | MCL_FUTURE);
 
  	if (!(srv = rt_task_init(srv_name, 0, 0, 0))) {
-		printf("CANNOT INIT SRV TASK\n");
+		PRINTF("CANNOT INIT SRV TASK\n");
 		exit(-1);
 	}
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	my_pid = rt_Alias_attach("");
 	if (my_pid <= 0) {
-		printf("Cannot attach name SRV\n");
+		PRINTF("Cannot attach name SRV\n");
 		exit(-1);
 	}
 
+//	rt_set_oneshot_mode();
 	period = nano2count(1000000);
-	rt_set_oneshot_mode();
 	start_rt_timer(period);
-
-	printf("SRV starts (task = %p, pid = %d)\n", srv, my_pid);
-
 	rt_make_hard_real_time();
-	
+	PRINTF("SRV starts (task = %p, pid = %d)\n", srv, my_pid);
+
 	rt_task_make_periodic(srv, rt_get_time(), period);
 
   	proxy = rt_Proxy_attach(0, "More beer please", 17, -1);
 	if (proxy <= 0 ) {
-		printf("Failed to attach proxy\n");
+		PRINTF("Failed to attach proxy\n");
 		exit(-1);
 	}
 
+	
 	pid = rt_Receive(0, 0, 0, &msglen);
 	if (pid) {
 		// handshake to give the proxy to CLT
-		printf("rt_Reply the proxy %04X msglen = %d\n", proxy, msglen);
+		PRINTF("rt_Reply the proxy %04X msglen = %d\n", proxy, msglen);
 		rt_Reply(pid, &proxy, sizeof(proxy));
 	}
 
 	rt_sleep(nano2count(1000000000));
-	count = 8 ;
+	count = 20;
 	while(count--) {
 		memset( msg, 0, sizeof(msg));
 		pid = rt_Receive(0, msg, sizeof(msg), &msglen);
 		if(pid == proxy) {
-			printf("SRV receives the PROXY event [%s]\n", msg);
+			PRINTF("SRV receives the PROXY event [%s]\n", msg);
 			continue;
 		} else if (pid <= 0) {
-			printf("SRV rt_Receive() failed\n");
+			PRINTF("SRV rt_Receive() failed\n");
 			continue;
 		}
 		
-		printf("SRV received msg    [%s] %d bytes from pid %04X\n", msg, msglen, pid);
+		PRINTF("SRV received msg    [%s] %d bytes from pid %04X\n", msg, msglen, pid);
 
 		memcpy (rep, msg, sizeof(rep));
 		pt = (char *) rep;
@@ -85,20 +86,20 @@ int main(int argc, char* argv[])
 			pt++;
 		}
 		if (rt_Reply(pid, rep, sizeof(rep))) {
-			printf("SRV rt_Reply() failed\n");
+			PRINTF("SRV rt_Reply() failed\n");
 		}
 	}
 
 	if (rt_Proxy_detach(proxy)) {
-		printf("SRV cannot detach proxy\n");
+		PRINTF("SRV cannot detach proxy\n");
 	}
 	if (rt_Name_detach(my_pid)) {
-		printf("SRV cannot detach name\n");
+		PRINTF("SRV cannot detach name\n");
 	}
 	rt_make_soft_real_time();
 	rt_sleep(nano2count(1000000000));
 	if (rt_task_delete(srv)) {
-		printf("SRV cannot delete task\n");
+		PRINTF("SRV cannot delete task\n");
 	}
 	return 0;
 }
