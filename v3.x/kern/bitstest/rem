@@ -1,2 +1,2 @@
-rmmod bitstest
+rmmod bits_rt
 ../remod

@@ -9,7 +9,9 @@ echo
 echo "Now start the realtime process <enter> and wait for its end."
 read junk
 sync
-insmod ./condtest.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./cond_rt.ko;
+else insmod ./cond_rt.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

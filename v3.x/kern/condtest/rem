@@ -1,2 +1,2 @@
-rmmod condtest
+rmmod cond_rt
 ../remod

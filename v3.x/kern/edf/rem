@@ -1,2 +1,2 @@
-rmmod edf
+rmmod edf_rt
 ../remod

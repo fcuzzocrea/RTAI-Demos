@@ -10,7 +10,9 @@ echo "Now start the realtime the fifo based fast ticking <enter>,"
 echo "<ctrl-C> to end it:>"
 read junk
 sync
-insmod ./fastick1.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./fastick1_rt.ko;
+else insmod ./fastick1_rt.o; fi
 ./display
 sync
 rmmod fastick1
@@ -19,7 +21,9 @@ echo "Now start the realtime the sysreq based fast ticking <enter>,"
 echo "<ctrl-C> to end it:>"
 read junk
 sync
-insmod ./fastick2.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./fastick2_rt.ko;
+else insmod ./fastick2_rt.o; fi
 ./display
 sync
 rmmod fastick2
