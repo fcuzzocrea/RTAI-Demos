@@ -30,19 +30,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_lxrt.h>
 #include <rtai_sem.h>
 #include <rtai_tasklets.h>
-#include <rtai_usi.h>
 
 #define TIMER_IRQ 0
 
 static struct rt_tasklet_struct *tasklet;
 static SEM *dspsem;
-static volatile int intcnt;
-static int ovr, retval;
+static volatile int ovr, intcnt;
 
 static void timer_handler(unsigned long data)
 {
-	hard_sti();
-	while ((ovr = rt_expand_handler_data(data, &retval))) {
+	while ((ovr = rt_irq_wait_if(TIMER_IRQ)) > 0) {
 		/* overrun processing, if any, goes here */
 		rt_sem_signal(dspsem);
 		return;
@@ -70,15 +67,15 @@ int main(void)
 	}
 	tasklet = rt_init_tasklet();
 	rt_insert_tasklet(tasklet, 0, timer_handler, 111, nam2num("TSKLET"), 1);
-	rt_request_global_irq(TIMER_IRQ, tasklet, USI_TASKLET);
+	rt_request_irq_task(TIMER_IRQ, tasklet, RT_IRQ_TASKLET, 1);
         mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	while (intcnt < maxcnt) {
 		rt_sem_wait(dspsem);
-		printf("RETVAL %d, OVERRUNS %d, INTERRUPT COUNT %d\n", retval, ovr, intcnt);
+		printf("OVERRUNS %d, INTERRUPT COUNT %d\n", ovr, intcnt);
 	}
 	printf("TEST ENDS\n");
-        rt_free_global_irq(TIMER_IRQ);
+        rt_release_irq_task(TIMER_IRQ);
 	rt_remove_tasklet(tasklet);
 	rt_delete_tasklet(tasklet);
 	rt_task_delete(maint);
