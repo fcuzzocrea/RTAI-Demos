@@ -22,9 +22,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <sys/user.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <sched.h>
 #include <ctype.h>
 
@@ -54,21 +54,12 @@ void *ClockChrono_Read(void *args)
 	char ch;
 	int run = 0;
 
-	struct sched_param mysched;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		printf("ERROR IN SETTING THE POSIX SCHEDULER\n");
-		exit(1);
- 	}       
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
- 	if (!(mytask = rt_task_init(nam2num("READ"), 1, 0, 0))) {
+ 	if (!(mytask = rt_thread_init(nam2num("READ"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT TASK ClockChronoRead\n");
 		exit(1);
 	}
 	printf("INIT TASK ClockChronoRead %p.\n", mytask);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	while(1) {
 		rt_mbx_receive(Keyboard, &ch, 1);
@@ -117,21 +108,12 @@ void *ClockChrono_Clock(void *args)
 	char command;
 	BOOLEAN display;
 
-	struct sched_param mysched;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		printf("ERROR IN SETTING THE POSIX SCHEDULER\n");
-		exit(1);
- 	}       
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
- 	if (!(mytask = rt_task_init(nam2num("CLOCK"), 1, 0, 0))) {
+ 	if (!(mytask = rt_thread_init(nam2num("CLOCK"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT TASK ClockChronoClock\n");
 		exit(1);
 	}
 	printf("INIT TASK ClockChronoClock %p.\n", mytask);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	rt_make_hard_real_time();
 	rt_sem_wait(sync_sem);
@@ -188,21 +170,12 @@ void *ClockChrono_Chrono(void *args)
 	BOOLEAN hundredthes = FALSE;
 	char command;
 
-	struct sched_param mysched;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		printf("ERROR IN SETTING THE POSIX SCHEDULER\n");
-		exit(1);
- 	}       
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
- 	if (!(mytask = rt_task_init(nam2num("CHRONO"), 1, 0, 0))) {
+ 	if (!(mytask = rt_thread_init(nam2num("CHRONO"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT TASK ClockChronoChrono\n");
 		exit(1);
 	}
 	printf("INIT TASK ClockChronoChrono %p.\n", mytask);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	rt_make_hard_real_time();
 	rt_sem_wait(sync_sem);
@@ -261,21 +234,12 @@ void *ClockChrono_Write(void *args)
 	// char buf[25] = "00:00:00   00:00:00:00";
 	// int i;
 
-	struct sched_param mysched;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		printf("ERROR IN SETTING THE POSIX SCHEDULER\n");
-		exit(1);
- 	}       
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
- 	if (!(mytask = rt_task_init(nam2num("WRITE"), 1, 0, 0))) {
+ 	if (!(mytask = rt_thread_init(nam2num("WRITE"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT TASK ClockChronoWrite\n");
 		exit(1);
 	}
 	printf("INIT TASK ClockChronoWrite %p.\n", mytask);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	while(1) {
 		Display_Get(&chain, &receiver);
@@ -292,10 +256,10 @@ end:
 	return 0;
 }
 
-static pthread_t Read;
-static pthread_t Clock;
-static pthread_t Chrono;
-static pthread_t Write;
+static int Read;
+static int Clock;
+static int Chrono;
+static int Write;
 
 int main(int argc, char* argv[])
 {
@@ -326,22 +290,22 @@ int main(int argc, char* argv[])
 	OneUnit = nano2count(ONE_UNIT);
 	start_rt_timer((int)nano2count(TICK_PERIOD));
 
-	if (pthread_create(&Read, NULL, ClockChrono_Read, NULL)) { 
+	if ((Read = rt_thread_create(ClockChrono_Read, NULL, 10000)) < 0) { 
 		printf("ERROR IN CREATING ClockChrono_Read\n");
 		exit(1);
  	}       
 
-	if (pthread_create(&Chrono, NULL, ClockChrono_Chrono, NULL)) { 
+	if ((Chrono = rt_thread_create(ClockChrono_Chrono, NULL, 10000)) < 0) { 
 		printf("ERROR IN CREATING ClockChrono_Chrono\n");
 		exit(1);
  	}       
 
-	if (pthread_create(&Clock, NULL, ClockChrono_Clock, NULL)) { 
+	if ((Clock = rt_thread_create(ClockChrono_Clock, NULL, 10000)) < 0) { 
 		printf("ERROR IN CREATING ClockChrono_Clock\n");
 		exit(1);
  	}       
 
-	if (pthread_create(&Write, NULL, ClockChrono_Write, NULL)) {
+	if ((Write = rt_thread_create(ClockChrono_Write, NULL, 10000)) < 0) {
 		printf("ERROR IN CREATING ClockChrono_Write\n");
 		exit(1);
  	}       
@@ -367,10 +331,10 @@ int main(int argc, char* argv[])
 	rt_mbx_delete(Screen);
 	rt_task_delete(mytask);
 	printf("\nEND MASTER TASK %p.\n", mytask);
-	pthread_join(Chrono, NULL);
-	pthread_join(Clock, NULL);
-	pthread_join(Read, NULL);
-	pthread_join(Write, NULL);
+	waitpid(Chrono, 0, 0);
+	waitpid(Clock, 0, 0);
+	waitpid(Read, 0, 0);
+	waitpid(Write, 0, 0);
 
 	return 0;
 }
