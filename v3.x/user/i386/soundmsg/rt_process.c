@@ -21,8 +21,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <sys/io.h>
 
@@ -55,8 +55,8 @@ static void *speaker_handler(void *args)
 	char temp;
 	unsigned int i, len;
 
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	ioperm(PORT_ADR, 1, 1);
+//	ioperm(PORT_ADR, 1, 1);
+	iopl(3);
 
  	if (!(mytask = rt_task_init_schmod(nam2num("SOUND"), 1, 0, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT SOUND TASK\n");
@@ -101,7 +101,6 @@ static void *speaker_handler(void *args)
 	return 0;
 }
 
-static pthread_t thread, ethread;
 
 static volatile int end;
 
@@ -114,11 +113,11 @@ static void *endme(void *args)
 
 int main(void)
 {
-	unsigned int i, player, msg;
+	unsigned int i, player, msg, thread, ethread;
 	RT_TASK *mytask;
 	char data[BUFSIZE];
 
-        pthread_create(&ethread, NULL, endme, NULL);
+	ethread = rt_thread_create(endme, NULL, 5000);
 	if ((player = open("../../linux.au", O_RDONLY)) < 0) {
 		printf("ERROR OPENING SOUND FILE (linux.au)\n");
 		exit(1);
@@ -132,7 +131,7 @@ int main(void)
 
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
-	pthread_create(&thread, NULL, speaker_handler, NULL);
+	thread = rt_thread_create(speaker_handler, NULL, 10000);
 	rt_receivex(0, data, 1, &i);
 
 	while (!end) {
@@ -147,7 +146,7 @@ int main(void)
 
         msg = 0xFFFFFFFF;
         rt_rpcx(rt_get_adr(nam2num("SOUND")), &msg, &msg, sizeof(int), 1);
-        pthread_join(thread, NULL);
+	waitpid(thread, 0, 0);
 	rt_task_delete(mytask);
 	stop_rt_timer();
 	close(player);

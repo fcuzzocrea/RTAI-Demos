@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/io.h>
-#include <sys/wait.h>
 #include <math.h>
 
 #include <rtai_mbx.h>
@@ -146,6 +145,6 @@ int main(void)
 	stop_rt_timer();
 	close(player);
 	printf("\nEND MASTER TASK %p\n", mytask);
-        waitpid(thread, 0, 0);
+	rt_thread_join(thread);
 	return 0;
 }

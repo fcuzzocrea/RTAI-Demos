@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
 
 #include <rtai_lxrt.h>
 #include <rtai_sem.h>
@@ -87,7 +86,7 @@ static void *timer_handler(void *args)
 int main(void)
 {
         RT_TASK *maint;
-	int maxcnt, pid;
+	int maxcnt, thread;
 
 	printf("GIVE THE NUMBER OF INTERRUPTS YOU WANT TO COUNT: ");
 	scanf("%d", &maxcnt);
@@ -99,13 +98,13 @@ int main(void)
 		printf("CANNOT INIT SEMAPHORE > DSPSEM <\n");
 		exit(1);
 	}
-	pid = rt_thread_create(timer_handler, NULL, 10000);
+	thread = rt_thread_create(timer_handler, NULL, 10000);
 	while (intcnt < maxcnt) {
 		rt_sem_wait(dspsem);
 		printf("OVERRUNS %d, INTERRUPT COUNT %d\n", ovr, intcnt);
 	}
 	rt_release_irq_task(TIMER_IRQ);
-        waitpid(pid, 0, 0);
+        rt_thread_join(thread);
 	rt_task_delete(maint);
 	rt_sem_delete(dspsem);
 	printf("TEST ENDS\n");

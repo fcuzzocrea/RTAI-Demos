@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 #include <sys/io.h>
 
@@ -140,6 +139,6 @@ int main(void)
 	close(cntrfifo);
 	close(player);
 	printf("\nEND MASTER TASK\n");
-	waitpid(thread, 0, 0);
+	rt_thread_join(thread);
 	return 0;
 }

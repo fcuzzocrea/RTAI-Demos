@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <unistd.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -188,7 +187,7 @@ int main(int argc, char *argv[])
         }
         init_module();
         for (i = 0; i < NUM_TASKS; i++) {
-		waitpid(thread[i], 0, 0);
+		rt_thread_join(thread[i]);
         }
 	while ((srvport = rt_request_port(comnode)) <= 0) {
 		msleep(100);

@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -133,7 +132,7 @@ if (SERVER) {
 	}
 
 	rt_make_soft_real_time();
-        waitpid(athread, 0, 0);
+        rt_thread_join(athread);
 	rt_receive(0, &i);
 	rt_release_port(sndnode, sndport);
 	stop_rt_timer();

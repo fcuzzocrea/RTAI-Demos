@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <sys/wait.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -205,7 +204,7 @@ int main(int argc, char *argv[])
                 tasknode = addr.sin_addr.s_addr;
         }
 	init_module();
-	waitpid(thread, 0, 0);
+	rt_thread_join(thread);
         while ((srvport = rt_request_port(comnode)) <= 0) {
                 msleep(100);
         }
