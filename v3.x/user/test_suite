@@ -1,0 +1,33 @@
+cd bitstest
+./run
+cd ../forcesoft
+./run
+cd ../forked
+./run
+cd ../hardsoftsw
+./run
+cd ../i386
+./test_suite
+cd ../intertaskmsg
+./run
+cd ../linux_server
+./run
+cd ../msg_clock
+./run
+cd ../master_slave
+./run
+cd ../netrpc
+./test_suite
+cd ../pqueue
+./run
+cd ../rt_agent
+./run
+cd ../sem_clock
+./run
+cd ../tasklets
+./test_suite
+cd ../tbx
+./run
+cd ../threaded
+./run
+cd ../

@@ -1,0 +1,58 @@
+                     *** RTAI UNIX SYSV IPC MESSAGES ***
+
+This is an interesting exercise showing how simple it could be to adapt a 
+piece of Linux code to RTAI.
+By diffing the files found here with their Linux twins, found in its "ipc" 
+subdirectory, it is possible to see that, by appropriately #defining a few 
+interfaces, code reuse is almost total. It includes even the msg specific
+proc file, its Linux name has been changed to: "/proc/rtai/sysvmsg" to avoid 
+clashing against the original one.
+In fact there are a few unrequested changes due to my preference for a
+different calling structure for "msgsnd" and "msgrcv". I hate the idea of 
+defining a structure for the msg type and its content. Just setting it up 
+will take more than pushing one arg more into the call list.
+
+From the technical point of view the most important changes are related to:
+- getting rid of modifications of the process state, RTAI does it all both
+  for soft and hard real time modes already;
+- the use of real time spinlocks with irq protection, because in hard real 
+  time mode we can preempt, thus breaking the "just one process in kernel 
+  space" axiom;
+- the use of either rt_task_suspend/resume or rt_receive_until/rt_send to 
+  easily substitute Linux schedule/wake_up_process;
+- last, but more subtle, avoiding immediate rescheduling when using 
+  rt_task_resume/rt_send in place of Linux wake_up_process, as it will lead 
+  to a deadlock on a held spinlocks. That is not a problem for Linux, since 
+  its wake_up_process simply readies a process, the real scheduling occuring 
+  just at return from kernel space. Thus Linux can hold a spinlock till it 
+  leaves the kernel. Instead RTAI schedules a readied task immediately, so 
+  it will clash with any held spinlock. The solution, comes trivial: use
+  RTAI rt_sched_lock/unlock in a few appropriate places. 
+- a further example on how to extend LXRT usage to a user own specific 
+  application, without touching any part of the RTAI code.
+
+Like to remark that even if SYSV IPC messages are not the leanest communication
+tool to be used in real time they can, despite some clumsiness, be of help in 
+many cases that could turn their options into a manageable policy for a 
+specific application.
+
+No need to explain the implemented msg functions. Simply use the standard
+"man" command coming with any Linux/GPL. The changes to the call parameters
+in rt_msgsnd and rt_msgrcv_ can be easily inferred by lokking at i
+rtai_sysvmsg.h.
+
+Not checked yet is the standard RTAI symmetric usage of SYSV msg in kernel and
+user space, but it should work as it is already (likely daring too much? :-).
+
+There is a simple test to verify it works nicely. It is parametrizable, both 
+in term of tasks msg size and looping speed. The related self explaining 
+parameter macros are in testmsg.c. It can be a good viable stress test also 
+for checking RTAI in user space. To use it:
+
+make clean
+make
+./run
+
+then read the prompt.
+
+Paolo Mantegazza.

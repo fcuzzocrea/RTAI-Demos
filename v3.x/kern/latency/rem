@@ -1,0 +1,2 @@
+rmmod latency_rt
+../remod

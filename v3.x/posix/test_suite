@@ -1,0 +1,5 @@
+cd user
+./test_suite
+cd ../kern
+./test_suite
+cd -

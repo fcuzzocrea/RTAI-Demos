@@ -1,0 +1,43 @@
+#!/bin/sh
+
+prefix=`rtai-config --prefix`
+arch=`rtai-config --arch`
+insmod=/sbin/insmod
+
+if [ "$prefix" == "" ]; then 
+echo "ERROR: please set your PATH variable to <rtai-install>/bin"
+exit
+fi
+
+MODULES=$prefix/modules
+
+#sync paranoia might be useful
+
+sync
+$insmod $MODULES/rtai_hal.o
+sync
+if [ "$arch" = "i386" ]; then
+$insmod $MODULES/rtai_lxrt.o
+#$insmod $MODULES/rtai_up.o
+#$insmod $MODULES/rtai_smp.o
+#$insmod $MODULES/rtai_mup.o
+else
+$insmod $MODULES/rtai_up.o
+fi
+sync
+$insmod $MODULES/rtai_sem.o
+sync
+$insmod $MODULES/rtai_mbx.o
+sync
+$insmod $MODULES/rtai_msg.o
+sync
+$insmod $MODULES/rtai_fifos.o
+sync
+$insmod $MODULES/rtai_tbx.o
+sync
+$insmod $MODULES/rtai_bits.o
+sync
+$insmod $MODULES/rtai_mq.o
+sync
+$insmod $MODULES/rtai_shm.o
+sync

@@ -1,0 +1,5 @@
+rmmod clock
+rmmod cmdclk
+rmmod cmdcrn
+rmmod dispclk
+../remod

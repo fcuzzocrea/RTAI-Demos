@@ -1,0 +1,4 @@
+rmmod ktasklet
+rmmod kctest
+rmmod rtai_tasklets
+../remod

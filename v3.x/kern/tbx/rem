@@ -1,0 +1,5 @@
+sync
+rmmod tbx1
+rmmod tbx2
+rmmod tbx3
+../remod
