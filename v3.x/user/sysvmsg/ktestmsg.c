@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2004  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2005  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -17,12 +17,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 
-#include <sys/mman.h>
-#include <pthread.h>
+#include <linux/config.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/module.h>
 
-#include <rtai_lxrt.h>
+MODULE_LICENSE("GPL");
+
+#include <rtai_sched.h>
 #include <rtai_sem.h>
-#include <rtai_sysvmsg.h>
+#include <rtai_malloc.h>
+#include "rtai_sysvmsg.h"
 
 #define SLEEP_TIME  4000000
 
@@ -30,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define MAXSIZ  2000
 
-static SEM *barrier;
+static SEM barrier;
 
 static volatile int cnt[NTASKS], end = -1;
 
@@ -45,31 +50,30 @@ static double randu(void)
 static void mfun(int t)
 {
 	char tname[6] = "MFUN", mname[6] = "RMBX";
-	RT_TASK *mytask;
-	int smbx, rmbx[NTASKS], msg[MAXSIZ + 1], mtype, i;
+	int smbx, *rmbx, *msg, mtype, i;
+
+	rmbx = rt_malloc(NTASKS*sizeof(int));
+	msg  = rt_malloc((MAXSIZ + 1)*sizeof(int));
 
 	randu();
 	tname[4] = mname[4] = t + '0';
 	tname[5] = mname[5] = 0;
-	mytask = rt_thread_init(nam2num(tname), t + 1, 0, SCHED_FIFO, 0xF);
 	smbx    = rt_msgget(nam2num("SMSG"), 0);
 	rmbx[t] = rt_msgget(nam2num(mname), 0);
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-	rt_make_hard_real_time();
 
 	msg[0] = t;
-	rt_sem_wait_barrier(barrier);
+	rt_sem_wait_barrier(&barrier);
 	while (end < t) {
 		msg[MAXSIZ] = 0;
 		for (i = 1; i < MAXSIZ; i++) {
 			msg[MAXSIZ] += (msg[i] = MAXSIZ*randu()); 
 		}
-		if (rt_msgsnd_nu(smbx, 1, msg, sizeof(msg), 0)) {
+		if (rt_msgsnd_nu(smbx, 1, msg, sizeof(int)*(MAXSIZ + 1), 0)) {
 			rt_printk("SEND FAILED, TASK: %d\n", t);
 			goto prem;
 		}
 		msg[0] = msg[1] = 0;
-		if (rt_msgrcv_nu(rmbx[t], &mtype, msg, sizeof(msg), 1, 0) < 0) {
+		if (rt_msgrcv_nu(rmbx[t], &mtype, msg, sizeof(int)*(MAXSIZ + 1), 1, 0) < 0) {
 			rt_printk("RECEIVE FAILED, TASK: %d\n", t);
 			goto prem;
 		}
@@ -82,17 +86,18 @@ static void mfun(int t)
 		rt_sleep(nano2count(SLEEP_TIME));
 	}
 prem: 
-	rt_make_soft_real_time();
-	rt_task_delete(mytask);
-	printf("TASK %d ENDS.\n", t);
+	rt_free(rmbx);
+	rt_free(msg);
+	rt_printk("TASK %d ENDS.\n", t);
 }
 
 static void bfun(int t)
 {
-	RT_TASK *mytask;
-	int smbx, rmbx[NTASKS], msg[MAXSIZ + 1], mtype, i, n;
+	int smbx, *rmbx, *msg, mtype, i, n;
 
-	mytask = rt_thread_init(nam2num("BFUN"), 0, 0, SCHED_FIFO, 0xF);
+	rmbx = rt_malloc(NTASKS*sizeof(int));
+	msg  = rt_malloc((MAXSIZ + 1)*sizeof(int));
+
 	smbx = rt_msgget(nam2num("SMSG"), 0);
 	for (i = 0; i < NTASKS; i++) {
 		char mname[6] = "RMBX";
@@ -100,12 +105,10 @@ static void bfun(int t)
 		mname[5] = 0;
 		rmbx[i] = rt_msgget(nam2num(mname), 0);
 	}
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-	rt_make_hard_real_time();
 
-	rt_sem_wait_barrier(barrier);
+	rt_sem_wait_barrier(&barrier);
 	while (end < NTASKS) {
-		rt_msgrcv_nu(smbx, &mtype, msg, sizeof(msg), 1, 0);
+		rt_msgrcv_nu(smbx, &mtype, msg, sizeof(int)*(MAXSIZ + 1), 1, 0);
 		n = 0;
 		for (i = 1; i < MAXSIZ; i++) {
 			n += msg[i];
@@ -118,22 +121,21 @@ static void bfun(int t)
 		rt_msgsnd_nu(rmbx[msg[0]], 1, msg, 2*sizeof(int), 0);
 	}
 prem:
-	rt_make_soft_real_time();
-	rt_task_delete(mytask);
-	printf("SERVER TASK ENDS.\n");
+	rt_free(rmbx);
+	rt_free(msg);
+	rt_printk("SERVER TASK ENDS.\n");
 }
 
 static int smbx, rmbx[NTASKS];
-static int bthread, mthread[NTASKS];
+static RT_TASK bthread, mthread[NTASKS];
 
-int main(void)
+extern int rt_kthread_init(RT_TASK *, void *, int, int, int, int, int);
+
+int init_module(void)
 {
-	RT_TASK *mytask;
-	char msg[] = "let's end the game";
 	int i;
 
-	mytask = rt_thread_init(nam2num("MAIN"), 2, 0, SCHED_FIFO, 0xF);
-	barrier = rt_sem_init(rt_get_name(0), NTASKS + 1);
+	rt_sem_init(&barrier, NTASKS + 1);
 
 	smbx    = rt_msgget(nam2num("SMSG"), 0x666 | IPC_CREAT);
 	for (i = 0; i < NTASKS; i++) {
@@ -146,23 +148,28 @@ int main(void)
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 
-	bthread = rt_thread_create(bfun, 0, 0x8000);
+	rt_kthread_init(&bthread, bfun, 0, 0x8000, 0, 1, 0);
+	rt_task_resume(&bthread);
 	for (i = 0; i < NTASKS; i++) {
-		mthread[i] = rt_thread_create(mfun, (void *)i, 0x8000);
+		rt_kthread_init(&mthread[i], mfun, i, 0x8000, i + 1, 1, 0);
+		rt_task_resume(&mthread[i]);
 	}
 
-	printf("IF NOTHING HAPPENS IS OK, TYPE ENTER TO FINISH.\n");
-	getchar();
+	return 0;
+}
+
+void cleanup_module(void)
+{
+	char msg[] = "let's end the game";
+	int i;
 
 	for (i = 0; i < NTASKS; i++) {
 		end = i;
-		rt_msgsnd_nu(rmbx[i], 1, &msg, sizeof(msg), 0);
-		rt_thread_join(mthread[i]);
+		rt_msgsnd_nu(rmbx[i], 1, msg, sizeof(msg), 0);
 	}
 
 	end = NTASKS;
-	rt_msgsnd_nu(smbx,    1, &msg, sizeof(msg), 0);
-	rt_thread_join(bthread);
+	rt_msgsnd_nu(smbx, 1, msg, sizeof(msg), 0);
 
 	for (i = 0; i < NTASKS; i++) {
 		rt_msgctl(rmbx[i], IPC_RMID, NULL);
@@ -170,9 +177,16 @@ int main(void)
 	}
 	rt_msgctl(smbx, IPC_RMID, NULL);
 
+	current->state = TASK_INTERRUPTIBLE;
+	schedule_timeout(HZ);
+
 	stop_rt_timer();
-	rt_sem_delete(barrier);
-	rt_task_delete(mytask);
-	printf("MAIN TASK ENDS.\n");
-	return 0;
+	rt_sem_delete(&barrier);
+
+	for (i = 0; i < NTASKS; i++) {
+		rt_task_delete(&mthread[i]);
+	}
+	rt_task_delete(&bthread);
+
+	rt_printk("MAIN TASK ENDS.\n");
 }

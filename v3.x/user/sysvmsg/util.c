@@ -8,10 +8,9 @@
  */
 
 
-#include <linux/kernel.h>
 #include <linux/config.h>
-#include <linux/module.h>
 #include <linux/init.h>
+#include <linux/module.h>
 #include <linux/highuid.h>
 
 MODULE_LICENSE("GPL");
@@ -320,13 +319,13 @@ int ipc_parse_version (int *cmd)
 
 static struct rt_fun_entry rtai_sysvmsg_fun[] = {
 	[SYSV_MSGGET] = { 1, rt_msgget  },
-	[SYSV_MSGCTL] = { 1, rt_msgctl  },
-	[SYSV_MSGSND] = { 1, rt_msgsnd_ },
-	[SYSV_MSGRCV] = { 1, rt_msgrcv_ }
+	[SYSV_MSGCTL] = { 1, _rt_msgctl  },
+	[SYSV_MSGSND] = { 1, _rt_msgsnd },
+	[SYSV_MSGRCV] = { 1, _rt_msgrcv }
 };
 
 /* init module */
-int init_rtai_sysvmsg(void)
+int init_module(void)
 {
 	if (set_rt_fun_ext_index(rtai_sysvmsg_fun, SYSV_MSG_IDX)) {
 		rt_printk("%d is a wrong index module for lxrt.\n", SYSV_MSG_IDX);
@@ -334,16 +333,18 @@ int init_rtai_sysvmsg(void)
 	}			
 	msg_init();
 	printk("%s: loaded.\n", MODULE_NAME);
-	return 0;
+	return(0);
 }
 
 /*  cleanup module */
-void cleanup_rtai_sysvmsg(void)
+void cleanup_module(void)
 {
 	msg_exit();
 	reset_rt_fun_ext_index(rtai_sysvmsg_fun, SYSV_MSG_IDX);
 	printk("%s: unloaded.\n", MODULE_NAME);
 }
 
-module_init(init_rtai_sysvmsg);
-module_exit(cleanup_rtai_sysvmsg);
+EXPORT_SYMBOL(rt_msgget);
+EXPORT_SYMBOL(_rt_msgctl);
+EXPORT_SYMBOL(_rt_msgsnd);
+EXPORT_SYMBOL(_rt_msgrcv);

@@ -1,3 +1,9 @@
 EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-obj-m := util.o msg.o
+obj-m += util_rt.o msg_rt.o ktestmsg_rt.o
+
+util_rt-objs := util.o
+
+msg_rt-objs := msg.o
+
+ktestmsg_rt-objs := ktestmsg.o

@@ -17,12 +17,12 @@
 #define down(a)          rt_sem_wait(a)
 #define up(a)            rt_sem_signal(a)
 
-#if 0
-#define schedule()          do { int i; rt_receive(0, &i); } while (0)
-#define wake_up_process(t)  do { rt_send(t->rtai_tskext[0], 0); } while (0)
-#else
+#if 1
 #define schedule()          do { rt_task_suspend(0);                } while (0)
 #define wake_up_process(t)  do { rt_task_resume(t->rtai_tskext[0]); } while (0)
+#else
+#define schedule()          do { int i; rt_receive(0, &i);      } while (0)
+#define wake_up_process(t)  do { rt_send(t->rtai_tskext[0], 0); } while (0)
 #endif
 
 #define kmalloc(a, b)  rt_malloc(a)

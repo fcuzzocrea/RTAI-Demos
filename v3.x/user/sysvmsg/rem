@@ -1,2 +1,3 @@
+rmmod ktestmsg_rt
 rmmod util
 ../remod

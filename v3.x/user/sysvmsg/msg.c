@@ -140,7 +140,7 @@ static void free_msg(struct msg_msg* msg)
 	}
 }
 
-static struct msg_msg* load_msg(void* src, int len)
+static struct msg_msg* load_msg(void* src, int len, int space)
 {
 	struct msg_msg* msg;
 	struct msg_msgseg** pseg;
@@ -157,9 +157,13 @@ static struct msg_msg* load_msg(void* src, int len)
 
 	msg->next = NULL;
 
-	if (copy_from_user(msg+1, src, alen)) {
-		err = -EFAULT;
-		goto out_err;
+	if (space) {
+		if (copy_from_user(msg+1, src, alen)) {
+			err = -EFAULT;
+			goto out_err;
+		}
+	} else {
+		memcpy(msg+1, src, alen);
 	}
 
 	len -= alen;
@@ -177,9 +181,13 @@ static struct msg_msg* load_msg(void* src, int len)
 		}
 		*pseg = seg;
 		seg->next = NULL;
-		if(copy_from_user (seg+1, src, alen)) {
-			err = -EFAULT;
-			goto out_err;
+		if (space) {
+			if (copy_from_user (seg+1, src, alen)) {
+				err = -EFAULT;
+				goto out_err;
+			}
+		} else {
+			memcpy(seg+1, src, alen);
 		}
 		pseg = &seg->next;
 		len -= alen;
@@ -192,7 +200,7 @@ out_err:
 	return ERR_PTR(err);
 }
 
-static int store_msg(void* dest, struct msg_msg* msg, int len)
+static int store_msg(void* dest, struct msg_msg* msg, int len, int space)
 {
 	int alen;
 	struct msg_msgseg *seg;
@@ -200,8 +208,13 @@ static int store_msg(void* dest, struct msg_msg* msg, int len)
 	alen = len;
 	if(alen > DATALEN_MSG)
 		alen = DATALEN_MSG;
-	if(copy_to_user (dest, msg+1, alen))
-		return -1;
+	if(space) {
+		if(copy_to_user (dest, msg+1, alen)) {
+			return -1;
+		}
+	} else {
+		memcpy (dest, msg+1, alen);
+	}
 
 	len -= alen;
 	dest = ((char*)dest)+alen;
@@ -210,8 +223,13 @@ static int store_msg(void* dest, struct msg_msg* msg, int len)
 		alen = len;
 		if(alen > DATALEN_SEG)
 			alen = DATALEN_SEG;
-		if(copy_to_user (dest, seg+1, alen))
-			return -1;
+		if(space) {
+			if(copy_to_user (dest, seg+1, alen)) {
+				return -1;
+			}
+		} else {
+			memcpy (dest, seg+1, alen);
+		}
 		len -= alen;
 		dest = ((char*)dest)+alen;
 		seg=seg->next;
@@ -317,11 +335,15 @@ int rt_msgget (key_t key, int msgflg)
 	return ret;
 }
 
-static inline unsigned long copy_msqid_to_user(void *buf, struct msqid64_ds *in, int version)
+static inline unsigned long copy_msqid_to_user(void *buf, struct msqid64_ds *in, int version, int space)
 {
 	switch(version) {
 	case IPC_64:
-		return copy_to_user (buf, in, sizeof(*in));
+		if (space) {
+			return copy_to_user (buf, in, sizeof(*in));
+		}
+		memcpy (buf, in, sizeof(*in));
+		return 0;
 	case IPC_OLD:
 	    {
 		struct msqid_ds out;
@@ -354,7 +376,11 @@ static inline unsigned long copy_msqid_to_user(void *buf, struct msqid64_ds *in,
 		out.msg_lspid		= in->msg_lspid;
 		out.msg_lrpid		= in->msg_lrpid;
 
-		return copy_to_user (buf, &out, sizeof(out));
+		if (space) {
+			return copy_to_user (buf, &out, sizeof(out));
+		}
+		memcpy (buf, &out, sizeof(out));
+		return 0;
 	    }
 	default:
 		return -EINVAL;
@@ -368,15 +394,20 @@ struct msq_setbuf {
 	mode_t		mode;
 };
 
-static inline unsigned long copy_msqid_from_user(struct msq_setbuf *out, void *buf, int version)
+static inline unsigned long copy_msqid_from_user(struct msq_setbuf *out, void *buf, int version, int space)
 {
 	switch(version) {
 	case IPC_64:
 	    {
 		struct msqid64_ds tbuf;
 
-		if (copy_from_user (&tbuf, buf, sizeof (tbuf)))
-			return -EFAULT;
+		if (space) {
+			if (copy_from_user (&tbuf, buf, sizeof (tbuf))) {
+				return -EFAULT;
+			}
+		} else {
+			memcpy(&tbuf, buf, sizeof(tbuf));
+		}
 
 		out->qbytes		= tbuf.msg_qbytes;
 		out->uid		= tbuf.msg_perm.uid;
@@ -389,8 +420,13 @@ static inline unsigned long copy_msqid_from_user(struct msq_setbuf *out, void *b
 	    {
 		struct msqid_ds tbuf_old;
 
-		if (copy_from_user (&tbuf_old, buf, sizeof (tbuf_old)))
-			return -EFAULT;
+		if (space) {
+			if (copy_from_user (&tbuf_old, buf, sizeof (tbuf_old))) {
+				return -EFAULT;
+			}
+		} else {
+			memcpy(&tbuf_old, buf, sizeof(tbuf_old));
+		}
 
 		out->uid		= tbuf_old.msg_perm.uid;
 		out->gid		= tbuf_old.msg_perm.gid;
@@ -408,7 +444,7 @@ static inline unsigned long copy_msqid_from_user(struct msq_setbuf *out, void *b
 	}
 }
 
-int rt_msgctl (int msqid, int cmd, struct msqid_ds *buf)
+int _rt_msgctl (int msqid, int cmd, struct msqid_ds *buf, int space)
 {
 	int err, version;
 	struct msg_queue *msq;
@@ -450,8 +486,13 @@ int rt_msgctl (int msqid, int cmd, struct msqid_ds *buf)
 		}
 		max_id = msg_ids.max_id;
 		up(&msg_ids.sem);
-		if (copy_to_user (buf, &msginfo, sizeof(struct msginfo)))
-			return -EFAULT;
+		if(space) {
+			if (copy_to_user (buf, &msginfo, sizeof(struct msginfo))) {
+				return -EFAULT;
+			}
+		} else {
+			memcpy (buf, &msginfo, sizeof(struct msginfo));
+		}
 		return (max_id < 0) ? 0: max_id;
 	}
 	case MSG_STAT:
@@ -492,14 +533,14 @@ int rt_msgctl (int msqid, int cmd, struct msqid_ds *buf)
 		tbuf.msg_lspid  = msq->q_lspid;
 		tbuf.msg_lrpid  = msq->q_lrpid;
 		msg_unlock(msqid);
-		if (copy_msqid_to_user(buf, &tbuf, version))
+		if (copy_msqid_to_user(buf, &tbuf, version, space))
 			return -EFAULT;
 		return success_return;
 	}
 	case IPC_SET:
 		if (!buf)
 			return -EFAULT;
-		if (copy_msqid_from_user (&setbuf, buf, version))
+		if (copy_msqid_from_user (&setbuf, buf, version, space))
 			return -EFAULT;
 		break;
 	case IPC_RMID:
@@ -617,7 +658,7 @@ static int inline pipelined_send(struct msg_queue* msq, struct msg_msg* msg)
 	return 0;
 }
 
-int rt_msgsnd_(int msqid, int mtype, void *mtext, size_t msgsz, int msgflg)
+int _rt_msgsnd(int msqid, int mtype, void *mtext, size_t msgsz, int msgflg, int space)
 {
 	struct msg_queue *msq;
 	struct msg_msg *msg;
@@ -628,7 +669,7 @@ int rt_msgsnd_(int msqid, int mtype, void *mtext, size_t msgsz, int msgflg)
 	if (mtype < 1)
 		return -EINVAL;
 
-	msg = load_msg(mtext, msgsz);
+	msg = load_msg(mtext, msgsz, space);
 	if(IS_ERR(msg))
 		return PTR_ERR(msg);
 
@@ -719,8 +760,8 @@ static int inline convert_mode(long* msgtyp, int msgflg)
 	return SEARCH_EQUAL;
 }
 
-int rt_msgrcv_(int msqid, int *mtype, void *mtext, size_t msgsz,
-			    long msgtyp, int msgflg)
+int _rt_msgrcv(int msqid, int *mtype, void *mtext, size_t msgsz,
+			    long msgtyp, int msgflg, int space)
 {
 	struct msg_queue *msq;
 	struct msg_receiver msr_d;
@@ -784,9 +825,16 @@ retry:
 
 out_success:
 		msgsz = (msgsz > msg->m_ts) ? msg->m_ts : msgsz;
-		if (put_user (msg->m_type, mtype) ||
-		    store_msg(mtext, msg, msgsz)) {
-			    msgsz = -EFAULT;
+		if (space) {
+			if (put_user (msg->m_type, mtype) ||
+			    store_msg(mtext, msg, msgsz, space)) {
+				msgsz = -EFAULT;
+			}
+		} else {
+			*mtype = msg->m_type;
+			if (store_msg(mtext, msg, msgsz, space)) {
+				msgsz = -EFAULT;
+			}
 		}
 		free_msg(msg);
 		return msgsz;
@@ -936,3 +984,7 @@ void __exit msg_exit (void)
 #endif
 }
 
+EXPORT_SYMBOL(_rt_msgctl);
+EXPORT_SYMBOL(_rt_msgrcv);
+EXPORT_SYMBOL(_rt_msgsnd);
+EXPORT_SYMBOL(rt_msgget);
