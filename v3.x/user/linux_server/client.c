@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define WAITIME  1     // seconds
 #define BUFSIZE  1000  // bytes
 #define HDRSIZE  50    // must be <= BUFSIZE
-#define NRECS    10000
+#define NRECS    15000LL
 
 int main(void)
 {
@@ -70,7 +70,7 @@ int main(void)
 	memset(s, 'B', HDRSIZE);
 	write(fd, s, HDRSIZE);
 	memset(s, 'A', BUFSIZE);
-	printf("(WRITE) Write %d MB of 'A's to the opened file.\n", BUFSIZE*NRECS);
+	printf("(WRITE) Write %lu MB of 'A's to the opened file.\n", (unsigned long)(BUFSIZE*NRECS/1000000));
 	t = rt_get_cpu_time_ns();
 	for (i = 0; i < NRECS; i++) {
 		write(fd, s, BUFSIZE);
@@ -90,7 +90,7 @@ int main(void)
 	s[HDRSIZE + 1] = 0;
 	printf("(READ) Here is the header  %s.\n", s);
 	lseek(fd, -1, SEEK_CUR);
-	printf("(READ) Read the written %d MB of 'A's back.\n", BUFSIZE*NRECS);
+	printf("(READ) Read the written %lu MB of 'A's back.\n", (unsigned long)(BUFSIZE*NRECS/1000000));
 	t = rt_get_cpu_time_ns();
 	for (i = 0; i < NRECS; i++) {
 		read(fd, s, BUFSIZE);
