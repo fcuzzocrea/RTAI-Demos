@@ -30,21 +30,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-static DECLARE_WAIT_QUEUE_HEAD(waitq);
 static struct task_struct *sleeping_process;
 
 static int srq;
-
-static inline int is_signalled(sigset_t signal, sigset_t blocked)
-{
-	int i =  _NSIG_WORDS - 1;
-	do {
-		if ( signal.sig[i] & ~blocked.sig[i] ) {
-			return 1;
-		}
-	} while (i--);
-	return 0;
-}
 
 static long long user_srq_handler(unsigned int whatever)
 {
@@ -53,9 +41,9 @@ static long long user_srq_handler(unsigned int whatever)
 	if (whatever == 1) {
 		return llimd(rt_times.periodic_tick, 1000000, FREQ_8254);
 	}
-	sleeping_process = current;
-	interruptible_sleep_on(&waitq);
-	if (is_signalled(current->pending.signal, current->blocked)) {
+	(sleeping_process = current)->state = TASK_INTERRUPTIBLE;
+	schedule();
+	if (signal_pending(current)) {
 		return -ERESTARTSYS;
 	}
 	time = llimd(rt_times.tick_time, 1000000, FREQ_8254);
@@ -67,9 +55,9 @@ static long long user_srq_handler(unsigned int whatever)
 
 static void rtai_srq_handler(void)
 {
-        if (sleeping_process && !sleeping_process->run_list.next) {
+        if (sleeping_process) {
+		wake_up_process(sleeping_process);
 		sleeping_process = 0;
-		wake_up_interruptible(&waitq);
 	}
 }
 
