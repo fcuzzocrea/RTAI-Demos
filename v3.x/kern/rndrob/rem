@@ -1,2 +1,2 @@
-rmmod rndrob
+rmmod rndrob_rt
 ../remod
