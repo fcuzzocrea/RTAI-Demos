@@ -19,7 +19,9 @@ echo
 echo "Now start the realtime process <enter>."
 read junk
 sync
-insmod ./handler.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./handler_rt.ko;
+else insmod ./handler_rt.o; fi
 $SUDO ./press < pdata
 echo
 echo "Done. Press <enter> to remove the modules."

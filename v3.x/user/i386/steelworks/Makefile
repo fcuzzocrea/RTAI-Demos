@@ -1,23 +1,5 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += handler_rt.o
 
-CC = $(shell rtai-config --cc)
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
-LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
-LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
-
-all: handler.o press
-
-%.o: %.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-press: press.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< -lncurses $(LXRT_LDFLAGS)
-
-clean:
-	rm -f *.o press
-
-.PHONY: clean
+handler_rt-objs := handler.o

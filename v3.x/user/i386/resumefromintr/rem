@@ -1,2 +1,2 @@
-rmmod rt_handler
+rmmod handler_rt
 ../../remod
