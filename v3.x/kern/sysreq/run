@@ -9,7 +9,9 @@ echo
 echo "Now start the realtime process <enter>, <ctrl-C> to end it."
 read junk
 sync
-insmod ./sysreq.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./sysreq_rt.ko;
+else insmod ./sysreq_rt.o; fi
 ./display
 echo
 echo "Done. Press <enter> to remove the modules."

@@ -29,7 +29,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_sched.h>
 
 MODULE_LICENSE("GPL");
-EXPORT_NO_SYMBOLS;
 
 static DECLARE_WAIT_QUEUE_HEAD(waitq);
 static struct task_struct *sleeping_process;
@@ -100,4 +99,3 @@ void cleanup_module(void)
 	rt_free_srq(srq);
 	rt_umount_rtai();
 }
-

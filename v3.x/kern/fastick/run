@@ -15,7 +15,7 @@ then insmod ./fastick1_rt.ko;
 else insmod ./fastick1_rt.o; fi
 ./display
 sync
-rmmod fastick1
+rmmod fastick1_rt
 echo "*** FAST TICKING USING SYSREQs (kernel) ***"
 echo "Now start the realtime the sysreq based fast ticking <enter>,"
 echo "<ctrl-C> to end it:>"
@@ -26,7 +26,7 @@ then insmod ./fastick2_rt.ko;
 else insmod ./fastick2_rt.o; fi
 ./display
 sync
-rmmod fastick2
+rmmod fastick2_rt
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

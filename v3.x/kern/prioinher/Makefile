@@ -1,18 +1,7 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += prioinher1_rt.o prioinher2_rt.o
 
-CC = $(shell rtai-config --cc)
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
+prioinher1_rt-objs := prioinher1.o
 
-all: prioinher1.o prioinher2.o
-
-%.o: %.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-clean:
-	rm -f *.o
-
-.PHONY: clean
+prioinher2_rt-objs := prioinher2.o
