@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -265,6 +264,8 @@ extern int CommandClock_task(void *args);
 extern int CommandChrono_task(void *args);
 extern int Display_task(void *args);
 
+#define SZ 50000
+
 int main(void)
 {
 	RT_TASK *mytask;
@@ -282,51 +283,51 @@ int main(void)
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 
-	if ((Disp_task = rt_thread_create(Display_task, NULL, 10000)) < 0) { 
+	if ((Disp_task = rt_thread_create(Display_task, NULL, SZ)) < 0) { 
 		printf("ERROR IN CREATING Display_task\n");
 		exit(1);
  	}       
 
-	if ((Chrono_task = rt_thread_create(CommandChrono_task, NULL, 10000)) < 0) { 
+	if ((Chrono_task = rt_thread_create(CommandChrono_task, NULL, SZ)) < 0) { 
 		printf("ERROR IN CREATING CommandChrono_task\n");
 		exit(1);
  	}       
 
-	if ((Clock_task = rt_thread_create(CommandClock_task, NULL, 10000)) < 0) { 
+	if ((Clock_task = rt_thread_create(CommandClock_task, NULL, SZ)) < 0) { 
 		printf("ERROR IN CREATING CommandClock_task\n");
 		exit(1);
  	}       
 
-	if ((Read = rt_thread_create(ClockChrono_Read, NULL, 10000)) < 0) { 
+	if ((Read = rt_thread_create(ClockChrono_Read, NULL, SZ)) < 0) { 
 		printf("ERROR IN CREATING ClockChrono_Read\n");
 		exit(1);
  	}       
 
-	if ((Chrono = rt_thread_create(ClockChrono_Chrono, NULL, 10000)) < 0){ 
+	if ((Chrono = rt_thread_create(ClockChrono_Chrono, NULL, SZ)) < 0){ 
 		printf("ERROR IN CREATING ClockChrono_Chrono\n");
 		exit(1);
  	}       
 
-	if ((Clock = rt_thread_create(ClockChrono_Clock, NULL, 10000)) < 0) { 
+	if ((Clock = rt_thread_create(ClockChrono_Clock, NULL, SZ)) < 0) { 
 		printf("ERROR IN CREATING ClockChrono_Clock\n");
 		exit(1);
  	}       
 
 
-	if ((Write = rt_thread_create(ClockChrono_Write, NULL, 10000)) < 0) { 
+	if ((Write = rt_thread_create(ClockChrono_Write, NULL, SZ)) < 0) { 
 		printf("ERROR IN CREATING ClockChrono_Write\n");
 		exit(1);
  	}       
 
 	rt_task_suspend(mytask);
 
-	waitpid(Disp_task, 0, 0);
-	waitpid(Chrono_task, 0, 0);
-	waitpid(Clock_task, 0, 0);
-	waitpid(Chrono, 0, 0);
-	waitpid(Clock, 0, 0);
-	waitpid(Read, 0, 0);
-	waitpid(Write, 0, 0);
+	rt_thread_join(Disp_task);
+	rt_thread_join(Chrono_task);
+	rt_thread_join(Clock_task);
+	rt_thread_join(Chrono);
+	rt_thread_join(Clock);
+	rt_thread_join(Read);
+	rt_thread_join(Write);
 	rt_mbx_delete(Keyboard);
 	rt_mbx_delete(Screen);
 	rt_task_delete(mytask);

@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <sys/user.h>
 #include <sys/mman.h>
-#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sched.h>
@@ -331,10 +330,10 @@ int main(int argc, char* argv[])
 	rt_mbx_delete(Screen);
 	rt_task_delete(mytask);
 	printf("\nEND MASTER TASK %p.\n", mytask);
-	waitpid(Chrono, 0, 0);
-	waitpid(Clock, 0, 0);
-	waitpid(Read, 0, 0);
-	waitpid(Write, 0, 0);
+	rt_thread_join(Chrono);
+	rt_thread_join(Clock);
+	rt_thread_join(Read);
+	rt_thread_join(Write);
 
 	return 0;
 }

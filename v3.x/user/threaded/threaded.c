@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <rtai_sem.h>
@@ -158,7 +157,7 @@ int main(void)
 	rt_task_delete(mytask);
 	printf("MASTER %lu %p ENDS\n", mytask_name, mytask);
 	for (i = 0; i < ntasks; i++) {
-		waitpid(task[i], 0, 0);
+		rt_thread_join(task[i]);
 	}
 	return 0;
 }
