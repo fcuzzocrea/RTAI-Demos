@@ -15,7 +15,7 @@ cd ../intertaskmsg
 cd ../latency
 ./run
 cd ../linux_server
-./run
+#./run
 cd ../msg_clock
 ./run
 cd ../master_slave
