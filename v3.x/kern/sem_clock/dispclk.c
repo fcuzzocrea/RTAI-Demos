@@ -172,3 +172,16 @@ int init_module(void)
 void cleanup_module(void)
 {
 }
+
+EXPORT_SYMBOL(MenageHmsh_AdvanceSeconds);
+EXPORT_SYMBOL(MenageHmsh_PlusOneUnit);
+EXPORT_SYMBOL(MenageHmsh_InitialiseHundredthes);
+EXPORT_SYMBOL(MenageHmsh_AdvanceHours);
+EXPORT_SYMBOL(MenageHmsh_PlusNSeconds);
+EXPORT_SYMBOL(MenageHmsh_Equal);
+EXPORT_SYMBOL(MenageHmsh_AdvanceMinutes);
+EXPORT_SYMBOL(MenageHmsh_Initialise);
+EXPORT_SYMBOL(MenageHmsh_Convert);
+EXPORT_SYMBOL(Display_PutTimes);
+EXPORT_SYMBOL(Display_Get);
+EXPORT_SYMBOL(Display_PutHour);

@@ -81,3 +81,6 @@ int init_module(void)
 void cleanup_module(void)
 {
 }
+
+EXPORT_SYMBOL(CommandClock_Put);
+EXPORT_SYMBOL(CommandClock_Get);
