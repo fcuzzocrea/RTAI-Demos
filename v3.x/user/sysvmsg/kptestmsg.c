@@ -112,7 +112,7 @@ int init_module(void)
 	start_rt_timer(0);
 
 	for (i = 0; i < NTASKS; i++) {
-		rt_kthread_init(&mthread[i], mfun, i, 0x8000, i + 1, 1, 0);
+		rt_kthread_init(&mthread[i], mfun, i, 0x8000, i + 2, 1, 0);
 		rt_task_resume(&mthread[i]);
 	}
 

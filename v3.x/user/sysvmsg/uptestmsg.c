@@ -35,7 +35,7 @@ static void bfun(int t)
 	RT_TASK *mytask;
 	int smbx, rmbx[NTASKS], msg[MAXSIZ + 1], mtype, i, n;
 
-	mytask = rt_thread_init(nam2num("BFUN"), 0, 0, SCHED_FIFO, 0xF);
+	mytask = rt_thread_init(nam2num("BFUN"), 1, 0, SCHED_FIFO, 0xF);
 	smbx = rt_msgget(nam2num("SMSG"), 0);
 	for (i = 0; i < NTASKS; i++) {
 		char mname[6] = "RMBX";

@@ -146,10 +146,10 @@ int init_module(void)
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 
-	rt_kthread_init(&bthread, bfun, 0, 0x8000, 0, 1, 0);
+	rt_kthread_init(&bthread, bfun, 0, 0x8000, 1, 1, 0);
 	rt_task_resume(&bthread);
 	for (i = 0; i < NTASKS; i++) {
-		rt_kthread_init(&mthread[i], mfun, i, 0x8000, i + 1, 1, 0);
+		rt_kthread_init(&mthread[i], mfun, i, 0x8000, i + 2, 1, 0);
 		rt_task_resume(&mthread[i]);
 	}
 

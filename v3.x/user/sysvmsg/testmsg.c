@@ -51,7 +51,7 @@ static void mfun(int t)
 	randu();
 	tname[4] = mname[4] = t + '0';
 	tname[5] = mname[5] = 0;
-	mytask = rt_thread_init(nam2num(tname), t + 1, 0, SCHED_FIFO, 0xF);
+	mytask = rt_thread_init(nam2num(tname), t + 2, 0, SCHED_FIFO, 0xF);
 	smbx = rt_msgget(nam2num("SMSG"), 0);
 	rmbx = rt_msgget(nam2num(mname), 0);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -92,7 +92,7 @@ static void bfun(int t)
 	RT_TASK *mytask;
 	int smbx, rmbx[NTASKS], msg[MAXSIZ + 1], mtype, i, n;
 
-	mytask = rt_thread_init(nam2num("BFUN"), 0, 0, SCHED_FIFO, 0xF);
+	mytask = rt_thread_init(nam2num("BFUN"), 1, 0, SCHED_FIFO, 0xF);
 	smbx = rt_msgget(nam2num("SMSG"), 0);
 	for (i = 0; i < NTASKS; i++) {
 		char mname[6] = "RMBX";
