@@ -10,7 +10,9 @@ echo "Now start the realtime the fifo based fast ticking <enter>,"
 echo "<ctrl-C> to end it:>"
 read junk
 sync
-insmod ./preempt_rt.o
+if (`rtai-config --linux-version | grep -q 2.6`);
+then insmod ./preempt_rt.ko;
+else insmod ./preempt_rt.o; fi
 ./display
 sync
 echo
