@@ -61,7 +61,7 @@ static void *intr_handler(void *args)
 	unsigned int msg;
 
 	rt_allow_nonroot_hrt();
-	ioperm(PORT_ADR, 1, 1);
+//	ioperm(PORT_ADR, 1, 1);
 	iopl(3);
 
  	if (!(mytask = rt_task_init_schmod(nam2num("SOUND"), 1, 0, 0, SCHED_FIFO, 0xF))) {
