@@ -59,7 +59,7 @@ int main(void)
 	rt_start_unix_server(mytask, 99, 10000);
 	rt_grow_and_lock_stack(4000);
 
-//	rt_make_hard_real_time();
+	rt_make_hard_real_time();
 	rt_task_use_fpu(mytask, 1);
 
 	rt_printf("(SCANF) Input a: string, integer, long long, float, double: ");
