@@ -4,7 +4,7 @@
 //
 // Authors:             Trevor Woolven (trevw@zentropix.com)
 // Original date:       Thu 15 Jul 1999
-// Id:                  @(#)$Id: pqueue.c,v 1.1 2004/06/06 14:17:24 rpm Exp $
+// Id:                  @(#)$Id: pqueue.c,v 1.2 2004/09/01 15:44:48 mante Exp $
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <linux/module.h>
 #include <linux/errno.h>
+
+#include <asm/fcntl.h>
+
 #include <rtai_mq.h>
 
 #include "mod_stuff.h"
@@ -212,4 +215,8 @@ mqd_t tx_q = INVALID_PQUEUE, rx_q = INVALID_PQUEUE;
   rt_task_delete(rt_whoami());
 }
 
+EXPORT_SYMBOL(parent_task);
+EXPORT_SYMBOL(test_name);
+EXPORT_SYMBOL(parent_func);
+EXPORT_SYMBOL(PARENT_PRIORITY);
 //------------------------------------eof---------------------------------------

@@ -1,18 +1,7 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += mod_stuff_rt.o pqueue_rt.o
 
-CC = $(shell rtai-config --cc)
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
+mod_stuff_rt-objs := mod_stuff.o
 
-all: pqueue.o mod_stuff.o
-
-%.o: %.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-clean:
-	rm -f *.o
-
-.PHONY: clean
+pqueue_rt-objs := pqueue.o

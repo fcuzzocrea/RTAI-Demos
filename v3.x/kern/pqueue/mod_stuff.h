@@ -6,7 +6,7 @@
 //
 // Authors:             Trevor Woolven (trevw@zentropix.com)
 // Original date:       Thu 15 Jul 1999
-// Id:                  @(#)$Id: mod_stuff.h,v 1.1 2004/06/06 14:17:24 rpm Exp $
+// Id:                  @(#)$Id: mod_stuff.h,v 1.2 2004/09/01 15:44:48 mante Exp $
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #define RUNNABLE_ON_CPUS 3
-#define RUN_ON_CPUS (smp_num_cpus > 1 ? RUNNABLE_ON_CPUS : 1)
+#define RUN_ON_CPUS (num_online_cpus() > 1 ? RUNNABLE_ON_CPUS : 1)
 
 #define TIMER_TO_CPU 3  
 // < 0 || > 1 to maintain a symmetrically processed timer
