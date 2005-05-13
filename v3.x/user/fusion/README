@@ -1,0 +1,19 @@
+This is a test for RTAI-classic/RTAI-fusion APIs interoperability support.
+
+- It is an initial experimental draft to be completed yet.
+- It is for use just with MAGMA, in immediate mode for a reliable way to 
+mix Linux and hard real time.
+- It contains originals RTAI-fusion user space "latency" and "switches" 
+examples, almost verbatim copies of fusion originals, plus "latency" with a 
+separate "display" process (latwdisp) to test communications through queues.
+
+Be careful! Before using it check the sampling period of the various test 
+cases. It might be too tight if your CPU is below 1 GHz. Moreover not all 
+the compatibility headers have been tested yet.
+
+To use:
+- make clean
+- make
+./runl (for RTAI-fusion user space latency)
+./runs (for RTAI-fusion user space switch)
+./rund (for RTAI-fusion user space latency with a mating display task)
