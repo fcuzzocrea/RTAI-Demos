@@ -139,7 +139,7 @@ int main(void)
 	}
 
 	for (i = 0; i < ntasks; i++) {
-		rt_send(rt_get_adr(taskname(i)), (unsigned int)sem);
+		rt_send(rt_get_adr(taskname(i)), (unsigned long)sem);
 	}
 
 	for (i = 0; i < ntasks; i++) {
