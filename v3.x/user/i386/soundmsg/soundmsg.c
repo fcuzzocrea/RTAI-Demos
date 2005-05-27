@@ -48,6 +48,8 @@ static int filter(int x)
 	return ret;
 }
 
+static volatile int end;
+
 static void *speaker_handler(void *args)
 {
 	RT_TASK *mytask, *master;
@@ -73,7 +75,7 @@ static void *speaker_handler(void *args)
 	rt_task_make_periodic(mytask, rt_get_time() + 100*period, period);
 
         len = 0;
-	while(1) {
+	while(!end) {
 		if (len) {
 			data = filter(buf[i++]);
 			temp = inb(PORT_ADR);
@@ -104,7 +106,6 @@ static void *speaker_handler(void *args)
 
 static pthread_t thread;
 
-static int end;
 static void endme(int dummy) { end = 1; }
 
 int main(void)

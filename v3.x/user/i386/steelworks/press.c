@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
+#include <sys/poll.h>
 #include <sys/io.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -208,14 +209,7 @@ void screen_end(void)
 	endwin();
 }
 
-static void msleep(int ms)
-{
-	struct timeval timout;
-	timout.tv_sec = 0;
-	timout.tv_usec = ms<<10;
-	select(1, NULL, NULL, NULL, &timout);
-}
-
+#define msleep(x)  do { poll(0, 0, x); } while (0)
 
 static void endme(int dummy) { end = 1; }
 
@@ -245,6 +239,7 @@ int main(void)
 	screen_init();
 	paint_screen();
 	init_module();
+	msleep(1);
         start = 1;
         rt_mbx_send(mbx, &start, 1);
 
