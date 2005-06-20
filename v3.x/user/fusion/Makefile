@@ -11,7 +11,7 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 all: latency switch latwdisp display
 
 latency: latency.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lm -llxrt
 
 switch: switch.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt

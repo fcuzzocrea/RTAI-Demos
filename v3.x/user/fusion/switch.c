@@ -12,7 +12,6 @@
 #include <string.h>
 #include <signal.h>
 #include <getopt.h>
-
 #include <task.h>
 #include <timer.h>
 #include <sem.h>
@@ -28,13 +27,13 @@ long long maxjitter = -10000000;
 long long avgjitter = 0;
 long long lost = 0;
 long long nsamples = 10000;
-long long sampling_period = 10000;
+long long sampling_period = 1000000;
 
 #define HISTOGRAM_CELLS 100
 
 unsigned long histogram[HISTOGRAM_CELLS];
 
-int do_histogram = 0, finished = 0;
+int do_histogram = 0;
 int ignore = 5;
 
 static inline void add_histogram(long addval)
@@ -71,11 +70,13 @@ void event(void *cookie)
        }
 
        for (;;) {
-		err = rt_task_wait_period();
-
-		if (finished) {
-			return;
-		}
+               err = rt_task_wait_period();
+               if (err) {
+                       if (err != -ETIMEDOUT) {
+                               /* Timer stopped. */
+                               rt_task_delete(NULL);
+                       }
+               }
 
                switch_count++;
                switch_tsc = rt_timer_tsc();
@@ -128,7 +129,6 @@ void worker(void *cookie)
                        add_histogram(dt);
        }
 
-       finished = 1;
        rt_sem_delete(&switch_sem);
 
        minjitter = minj;
@@ -145,6 +145,10 @@ void worker(void *cookie)
 
        if (do_histogram)
                dump_histogram();
+
+       rt_timer_stop();
+
+       exit(0);
 }
 
 int main(int argc, char **argv)
@@ -180,6 +184,9 @@ int main(int argc, char **argv)
                        exit(2);
                }
 
+       if (sampling_period == 0)
+               sampling_period = 100000;       /* ns */
+
        signal(SIGINT, SIG_IGN);
        signal(SIGTERM, SIG_IGN);
 
@@ -187,7 +194,7 @@ int main(int argc, char **argv)
 
        mlockall(MCL_CURRENT|MCL_FUTURE);
        
-       printf("== Sampling period: %lld ns\n", sampling_period);
+       printf("== Sampling period: %llu us\n", sampling_period / 1000);
        printf("== Do not interrupt this program\n");
 
        err = rt_task_create(&worker_task, "worker", 0, 98, T_FPU);
@@ -214,9 +221,7 @@ int main(int argc, char **argv)
                return 1;
        }
 
-	rt_task_join("worker");
-	rt_task_join("event");
-        rt_timer_stop();
+       pause();
 
        return 0;
 }
