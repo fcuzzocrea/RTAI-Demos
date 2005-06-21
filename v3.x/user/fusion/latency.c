@@ -167,6 +167,7 @@ void display (void *cookie)
                 fprintf(stderr,"latency: failed to pend on semaphore, code %d\n",err);
 
             rt_task_delete(NULL);
+		break;
             }
 
         /* convert jitters to nanoseconds. */
@@ -281,6 +282,7 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
         return;
 
     finished = 1;
+    rt_timer_stop();
     rt_sem_delete(&display_sem);
 
     if (do_histogram || do_stats)
@@ -311,8 +313,6 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     if (histogram_avg)  free(histogram_avg);
     if (histogram_max)  free(histogram_max);
     if (histogram_min)  free(histogram_min);
-
-    rt_timer_stop();
 
     exit(0);
 }
