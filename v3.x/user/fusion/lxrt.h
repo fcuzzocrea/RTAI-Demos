@@ -348,8 +348,8 @@
 
 // Keep LXRT call enc/decoding together, so you are sure to act consistently.
 // This is the encoding, note " | GT_NR_SYSCALLS" to ensure not a Linux syscall, ...
-#define GT_NR_SYSCALLS  (1 << 15)
-#define ENCODE_LXRT_REQ(dynx, srq, lsize)  (((dynx) << 28) | (((srq) & 0xFFF) << 16) | GT_NR_SYSCALLS | (lsize))
+#define GT_NR_SYSCALLS  (1 << 11)
+#define ENCODE_LXRT_REQ(dynx, srq, lsize)  (((dynx) << 24) | (((srq) & 0xFFF) << 12) | GT_NR_SYSCALLS | (lsize))
 
 #include <asm/rtai_lxrt.h>
 
