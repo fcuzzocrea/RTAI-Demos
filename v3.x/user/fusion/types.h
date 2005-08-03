@@ -24,6 +24,7 @@
 
 #define SEM_ERR     (0xFFFF)
 #define SEM_TIMOUT  (0xFFFE)
+#define MSG_ERR     ((void *)0xFFFF)
 
 #define PRIO_Q    0 
 #define FIFO_Q    4 

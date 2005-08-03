@@ -22,6 +22,10 @@
 
 #include <types.h>
 
+#define RT_EINTR      (0xFff0)
+#define RT_EIDRM      (0xFfff)
+#define RT_ETIMEDOUT  (0xFffe)
+
 // scheduler
 #define YIELD				 0
 #define SUSPEND				 1
@@ -349,7 +353,7 @@
 // Keep LXRT call enc/decoding together, so you are sure to act consistently.
 // This is the encoding, note " | GT_NR_SYSCALLS" to ensure not a Linux syscall, ...
 #define GT_NR_SYSCALLS  (1 << 11)
-#define ENCODE_LXRT_REQ(dynx, srq, lsize)  (((dynx) << 24) | (((srq) & 0xFFF) << 12) | GT_NR_SYSCALLS | (lsize))
+#define ENCODE_LXRT_REQ(dynx, srq, lsize)  (((dynx) << 24) | ((srq) << 12) | GT_NR_SYSCALLS | (lsize))
 
 #include <asm/rtai_lxrt.h>
 

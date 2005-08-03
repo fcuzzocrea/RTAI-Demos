@@ -4,12 +4,13 @@ This is a test for RTAI-classic/RTAI-fusion APIs interoperability support.
 - It is for use just with MAGMA, in immediate mode for a reliable way to 
 mix Linux and hard real time.
 - It contains originals RTAI-fusion user space "latency" and "switches" 
-examples, almost verbatim copies of fusion originals, plus "latency" with a 
+examples, verbatim copies of fusion originals, plus "latency" with a 
 separate "display" process (latwdisp) to test communications through queues.
 
 Be careful! Before using it check the sampling period of the various test 
-cases. It might be too tight if your CPU is below 1 GHz. Moreover not all 
-the compatibility headers have been tested yet.
+cases. Extreme cases can be committed now and then. They might be too tight if 
+your CPU is below 1 GHz. Moreover not all the compatibility headers have been 
+tested yet.
 
 To use:
 - make clean

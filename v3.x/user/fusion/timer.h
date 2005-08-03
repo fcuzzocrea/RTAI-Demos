@@ -20,22 +20,34 @@
 #ifndef _RTAI_FUSION_TIMER_H
 #define _RTAI_FUSION_TIMER_H
 
+#include <time.h>
+
 #include <lxrt.h>
 
-#define TM_UNSET   0
-#define TM_ONESHOT 0
+#define TM_UNSET    -1
+#define TM_ONESHOT   0
+
+typedef struct rt_timer_info {
+	RTIME period;
+	RTIME date;
+	RTIME tsc;
+} RT_TIMER_INFO;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static inline RTIME rt_timer_ns2ticks(RTIME ns)
+#define rt_timer_ticks2ns(t)  (t)
+
+#define rt_timer_ns2ticks(t)  (t)
+
+static inline RTIME rt_timer_ns2tsc(RTIME ns)
 {
         struct { RTIME ns; } arg = { ns };
         return rtai_lxrt(BIDX, SIZARG, NANO2COUNT, &arg).rt;
 }
 
-static inline RTIME rt_timer_ticks2ns(RTIME ticks)
+static inline RTIME rt_timer_tsc2ns(RTIME ticks)
 {
         struct { RTIME ticks; } arg = { ticks };
         return rtai_lxrt(BIDX, SIZARG, COUNT2NANO, &arg).rt;
@@ -53,6 +65,12 @@ static inline RTIME rt_timer_tsc(void)
 	return rtai_lxrt(BIDX, SIZARG, GET_TIME, &arg).rt;
 }
 
+static inline void rt_timer_spin(RTIME ns)
+{
+	struct { long ns; } arg = { ns };
+	rtai_lxrt(BIDX, SIZARG, BUSY_SLEEP, &arg);
+}
+
 static inline int rt_timer_start(RTIME nstick)
 {
         struct { int dummy; } arg;
@@ -67,8 +85,12 @@ static inline void rt_timer_stop(void)
 	rtai_lxrt(BIDX, SIZARG, STOP_TIMER, &arg);
 }
 
-static inline int rt_timer_inquire(void *info)
+static inline int rt_timer_inquire(RT_TIMER_INFO *info)
 {
+        struct { unsigned long dummy; } arg;
+	info->period = rtai_lxrt(BIDX, SIZARG, HARD_TIMER_RUNNING, &arg).i[LOW] - 1;
+	info->date = info->tsc = rt_timer_tsc();
+	info->date = rt_timer_tsc2ns(info->date);
 	return 0;
 }
 

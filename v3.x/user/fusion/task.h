@@ -32,8 +32,8 @@
 #define T_LOCK  1
 #define T_RRB   2
 
-#define T_LOPRIO  1
-#define T_HIPRIO  99
+#define T_LOPRIO  FUSION_LOW_PRIO
+#define T_HIPRIO  FUSION_HIGH_PRIO
 
 typedef struct rt_task_t {
 	void *task;
@@ -50,6 +50,8 @@ extern "C" {
 #endif
 
 #include <sched.h>
+
+#include <asm/rtai_lxrt.h>
 
 static inline void *rtai_tskext(void)
 {
@@ -121,7 +123,7 @@ static inline int rt_task_yield(void)
 
 static inline int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 {
-        struct { void *task; RTIME idate, period; } arg = { task ? task->task : rtai_tskext(), idate == TM_NOW ? rt_timer_tsc() : rt_timer_ns2ticks(idate), rt_timer_ns2ticks(period) };
+        struct { void *task; RTIME idate, period; } arg = { task ? task->task : rtai_tskext(), idate == TM_NOW ? rt_timer_tsc() : rt_timer_ns2tsc(idate), rt_timer_ns2tsc(period) };
        	return rtai_lxrt(BIDX, SIZARG, MAKE_PERIODIC, &arg).i[LOW];
 }
 
@@ -129,7 +131,7 @@ static inline int rt_task_wait_period(void)
 {
 	struct { unsigned long retval; } arg;
 	arg.retval = rtai_lxrt(BIDX, SIZARG, WAIT_PERIOD, &arg).i[LOW];
-	return !arg.retval ? 0 : arg.retval > 0 ? -ETIMEDOUT : -EINVAL;
+	return !arg.retval ? 0 : arg.retval == RT_ETIMEDOUT ? -ETIMEDOUT : -EINVAL;
 }
 
 static inline int rt_task_set_priority(RT_TASK *task, int prio)
@@ -143,7 +145,6 @@ static inline int rt_task_set_priority(RT_TASK *task, int prio)
 	retval = rtai_lxrt(BIDX, SIZARG, CHANGE_TASK_PRIO, &arg).i[LOW];
 	return retval < 0 ? retval : 0;
 }
-
 
 static inline int rt_task_sleep(RTIME delay)
 {
@@ -197,6 +198,11 @@ static inline void support_task(RT_TASK *task)
 #include <pthread.h>
 
 #define RT_THREAD_STACK_MIN 64*1024
+
+static inline int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
+{
+	return 0;
+}
 
 static inline int rt_thread_create(void *fun, void *args, int stack_size)
 {
@@ -293,6 +299,73 @@ static inline void rt_task_join(const char *name)
 	while (rt_get_handle(nam2id(name))) {
 		poll(0, 0, 200);
 	}
+}
+
+typedef struct rt_task_mcb {
+	unsigned long flowid;
+	long opcode;
+	void *data;
+	long size;
+} RT_TASK_MCB;
+
+static inline int rt_task_send(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
+{
+	if (timeout == TM_INFINITE) {
+		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; } arg = { task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size };
+		if (rtai_lxrt(BIDX, SIZARG, RPCX, &arg).v[LOW] == MSG_ERR) {
+			return -EIDRM;
+		}
+	} else if (timeout == TM_NONBLOCK) {
+		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; } arg = { task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size };
+		if ((void *)(task = rtai_lxrt(BIDX, SIZARG, RPCX_IF, &arg).v[LOW]) <= MSG_ERR) {
+			return !task ? -EWOULDBLOCK : -EIDRM;
+		}
+	} else {
+		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; RTIME timeout; } arg = { task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size, rt_timer_ns2tsc(timeout) };
+		if ((void *)(task = rtai_lxrt(BIDX, SIZARG, RPCX_TIMED, &arg).v[LOW]) <= MSG_ERR) {
+			return !task ? -EINTR : -EIDRM;
+		}
+	}
+	return mcb_r->size;
+}
+
+unsigned long rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
+{
+	int len;
+	void *task = NULL;
+	if (timeout == TM_INFINITE) {
+		struct { void *task; void *rmsg; long rsize; int *len; } arg = { task, mcb_r->data, mcb_r->size, &len };
+		if ((task = rtai_lxrt(BIDX, SIZARG, RECEIVEX, &arg).v[LOW]) <= MSG_ERR) {
+			return -EIDRM;
+		}
+	} else if (timeout == TM_NONBLOCK) {
+		struct { void *task; void *rmsg; long rsize; int *len; } arg = { task, mcb_r->data, mcb_r->size, &len };
+		if ((task = rtai_lxrt(BIDX, SIZARG, RECEIVEX_IF, &arg).v[LOW]) <= MSG_ERR) {
+			return !task ? -EWOULDBLOCK : -EIDRM;
+		}
+	} else {
+		struct { void *task; void *rmsg; long rsize; int *len; RTIME timeout; } arg = { task, mcb_r->data, mcb_r->size, &len, rt_timer_ns2tsc(timeout) };
+		if ((task = rtai_lxrt(BIDX, SIZARG, RECEIVEX_TIMED, &arg).v[LOW]) <= MSG_ERR) {
+			return !task ? -EINTR : -EIDRM;
+		}
+	}
+	return mcb_r->flowid = (unsigned long)task;
+}
+
+int rt_task_reply(unsigned long flowid, RT_TASK_MCB *mcb_s)
+{
+	struct { struct rt_task_struct *task; void *msg; long size; } arg = { (void *)flowid, mcb_s->data, mcb_s->size, };
+	return rtai_lxrt(BIDX, SIZARG, RETURNX, &arg).v[LOW] <= MSG_ERR ? -EIDRM: 0; 
+}
+
+static inline int rt_task_spawn(RT_TASK *task, const char *name, int stksize, int prio, int mode, void (*entry)(void *cookie), void *cookie)
+{
+	int retval;
+
+	if (!(retval = rt_task_create(task, name, stksize, prio, mode))) {
+	        retval = rt_task_start(task, entry, cookie);
+	}
+	return retval;
 }
 
 #ifdef __cplusplus
