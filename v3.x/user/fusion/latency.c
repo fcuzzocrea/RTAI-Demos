@@ -25,7 +25,7 @@ long gminjitter = TEN_MILLION,
     gavgjitter = 0,
     goverrun = 0;
 
-int sampling_period = 0;
+int period_ns = 0;
 int test_duration = 0;  /* sec of testing, via -T <sec>, 0 is inf */
 int data_lines = 21;    /* data lines per header line, -l <lines> to change */
 int quiet = 0;          /* suppress printing of RTH, RTD lines when -T given */
@@ -34,7 +34,7 @@ time_t test_start, test_end;    /* report test duration */
 int test_loops = 0;             /* outer loop count */
 
 #define MEASURE_PERIOD ONE_BILLION
-#define SAMPLE_COUNT (MEASURE_PERIOD / sampling_period)
+#define SAMPLE_COUNT (MEASURE_PERIOD / period_ns)
 
 /* Warmup time : in order to avoid spurious cache effects on low-end machines. */
 #define WARMUP_TIME 1
@@ -50,14 +50,15 @@ int bucketsize = 1000;  /* default = 1000ns, -B <size> to override */
 static inline void add_histogram (long *histogram, long addval)
 {
     /* bucketsize steps */
-    long inabs = rt_timer_ticks2ns(addval >= 0 ? addval : -addval) / bucketsize;
+    long inabs = rt_timer_tsc2ns(addval >= 0 ? addval : -addval) / bucketsize;
     histogram[inabs < histogram_size ? inabs : histogram_size-1]++;
 }
 
 void latency (void *cookie)
 {
     int err, count, nsamples, warmup = 1;
-    RTIME expected, period, start;
+    RTIME expected_tsc, period_tsc, start_ticks;
+    RT_TIMER_INFO timer_info;
 
     err = rt_timer_start(TM_ONESHOT);
 
@@ -67,12 +68,21 @@ void latency (void *cookie)
         return;
         }
 
-    nsamples = ONE_BILLION / sampling_period;
-    period = rt_timer_ns2ticks(sampling_period);
-    expected = rt_timer_tsc() + 2 * period; /* start time: two periods
-                                               from now. */
-    start = rt_timer_ticks2ns(expected);
-    err = rt_task_set_periodic(NULL,start,sampling_period);
+    err = rt_timer_inquire(&timer_info);
+    
+    if (err)
+        {
+        fprintf(stderr,"latency: rt_timer_inquire, code %d\n",err);
+        return;
+        }
+
+    nsamples = ONE_BILLION / period_ns;
+    period_tsc = rt_timer_ns2tsc(period_ns);
+    /* start time: one millisecond from now. */
+    start_ticks = timer_info.date + rt_timer_ns2ticks(1000000);
+    expected_tsc = timer_info.tsc + rt_timer_ns2tsc(1000000);
+
+    err = rt_task_set_periodic(NULL,start_ticks,period_ns);
 
     if (err)
         {
@@ -88,7 +98,7 @@ void latency (void *cookie)
 
         for (count = sumj = 0; count < nsamples; count++)
             {
-            expected += period;
+            expected_tsc += period_tsc;
             err = rt_task_wait_period();
 
             if (err)
@@ -99,7 +109,7 @@ void latency (void *cookie)
                 overrun++;
                 }
 
-            dt = (long)(rt_timer_tsc() - expected);
+            dt = (long)(rt_timer_tsc() - expected_tsc);
             if (dt > maxj) maxj = dt;
             if (dt < minj) minj = dt;
             sumj += dt;
@@ -167,15 +177,14 @@ void display (void *cookie)
                 fprintf(stderr,"latency: failed to pend on semaphore, code %d\n",err);
 
             rt_task_delete(NULL);
-		break;
             }
 
         /* convert jitters to nanoseconds. */
-        minj = rt_timer_ticks2ns(minjitter);
-        gminj = rt_timer_ticks2ns(gminjitter);
-        avgj = rt_timer_ticks2ns(avgjitter);
-        maxj = rt_timer_ticks2ns(maxjitter);
-        gmaxj = rt_timer_ticks2ns(gmaxjitter);
+        minj = rt_timer_tsc2ns(minjitter);
+        gminj = rt_timer_tsc2ns(gminjitter);
+        avgj = rt_timer_tsc2ns(avgjitter);
+        maxj = rt_timer_tsc2ns(maxjitter);
+        gmaxj = rt_timer_tsc2ns(gmaxjitter);
 
         if (!quiet)
             {
@@ -293,9 +302,9 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     if (!test_duration) test_duration = actual_duration;
     gavgjitter /= (test_loops > 1 ? test_loops : 2)-1;
 
-    gminj = rt_timer_ticks2ns(gminjitter);
-    gmaxj = rt_timer_ticks2ns(gmaxjitter);
-    gavgj = rt_timer_ticks2ns(gavgjitter);
+    gminj = rt_timer_tsc2ns(gminjitter);
+    gmaxj = rt_timer_tsc2ns(gmaxjitter);
+    gavgj = rt_timer_tsc2ns(gavgjitter);
 
     printf("---|------------|------------|------------|--------|-------------------------\n"
            "RTS|%12ld|%12ld|%12ld|%8ld|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
@@ -346,7 +355,7 @@ int main (int argc, char **argv)
 
             case 'p':
 
-                sampling_period = atoi(optarg) * 1000;
+                period_ns = atoi(optarg) * 1000;
                 break;
 
             case 'l':
@@ -394,8 +403,8 @@ int main (int argc, char **argv)
     if (!(histogram_avg && histogram_max && histogram_min)) 
         cleanup_upon_sig(0);
 
-    if (sampling_period == 0)
-        sampling_period = 100000; /* ns */
+    if (period_ns == 0)
+        period_ns = 100000; /* ns */
 
     signal(SIGINT, cleanup_upon_sig);
     signal(SIGTERM, cleanup_upon_sig);
@@ -404,11 +413,11 @@ int main (int argc, char **argv)
 
     setlinebuf(stdout);
 
-    printf("== Sampling period: %d us\n",sampling_period / 1000);
+    printf("== Sampling period: %d us\n",period_ns / 1000);
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
-    err = rt_task_create(&display_task,"display",0,98,T_CPU(1));
+    err = rt_task_create(&display_task,"display",0,98,0);
 
     if (err)
         {
@@ -424,7 +433,7 @@ int main (int argc, char **argv)
         return 0;
         }
 
-    err = rt_task_create(&latency_task,"sampling",0,99,T_FPU|T_CPU(1));
+    err = rt_task_create(&latency_task,"sampling",0,99,T_FPU);
 
     if (err)
         {
