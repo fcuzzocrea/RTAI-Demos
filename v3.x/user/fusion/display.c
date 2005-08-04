@@ -7,8 +7,8 @@
 #include <signal.h>
 #include <getopt.h>
 
-#include "task.h"
-#include "queue.h"
+#include <task.h>
+#include <queue.h>
 
 int finished, data_lines = 21;
 
@@ -24,14 +24,16 @@ void display(void *cookie)
 	rt_queue_bind(&q, "queue");
 	time(&start);
 	while (!finished) {
+		smpl = NULL;
 		rt_queue_recv(&q, (void *)&smpl, TM_INFINITE);
+		if (smpl == NULL) continue; 
 		if (data_lines && (n++%data_lines) == 0) {
 			time_t now, dt;
 			time(&now);
 			dt = now - start;
-			printf("rth|%12s|%12s|%12s|%12s|     %.2ld:%.2ld:%.2ld\n", "lat min", "lat avg", "lat max", "overrun", dt/3600, (dt/60)%60, dt%60 + 1);
+			printf("rth|%12s|%12s|%12s|%8s|     %.2ld:%.2ld:%.2ld\n", "lat min", "lat avg", "lat max", "overrun", dt/3600, (dt/60)%60, dt%60 + 1);
 		}
-		printf("rtd|%12ld|%12ld|%12ld|%12ld\n", smpl->minjitter, smpl->avgjitter, smpl->maxjitter, smpl->overrun);
+		printf("rtd|%12ld|%12ld|%12ld|%8ld\n", smpl->minjitter, smpl->avgjitter, smpl->maxjitter, smpl->overrun);
 		rt_queue_free(&q, smpl);
 	}
 	rt_queue_unbind(&q);
@@ -39,8 +41,10 @@ void display(void *cookie)
 
 void cleanup_upon_sig(int sig __attribute__((unused)))
 {
-	finished = 1;
-	fflush(stdout);
+	if (!finished) {
+		finished = 1;
+		fflush(stdout);
+	}
 }
 
 int main (int argc, char **argv)
