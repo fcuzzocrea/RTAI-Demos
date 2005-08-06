@@ -23,8 +23,8 @@ sleep 1
 $SUDO ./display &
 read junk
 read junk
-DISP=`ps -a |grep display | awk '{ print $1 }'`
-kill -9 $DISP
-LATE=`ps -a |grep latwdisp | awk '{ print $1 }'`
-kill -9 $LATE
+TASK=`ps -a |grep display | awk '{ print $1 }'`
+kill -9 $TASK
+TASK=`ps -a |grep latwdisp | awk '{ print $1 }'`
+kill -9 $TASK
 ../remod
