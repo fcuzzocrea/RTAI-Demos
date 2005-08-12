@@ -13,6 +13,9 @@
 #include <sem.h>
 #include <queue.h>
 
+extern int rt_is_hard_timer_running(void);
+static volatile int hard_timer_running;
+
 RT_TASK latency_task, display_task;
 
 RT_SEM display_sem;
@@ -64,13 +67,14 @@ void latency (void *cookie)
 
     rt_queue_create(&q, "queue", 0, 100, 0);
 
-    err = rt_timer_start(TM_ONESHOT);
-
-    if (err)
-        {
-        fprintf(stderr,"latency: cannot start timer, code %d\n",err);
-        return;
-        }
+    if (!(hard_timer_running = rt_is_hard_timer_running())) {
+	err = rt_timer_start(TM_ONESHOT);
+    	if (err)
+           {
+	   fprintf(stderr,"latency: cannot start timer, code %d\n",err);
+           return;
+           }
+    }
 
     err = rt_timer_inquire(&timer_info);
     
@@ -304,7 +308,10 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
         return;
 
     finished = 1;
-    rt_timer_stop();
+    if (!hard_timer_running)
+	{
+	rt_timer_stop();
+	}
     rt_sem_delete(&display_sem);
 
     if (do_histogram || do_stats)
@@ -417,7 +424,7 @@ int main (int argc, char **argv)
         cleanup_upon_sig(0);
 
     if (period_ns == 0)
-        period_ns = 100000; /* ns */
+        period_ns = 50000; /* ns */
 
     signal(SIGINT, cleanup_upon_sig);
     signal(SIGTERM, cleanup_upon_sig);
