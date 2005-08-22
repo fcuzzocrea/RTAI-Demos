@@ -29,7 +29,7 @@ long gminjitter = TEN_MILLION,
     gavgjitter = 0,
     goverrun = 0;
 
-int period_ns = 0;
+long long period_ns = 0;
 int test_duration = 0;  /* sec of testing, via -T <sec>, 0 is inf */
 int data_lines = 21;    /* data lines per header line, -l <lines> to change */
 int quiet = 0;          /* suppress printing of RTH, RTD lines when -T given */
@@ -111,10 +111,10 @@ void latency (void *cookie)
 
             if (err)
                 {
-                if (err != -ETIMEDOUT)
+                if (err != -ETIMEDOUT) {
 		    rt_queue_delete(&q);
                     rt_task_delete(NULL); /* Timer stopped. */
-
+		}
                 overrun++;
                 }
 
@@ -143,18 +143,19 @@ void latency (void *cookie)
             if(maxj > gmaxjitter)
                 gmaxjitter = maxj;
 
+            avgjitter = sumj / nsamples;
+            gavgjitter += avgjitter;
+            goverrun += overrun;
+            rt_sem_v(&display_sem);
+
         struct smpl_t { long minjitter, avgjitter, maxjitter, overrun; } *smpl;
         smpl = rt_queue_alloc(&q, sizeof(struct smpl_t));
         smpl->minjitter = rt_timer_tsc2ns(minj);
         smpl->maxjitter = rt_timer_tsc2ns(maxj);
         smpl->avgjitter = rt_timer_tsc2ns(sumj / nsamples);
-        smpl->overrun   = overrun;
-
-            avgjitter = sumj / nsamples;
-            gavgjitter += avgjitter;
-            goverrun += overrun;
-            rt_sem_v(&display_sem);
+        smpl->overrun   = goverrun;
 	rt_queue_send(&q, smpl, sizeof(struct smpl_t), TM_NONBLOCK);
+
             }
 
         if(warmup && test_loops == WARMUP_TIME)
@@ -375,7 +376,7 @@ int main (int argc, char **argv)
 
             case 'p':
 
-                period_ns = atoi(optarg) * 1000;
+                period_ns = atoi(optarg) * 1000LL;
                 break;
 
             case 'l':
@@ -433,7 +434,7 @@ int main (int argc, char **argv)
 
     setlinebuf(stdout);
 
-    printf("== Sampling period: %d us\n",period_ns / 1000);
+    printf("== Sampling period: %Ld us\n",period_ns / 1000);
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
