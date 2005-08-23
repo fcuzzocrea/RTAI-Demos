@@ -1,28 +1,5 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m = intrlat_rt.o
 
-CC = $(shell rtai-config --cc)
-LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
-LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
-
-all: latency switch latwdisp display
-
-latency: latency.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lm -llxrt
-
-switch: switch.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
-
-latwdisp: latwdisp.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lm -llxrt
-
-display: display.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
-
-clean:
-	rm -f *.o latency switch latwdisp display
-
-.PHONY: clean
+intrlat_rt-objs := intrlat.o

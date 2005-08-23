@@ -1,1 +1,3 @@
+rmmod intrlat_rt.ko
+rmmod intrlat_rt.o
 ../remod
