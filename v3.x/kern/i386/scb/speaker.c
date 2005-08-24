@@ -12,6 +12,8 @@
 
 MODULE_LICENSE("GPL");
 
+//#define CONFIG_X86_64
+
 #define SCBSUPRT  USE_GFP_ATOMIC
 #define SCBSIZ    2000
 
@@ -23,7 +25,7 @@ MODULE_LICENSE("GPL");
 /* You can make this bigger, but then you start to get
  * clipping, which sounds bad.  29 is good.
  */
-#define VOLUME  29
+#define VOLUME  30
 
 static RT_TASK thread;
 
@@ -37,9 +39,24 @@ static void *scb;
 
 static volatile int end;
 
+#define PORT_ADR 0x61
+
+static int filter(int x)
+{
+        static int oldx;
+        int ret;
+
+        if (x & 0x80) {
+                x = 382 - x;
+        }
+        ret = x > oldx;
+        oldx = x;
+        return ret;
+}
+
 static void intr_handler(int t)
 {
-	char data;
+	char data, temp;
 	int go = 0;
 	int divisor = DIVISOR;
 
@@ -48,11 +65,21 @@ static void intr_handler(int t)
 			divisor = DIVISOR;
 			cpu_used[hard_cpu_id()]++;
 			go = !rt_scb_get(scb, &data, 1);
-		}
+                } else {
+                        go = 0;
+                }
 		if (go) {
+#ifdef CONFIG_X86_64
+                        data = filter(data);
+                        temp = inb(PORT_ADR);
+                        temp &= 0xfd;
+                        temp |= (data & 1) << 1;
+                        outb(temp, PORT_ADR);
+#else
 			outb(port61, 0x61);
 			outb(port61^1, 0x61);
 			outb(vl_tab[((unsigned int)data)&0xff], 0x42);
+#endif
 		}
 		rt_task_wait_period();
 	}
