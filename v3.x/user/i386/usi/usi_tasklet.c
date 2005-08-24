@@ -37,7 +37,7 @@ static struct rt_tasklet_struct *tasklet;
 static SEM *dspsem;
 static volatile int ovr, intcnt;
 
-#define DIAG_FLAGS
+//#define DIAG_FLAGS
 #include "check_flags.h"
 
 static void timer_handler(unsigned long data)

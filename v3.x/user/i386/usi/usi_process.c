@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 static SEM *dspsem;
 static volatile int ovr, intcnt;
 
-#define DIAG_FLAGS
+//#define DIAG_FLAGS
 #include "check_flags.h"
 
 static void *timer_handler(void *args)
