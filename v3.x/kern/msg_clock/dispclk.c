@@ -119,14 +119,14 @@ void Display_PutHour(MenageHmsh_tChain11 chain)
 	static MenageHmsh_tChain11 hours;
 	static RT_TASK *ackn = 0;
 	unsigned int put = 'p';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != &Display) {
 		ackn = rt_rpc(&Display, put, &msg);
 	}
 	hours = chain;
 	hours.chain[0] = 'h';
-	rt_send_if(&Display, (unsigned int)hours.chain);
+	rt_send_if(&Display, (unsigned long)hours.chain);
 }
 
 void Display_PutTimes(MenageHmsh_tChain11 chain)
@@ -134,21 +134,21 @@ void Display_PutTimes(MenageHmsh_tChain11 chain)
 	static MenageHmsh_tChain11 times;
 	static RT_TASK *ackn = 0;
 	unsigned int put = 'P';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != &Display) {
 		ackn = rt_rpc(&Display, put, &msg);
 	}
 	times = chain;
 	times.chain[0] = 't';
-	rt_send_if(&Display, (unsigned int)times.chain);
+	rt_send_if(&Display, (unsigned long)times.chain);
 }
 
 void Display_Get(MenageHmsh_tChain11 *chain, Display_tDest *receiver)
 {
 	static RT_TASK *ackn = 0;
 	unsigned int get = 'g';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != &Display) {
 		ackn = rt_rpc(&Display, get, &msg);
@@ -162,7 +162,7 @@ int cpu_used[NR_RT_CPUS];
 
 static void Display_task(int t)
 {
-	unsigned int command;
+	unsigned long command;
 	int ackn = 0;
 	RT_TASK *get = (RT_TASK *)0, *tput = (RT_TASK *)0, *hput = (RT_TASK *)0, *task;
 
