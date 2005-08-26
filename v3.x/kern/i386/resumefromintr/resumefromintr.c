@@ -136,7 +136,9 @@ static void intr_handler(int t) {
 }
 
 
+#ifdef EMULATE_TSC
 DECLR_8254_TSC_EMULATION;
+#endif
 
 int init_module(void)
 {
@@ -153,7 +155,9 @@ int init_module(void)
 #else
 	rt_request_timer((void *)rt_timer_tick, imuldiv(TICK, FREQ_8254, 1000000000), 0);
 #endif
+#ifdef EMULATE_TSC
 	SETUP_8254_TSC_EMULATION;
+#endif
 	return 0;
 }
 
@@ -162,7 +166,9 @@ void cleanup_module(void)
 {
 	int cpuid;
 	rt_reset_irq_to_sym_mode(0);
+#ifdef EMULATE_TSC
 	CLEAR_8254_TSC_EMULATION;
+#endif
 	rt_free_timer();
 	rtf_destroy(CMDF);
 	if (Mode) {
