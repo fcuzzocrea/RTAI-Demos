@@ -34,19 +34,9 @@ int main(void)
 	int i, *shm, shm_size, count;
 	unsigned long chksum;
 
-	struct sched_param mysched;
-
-	mysched.sched_priority = 99;
-
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-	puts(" ERROR IN SETTING THE SCHEDULER UP");
-	perror( "errno" );
-	exit( 0 );
- 	}       
-
+	sending_task = rt_task_init_schmod(nam2num("STSK"), 0, 0, 0, SCHED_FIFO, 0xF);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-
-	sending_task = rt_task_init(nam2num("STSK"), 0, 0, 0);
+	rt_make_hard_real_time();
 	shmsem   = rt_get_adr(nam2num("SHSM"));
 	agentsem = rt_get_adr(nam2num("AGSM"));
 	shm = rt_shm_alloc(nam2num("MEM"), 0, 0);
