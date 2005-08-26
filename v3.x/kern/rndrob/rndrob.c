@@ -48,7 +48,7 @@ static RT_TASK thread[NTASKS];
 
 static int nsw[NTASKS];
 
-static void fun(int indx)
+static void fun(long indx)
 {
 	RTIME startime;
 	rt_printk("RESUMED TASK #%d (%p) ON CPU %d.\n", indx, &thread[indx], hard_cpu_id());

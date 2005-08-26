@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define LOOPS 1000000000
 
-#define NTASKS 16
+#define NTASKS 8
 
 static RT_TASK thread[NTASKS];
 

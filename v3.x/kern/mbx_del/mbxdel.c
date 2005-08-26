@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define STACK_SIZE  2000
 
-#define NUM_TASKS  16
+#define NUM_TASKS  8
 
 static RT_TASK task[NUM_TASKS + 1];
 
