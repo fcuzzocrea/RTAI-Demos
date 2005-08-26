@@ -38,7 +38,7 @@ static RT_TASK thread;
 
 static int cpu_used[NR_RT_CPUS];
 
-static void intr_handler(int t)
+static void intr_handler(long t)
 {
 	char wakeup;
 	while(1) {
@@ -56,8 +56,8 @@ int init_module(void)
 #ifdef ONE_SHOT
 	rt_set_oneshot_mode();
 #endif
-	rt_task_init(&thread, intr_handler, 0, STACK_SIZE, 0, 0, 0);
 	tick_period = start_rt_timer(nano2count(TICK_PERIOD));
+	rt_task_init(&thread, intr_handler, 0, STACK_SIZE, 0, 0, 0);
 	rt_task_make_periodic(&thread, rt_get_time() + 2*tick_period, tick_period);
 	return 0;
 }

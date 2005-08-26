@@ -38,7 +38,7 @@ static int cond_data;
 
 static atomic_t cleanup;
 
-static void task_func1(int dummy)
+static void task_func1(long dummy)
 {
 	rt_printk("Starting task1, waiting on the conditional variable to be 1.\n");
 	rt_mutex_lock(&mtx);
@@ -66,7 +66,7 @@ static void task_func1(int dummy)
 }
 
 
-static void task_func2(int dummy)
+static void task_func2(long dummy)
 {
 	rt_printk("Starting task2, waiting on the conditional variable to be 2.\n");
 	rt_mutex_lock(&mtx);
@@ -90,7 +90,7 @@ static void task_func2(int dummy)
 	atomic_inc(&cleanup);
 }
 
-static void task_func3(int dummy)
+static void task_func3(long dummy)
 {
 	rt_printk("Starting task3, waiting on the conditional variable to be 3 with a 2 s timeout.\n");
 	rt_mutex_lock(&mtx);
@@ -112,7 +112,7 @@ static void task_func3(int dummy)
 	atomic_inc(&cleanup);
 }
 
-static void task_func4(int dummy)
+static void task_func4(long dummy)
 {
 	rt_printk("Starting task4, signalling after setting data to 1, then waits for a broadcast.\n");
 	rt_mutex_lock(&mtx);

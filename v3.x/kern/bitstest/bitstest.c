@@ -36,7 +36,7 @@ static RT_TASK task0, task1, task;
 
 static BITS bits;
 
-static void fun0(int t)
+static void fun0(long t)
 {
 	unsigned long resulting_mask;
 	int timeout;
@@ -56,7 +56,7 @@ static void fun0(int t)
 	atomic_inc(&cleanup);
 }
 
-static void fun1(int t)
+static void fun1(long t)
 {
 	unsigned long resulting_mask;
 	int timeout;
@@ -76,7 +76,7 @@ static void fun1(int t)
 	atomic_inc(&cleanup);
 }
 
-static void fun(int t)
+static void fun(long t)
 {
 	rt_printk("SIGNAL SET_BITS 0x0000FFFF AND RETURNS BITS MASK %lx\n",
 	rt_bits_signal(&bits, SET_BITS, 0x0000FFFF));

@@ -42,7 +42,7 @@ static RTIME tick_period;
 
 static int cpu_used[NR_RT_CPUS];
 
-static void fun(int t)
+static void fun(long t)
 {
 	unsigned int loops = LOOPS;
 	while(loops--) {
