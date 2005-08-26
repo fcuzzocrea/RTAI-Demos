@@ -41,14 +41,14 @@ typedef struct {
 #define TBXSIZE (5*sizeof(MSG))  //big tbx stress!       
 #define ORDER PRIO_Q             //FIFO ordered
 #define MAXCOUNT 500
-#define TIMEBASE 10000000
+#define TIMEBASE 1000000
 #define DELAY (5*TIMEBASE)
 #define SHIFT (2*TIMEBASE)
 #define TIMEOUT (10*TIMEBASE)
 
 static int cleanup;
 
-static void Task1(int t)
+static void Task1(long t)
 {
 	int unsent;
 	MSG msg;
@@ -66,7 +66,7 @@ static void Task1(int t)
 	rt_task_suspend(rt_whoami());
 }                                        
 
-static void Task2(int t) 
+static void Task2(long t) 
 {   
 	int status;
 	MSG buf;
@@ -86,7 +86,7 @@ static void Task2(int t)
 	rt_task_suspend(rt_whoami());
 }
 
-static void Task3(int t) 
+static void Task3(long t) 
 {   
 	int status;
 	MSG buf;
@@ -104,7 +104,7 @@ static void Task3(int t)
 	rt_task_suspend(rt_whoami());
 }
                                                                                    
-static void Task4(int t)
+static void Task4(long t)
 {
 	int wakedup;
 	MSG msg;
@@ -129,7 +129,7 @@ static void Task4(int t)
 	rt_task_suspend(rt_whoami());
 }                                        
 
-static void Task5(int t) 
+static void Task5(long t) 
 {   
 	int status;
 	MSG buf;
@@ -149,7 +149,7 @@ static void Task5(int t)
 	rt_task_suspend(rt_whoami());
 }
 
-static void Task6(int t) 
+static void Task6(long t) 
 {   
 	int status;
 	MSG buf;
@@ -167,7 +167,7 @@ static void Task6(int t)
 	rt_task_suspend(rt_whoami());
 }
 
-static void Task7(int t)
+static void Task7(long t)
 {
 	int unsent;
 	MSG msg;

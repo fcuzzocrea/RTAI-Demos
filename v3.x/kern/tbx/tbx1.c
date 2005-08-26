@@ -46,7 +46,7 @@ static char msg3[] = {"URGENT FROM TASK7!"};
 
 static int cleanup;
 
-static void Task1(int t)
+static void Task1(long t)
 {
 	int unsent;
     
@@ -61,7 +61,7 @@ static void Task1(int t)
 	rt_task_suspend(rt_whoami());
 }                                        
 
-static void Task2(int t) 
+static void Task2(long t) 
 {   
 	int status;
 	char buf[100];
@@ -75,7 +75,7 @@ static void Task2(int t)
 	}
 }
 
-static void Task3(int t) 
+static void Task3(long t) 
 {   
 	int status;
 	char buf[100];
@@ -88,7 +88,7 @@ static void Task3(int t)
 	}
 }
                                                                                    
-static void Task4(int t)
+static void Task4(long t)
 {
 	int wakedup;
     
@@ -103,7 +103,7 @@ static void Task4(int t)
 	rt_task_suspend(rt_whoami());
 }                                        
 
-static void Task5(int t) 
+static void Task5(long t) 
 {   
 	int status;
 	char buf[100];
@@ -116,7 +116,7 @@ static void Task5(int t)
 	}
 }
 
-static void Task6(int t) 
+static void Task6(long t) 
 {   
 	int status;
 	char buf[100];
@@ -129,7 +129,7 @@ static void Task6(int t)
 	}
 }
 
-static void Task7(int t)
+static void Task7(long t)
 {
 	int unsent;
     

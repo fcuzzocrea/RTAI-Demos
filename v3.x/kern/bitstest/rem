@@ -1,2 +1,4 @@
-rmmod bits_rt
+rmmod switches_rt
+dmesg
+ps
 ../remod

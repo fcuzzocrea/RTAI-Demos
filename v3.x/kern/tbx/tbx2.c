@@ -46,7 +46,7 @@ typedef struct {
 
 static int cleanup;
 
-static void Task1(int t)
+static void Task1(long t)
 {
 	int unsent;
 	MSG msg;
@@ -64,7 +64,7 @@ static void Task1(int t)
 	rt_task_suspend(rt_whoami());
 }                                        
 
-static void Task2(int t) 
+static void Task2(long t) 
 {   
 	int status;
 	MSG buf;
@@ -77,7 +77,7 @@ static void Task2(int t)
 	}
 }
 
-static void Task3(int t) 
+static void Task3(long t) 
 {   
 	int status;
 	MSG buf;
@@ -91,7 +91,7 @@ static void Task3(int t)
 	}
 }
 
-static void Task4(int t)
+static void Task4(long t)
 {
 	int wakedup;
 	MSG msg;
@@ -109,7 +109,7 @@ static void Task4(int t)
 	rt_task_suspend(rt_whoami());
 }                                        
 
-static void Task5(int t) 
+static void Task5(long t) 
 {   
 	int status;
 	MSG buf;
@@ -122,7 +122,7 @@ static void Task5(int t)
 	}
 }
 
-static void Task6(int t) 
+static void Task6(long t) 
 {   
 	int status;
 	MSG buf;
@@ -135,7 +135,7 @@ static void Task6(int t)
 	}
 }
 
-static void Task7(int t)
+static void Task7(long t)
 {
 	int unsent;
 	MSG msg;
