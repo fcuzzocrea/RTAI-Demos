@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <asm/io.h>
 
+MODULE_LICENSE("GPL");
+
 #include <asm/rtai.h>
 #include <rtai_sched.h>
 #include <rtai_mbx.h>
@@ -37,7 +39,7 @@ static MBX mbx;
 
 static atomic_t cleanup;
 
-void fun1(int t)
+void fun1(long t)
 {
 	int msg;
 	if (t & 1) {
@@ -48,26 +50,28 @@ void fun1(int t)
 		RT_PRINTK("TASK %d UNBLOCKS RECEIVING ON MBX %d BYTES\n", t, rt_mbx_receive(&mbx, &msg, sizeof(msg)));
 	}
         atomic_inc(&cleanup);
-//	rt_task_suspend(&task[t]);
 }
 
-void fun2(int t)
+void fun2(long t)
 {
 	RT_PRINTK("ANOTHER TASK DELETES THE MBX AND ...\n"); 
 	rt_mbx_delete(&mbx);
         atomic_inc(&cleanup);
-//	rt_task_suspend(&task[t]);
 }
 
 int init_module(void)
 {
 	int i;
+        rt_set_oneshot_mode();
+	start_rt_timer(0);
 	rt_mbx_init(&mbx, 5);
 	for (i = 0; i < NUM_TASKS; i++) {
 		rt_task_init(&task[i], fun1, i, STACK_SIZE, 0, 0, 0);
+		rt_task_make_periodic(&task[i], rt_get_time() + 100000000, 100000);
 		rt_task_resume(&task[i]);
 	}
 	rt_task_init(&task[NUM_TASKS], fun2, NUM_TASKS, STACK_SIZE, 1, 0, 0);
+	rt_task_make_periodic(&task[NUM_TASKS], rt_get_time() + 200000000, 100000);
 	rt_task_resume(&task[NUM_TASKS]);
 	while (atomic_read(&cleanup) < (NUM_TASKS + 1)) {
 		current->state = TASK_INTERRUPTIBLE;
@@ -83,4 +87,5 @@ void cleanup_module(void)
 	for (i = 0; i <= NUM_TASKS; i++) {
 		rt_task_delete(&task[i]);
 	}
+	stop_rt_timer();
 }

@@ -46,7 +46,7 @@ static MBX *mbx_in, *mbx_out;
 
 extern atomic_t cleanup;
 
-static void task_code(int task_no)
+static void task_code(long task_no)
 {
 	int i, ret, srvport;
 	char buf[9];
@@ -107,7 +107,7 @@ rt_printk("TASK_NO %d REL ITS EXEC COMNODE PORT %lx, %d\n", task_no, comnode, sr
 
 static RT_TASK init_thread;
 
-static void init_code(int none)
+static void init_code(long none)
 {
 	int i, srvport;
 

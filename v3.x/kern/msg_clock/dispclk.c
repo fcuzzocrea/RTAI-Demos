@@ -160,7 +160,7 @@ void Display_Get(MenageHmsh_tChain11 *chain, Display_tDest *receiver)
 
 int cpu_used[NR_RT_CPUS];
 
-static void Display_task(int t)
+static void Display_task(long t)
 {
 	unsigned long command;
 	int ackn = 0;

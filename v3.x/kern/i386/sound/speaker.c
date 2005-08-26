@@ -49,7 +49,7 @@ static int filter(int x)
         return ret;
 }
 
-static void intr_handler(int t)
+static void intr_handler(long t)
 {
 	char data, temp;
 	int go=0;

@@ -119,7 +119,7 @@ rt_sched_unlock();
 
 #endif
 
-static void intr_handler(int t) {
+static void intr_handler(long t) {
 
 	while(1) {
 		cpu_used[hard_cpu_id()]++;

@@ -40,7 +40,7 @@ static MBX *mbx_in, *mbx_out;
 static RTIME checkt;
 static int checkj, cleanup;
 
-static void task_code(int task_no)
+static void task_code(long task_no)
 {
 	int i, ret;
 	char buf[9];
@@ -96,7 +96,7 @@ static void task_code(int task_no)
 /*
  * initialization task
  */
-static void start_task_code(int notused)
+static void start_task_code(long notused)
 {
 	int i;
 	char buf[9];
@@ -199,7 +199,7 @@ void cleanup_module(void)
 	checkt = rdtsc() - checkt;
 	checkj = jiffies - checkj;
 	stop_rt_timer();
-	printk("\n(JIFFIES COUNT CHECK: TRUE = %d, LINUX = %d)\n", (int)llimd(checkt, 100, CPU_FREQ), checkj);
+	printk("\n(JIFFIES COUNT CHECK: TRUE = %d, LINUX = %d)\n", (int)llimd(checkt, HZ, CPU_FREQ), checkj);
 #ifdef DELETE
 	do {
 		int i;

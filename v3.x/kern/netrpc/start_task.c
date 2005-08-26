@@ -47,7 +47,7 @@ static MBX *mbx_in, *mbx_out;
 
 extern atomic_t cleanup;
 
-static void start_task_code(int none)
+static void start_task_code(long none)
 {
 	int i, srvport;
 	char buf[9];

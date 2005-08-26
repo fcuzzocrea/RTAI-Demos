@@ -49,7 +49,7 @@ static RT_TASK thread;
 static int *shm;
 static int counter = 0;
 
-static void fun(int t)
+static void fun(long t)
 {
 	while (1) {
 		*shm = ++counter;

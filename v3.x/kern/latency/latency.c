@@ -51,7 +51,7 @@ int avrgtime = 1;
 MODULE_PARM(avrgtime, "i");
 MODULE_PARM_DESC(avrgtime, "Averages are calculated for <avrgtime (s)> runs (default: 1)");
 
-int use_fpu = 0;
+int use_fpu = 1;
 MODULE_PARM(use_fpu, "i");
 MODULE_PARM_DESC(use_fpu, "do we want to use the FPU? (default: 0)");
 
@@ -127,7 +127,7 @@ static int proc_read(char *page, char **start, off_t off,
  */
  
 void
-fun(int thread)
+fun(long thread)
 {
 
 	int diff = 0;

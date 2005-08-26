@@ -72,7 +72,7 @@ static int keybrd_handler(unsigned int fifo)
 }
 
 
-static void ClockChrono_Read(int t)
+static void ClockChrono_Read(long t)
 {
 	char ch;
 	int run = 0;
@@ -108,7 +108,7 @@ static void ClockChrono_Read(int t)
 	}
 }
 
-static void ClockChrono_Clock(int t)
+static void ClockChrono_Clock(long t)
 {
 	const int hundredthes = FALSE;
 	MenageHmsh_tHour hour;
@@ -153,7 +153,7 @@ static void ClockChrono_Clock(int t)
 	}
 }
 
-static void ClockChrono_Chrono(int t)
+static void ClockChrono_Chrono(long t)
 {
 	MenageHmsh_tHour times;			
 	MenageHmsh_tChain11 timesChain;
@@ -204,7 +204,7 @@ static void ClockChrono_Chrono(int t)
 	}
 }
 
-static void ClockChrono_Write(int t)
+static void ClockChrono_Write(long t)
 {
 	Display_tDest receiver;
 	MenageHmsh_tChain11 chain;
