@@ -30,7 +30,7 @@ MODULE_LICENSE("GPL");
 
 #define TICK_PERIOD 100000
 
-#define STACK_SIZE 1000
+#define STACK_SIZE 2000
 
 #define CMDF 0
 
