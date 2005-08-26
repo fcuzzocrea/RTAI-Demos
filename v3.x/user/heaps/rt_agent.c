@@ -46,7 +46,7 @@ SEM shmsem, agentsem;
 #define PRINTK(fmt, args...)
 #endif
 
-void fun(int t)
+void fun(long t)
 {
 	int op;
 	RT_TASK *msgtsk;

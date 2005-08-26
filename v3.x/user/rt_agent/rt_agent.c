@@ -54,7 +54,7 @@ int *shm;
 SEM agentsem;
 SEM shmsem;
 
-void fun(int t)
+void fun(long t)
 {
 	int op;
 	RT_TASK *msgtsk;
