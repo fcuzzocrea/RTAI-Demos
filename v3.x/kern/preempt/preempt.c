@@ -33,7 +33,9 @@ MODULE_LICENSE("GPL");
 
 #define NAVRG 1000
 
-#define USE_FPU 0
+#define STACKSIZE 4210
+
+#define USE_FPU 1
 
 #define FASTMUL  4
 
@@ -56,7 +58,7 @@ static RTIME expected;
 
 static int cpu_used[NR_RT_CPUS];
 
-static void Slow_Thread(int dummy)
+static void Slow_Thread(long dummy)
 {
 	int jit;
 	RTIME svt, t;
@@ -72,7 +74,7 @@ static void Slow_Thread(int dummy)
         }
 }                                        
 
-static void Fast_Thread(int dummy) 
+static void Fast_Thread(long dummy) 
 {                             
 	int jit;
 	RTIME svt, t;
@@ -88,7 +90,7 @@ static void Fast_Thread(int dummy)
         }                      
 }
 
-static void fun(int thread) {
+static void fun(long thread) {
 
 	struct sample { long min, max, avrg, jitters[2]; } samp;
 	int diff;
@@ -142,9 +144,9 @@ static int __preempt_init(void)
 
 	rtf_create(FIFO, 1000);
 	rt_linux_use_fpu(USE_FPU);
-	rt_task_init(&thread, fun, 0, 3000, 0, USE_FPU, 0);
-	rt_task_init(&Fast_Task, Fast_Thread, 0, 3000, 1, 0, 0);
-	rt_task_init(&Slow_Task, Slow_Thread, 0, 3000, 2, 0, 0);
+	rt_task_init(&thread, fun, 0, STACKSIZE, 0, USE_FPU, 0);
+	rt_task_init(&Fast_Task, Fast_Thread, 0, STACKSIZE, 1, 0, 0);
+	rt_task_init(&Slow_Task, Slow_Thread, 0, STACKSIZE, 2, 0, 0);
 	if ((hard_timer_running = rt_is_hard_timer_running())) {
 		period = nano2count(TICK_TIME);
 	} else {

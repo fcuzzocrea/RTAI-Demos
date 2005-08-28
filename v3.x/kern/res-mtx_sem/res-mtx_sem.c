@@ -53,7 +53,7 @@ struct op_buffer {
 
 static struct op_buffer test_op;
 
-void task_func(int tid)
+void task_func(long tid)
 {
 	RT_TASK *task;
 	int i;
@@ -82,7 +82,7 @@ void task_func(int tid)
 
 static RT_TASK tasks[NUM_TASKS];
 
-void control_func(int tid)
+void control_func(long tid)
 {
 	int i;
 	RT_TASK *task;

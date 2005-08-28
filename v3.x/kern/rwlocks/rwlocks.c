@@ -41,7 +41,7 @@ static RWL rwl;
 
 static int extcnt[NTASKS];
 
-static void fun(int idx)
+static void fun(long idx)
 {
 	unsigned int loops = LOOPS;
 	while(loops--) {
