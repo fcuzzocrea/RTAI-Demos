@@ -67,11 +67,9 @@ int init_module(void)
 	rt_mbx_init(&mbx, 5);
 	for (i = 0; i < NUM_TASKS; i++) {
 		rt_task_init(&task[i], fun1, i, STACK_SIZE, 0, 0, 0);
-		rt_task_make_periodic(&task[i], rt_get_time() + 100000000, 100000);
 		rt_task_resume(&task[i]);
 	}
 	rt_task_init(&task[NUM_TASKS], fun2, NUM_TASKS, STACK_SIZE, 1, 0, 0);
-	rt_task_make_periodic(&task[NUM_TASKS], rt_get_time() + 200000000, 100000);
 	rt_task_resume(&task[NUM_TASKS]);
 	while (atomic_read(&cleanup) < (NUM_TASKS + 1)) {
 		current->state = TASK_INTERRUPTIBLE;
