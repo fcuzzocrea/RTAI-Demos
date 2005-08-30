@@ -65,7 +65,7 @@ static void timer_tick(void)
 static MBX mbx;
 static RT_TASK sup_task;
 
-static void sup_fun(int none)
+static void sup_fun(long none)
 {
         while ((taskport = rt_request_port(tasknode)) <= 0);
 	rt_mbx_receive(&mbx, &rmt_task, sizeof(rmt_task));
