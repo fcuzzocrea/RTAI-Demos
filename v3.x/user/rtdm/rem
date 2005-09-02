@@ -1,0 +1,3 @@
+rmmod -f rtai_16550A
+rmmod -f rtai_rtdm
+../remod
