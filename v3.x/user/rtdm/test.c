@@ -41,8 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtdm/rtserial.h>
 
 #define LOOPS  10
-#define RX_TIMEOUT  1000000000
-#define PAUSE_TIME  1000000000
+#define RX_TIMEOUT  500000000
+#define PAUSE_TIME  500000000
 
 static int sfd, rfd;
 
@@ -80,7 +80,7 @@ int main(void)
 		serconf.rx_timeout  = RX_TIMEOUT;
 		rt_dev_ioctl(rfd, RTSER_RTIOC_SET_CONFIG, &serconf);
 		printf("\nhello_world_lxrt: rtser0 test started (fd_count = %d)\n", rt_dev_fdcount());
-		for (i = 0; i < LOOPS; i++) {
+		for (i = 1; i <= LOOPS; i++) {
 			strcpy(hello, "Hello World\n\r");
 			rt_dev_write(sfd, hello, sizeof(hello) - 1);
 			rt_dev_ioctl(sfd, RTSER_RTIOC_GET_STATUS, &status);
