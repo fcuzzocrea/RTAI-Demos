@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	unsigned long rcvnode;
 	RT_TASK *sndtsk, *rcvtsk;
 	MBX *mbx;
-	int i, rcvport;
+	long i, rcvport;
         struct sockaddr_in addr;
 
         thread = rt_thread_create(endme, NULL, 2000);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 	while (!(rcvtsk = RT_get_adr(rcvnode, rcvport, "RCVTSK"))) {
 		RT_sleep(rcvnode, rcvport, 100000000);
 	}
-	RT_send(rcvnode, rcvport, rcvtsk, i);
+	RT_rpc(rcvnode, rcvport, rcvtsk, i, &i);
 	rt_release_port(rcvnode, rcvport);
 	rt_mbx_delete(mbx);
 	rt_task_delete(sndtsk);

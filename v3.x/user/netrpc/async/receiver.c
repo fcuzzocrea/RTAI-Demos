@@ -72,7 +72,7 @@ static int athread;
 int main(int argc, char *argv[])
 {
 	unsigned long sndnode;
-	int sndport, i, r;
+	long sndport, i, r;
 	RT_TASK *rcvtsk, *sndtsk;
         struct sockaddr_in addr;
 	static MBX *sndmbx;
@@ -132,8 +132,8 @@ if (SERVER) {
 	}
 
 	rt_make_soft_real_time();
-        rt_thread_join(athread);
-	rt_receive(0, &i);
+	rt_thread_join(athread);
+	rt_return(rt_receive(0, &i), i);
 	rt_release_port(sndnode, sndport);
 	stop_rt_timer();
 	rt_mbx_delete(mbx);
