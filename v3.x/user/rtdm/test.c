@@ -41,8 +41,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtdm/rtserial.h>
 
 #define LOOPS  10
-#define RX_TIMEOUT  500000000
-#define PAUSE_TIME  500000000
+#define TRX_TIMEOUT  500000000
+#define BAUD_RATE    RTSER_115200_BAUD
+#define PAUSE_TIME   50000000
 
 static int sfd, rfd;
 
@@ -55,8 +56,8 @@ static void endme(int dummy)
 int main(void)
 {
 	RT_TASK *testcomtsk;
-	char hello[20];
-	rtser_config_t serconf = { 0xFFFF, RTSER_DEF_BAUD, RTSER_DEF_PARITY, RTSER_DEF_BITS, RTSER_DEF_STOPB, RTSER_DEF_HAND, RTSER_DEF_FIFO_DEPTH, RTSER_DEF_TIMEOUT, RTSER_DEF_TIMEOUT, RTSER_DEF_TIMEOUT, RTSER_DEF_TIMESTAMP_HISTORY };
+	char hello[] = "Hello World\n\r";
+	rtser_config_t serconf;
 	struct rtser_status status;
 	int mcr_status, i;
 	
@@ -74,10 +75,16 @@ int main(void)
 		printf("hello_world_lxrt: error in rt_dev_open()\n");
 		return 1;
 	} else {	
+// GET_CONFIGs not needed, as the duplicated initializations, just for testing.
+		rt_dev_ioctl(sfd, RTSER_RTIOC_GET_CONFIG, &serconf);
+		serconf.config_mask = RTSER_SET_BAUD | RTSER_SET_TIMEOUT_TX;
+		serconf.rx_timeout  = TRX_TIMEOUT;
+		serconf.baud_rate   = BAUD_RATE;
 		rt_dev_ioctl(sfd, RTSER_RTIOC_SET_CONFIG, &serconf);
 		rt_dev_ioctl(rfd, RTSER_RTIOC_GET_CONFIG, &serconf);
-		serconf.config_mask = RTSER_SET_TIMEOUT_RX;
-		serconf.rx_timeout  = RX_TIMEOUT;
+		serconf.config_mask = RTSER_SET_BAUD | RTSER_SET_TIMEOUT_RX;
+		serconf.rx_timeout  = TRX_TIMEOUT;
+		serconf.baud_rate   = BAUD_RATE;
 		rt_dev_ioctl(rfd, RTSER_RTIOC_SET_CONFIG, &serconf);
 		printf("\nhello_world_lxrt: rtser0 test started (fd_count = %d)\n", rt_dev_fdcount());
 		for (i = 1; i <= LOOPS; i++) {
