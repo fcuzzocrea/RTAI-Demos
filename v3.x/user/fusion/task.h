@@ -131,7 +131,7 @@ static inline int rt_task_wait_period(void)
 {
 	struct { unsigned long retval; } arg;
 	arg.retval = rtai_lxrt(BIDX, SIZARG, WAIT_PERIOD, &arg).i[LOW];
-	return !arg.retval ? 0 : arg.retval == 1 ? -ETIMEDOUT : -EINVAL;
+	return !arg.retval ? 0 : -ETIMEDOUT;
 }
 
 static inline int rt_task_set_priority(RT_TASK *task, int prio)
