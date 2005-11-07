@@ -1,2 +1,2 @@
-Probing RTDM port to RTAI, but just by using its serial support. 
+Probing RTAI_TRIOSS using RTDM, just thorugh FUSION serial support though. 
 Overall seems OK, still to be ironed and finished. 

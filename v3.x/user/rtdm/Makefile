@@ -11,7 +11,7 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 all: test
 
 test: test.c
-	$(CC) $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt
+	$(CC) -I/usr/xenomai/include/ $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt -L/usr/xenomai/lib/ -lrtdm -lnative
 
 clean:
 	rm -f *.o test
