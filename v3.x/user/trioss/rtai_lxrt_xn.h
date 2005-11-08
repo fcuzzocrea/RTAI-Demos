@@ -29,6 +29,9 @@
 #define SET_ONESHOT_MODE		14
 #define GET_CPU_TIME_NS			20
 #define MAKE_PERIODIC_NS 		30
+#define REQUEST_RTC                    214
+#define RELEASE_RTC                    215
+
 
 #define LXRT_TASK_INIT          1002
 #define LXRT_TASK_DELETE        1003
@@ -107,10 +110,10 @@ static inline void *rtai_tskext(void)
         return (void *)rtai_lxrt(BIDX, SIZARG, RT_BUDDY, &arg).v[LOW];
 }
 
-static inline void *rtai_task_init(unsigned long name, int priority)
+static inline RT_TASK *ftask_init(unsigned long name, int priority)
 {
-        struct { int name, priority, stack_size, max_msg_size, policy, cpus_allowed; } arg = { name, priority, 0, 0, 0 };
-        return (void *)rtai_lxrt(BIDX, SIZARG, LXRT_TASK_INIT, &arg).v[LOW];
+	struct { unsigned long name; int priority, stack_size, max_msg_size, cpus_allowed; } arg = { name, priority, 0, 0, 0 };
+	return (RT_TASK *)rtai_lxrt(BIDX, SIZARG, LXRT_TASK_INIT, &arg).v[LOW];
 }
 
 static inline int rtai_task_delete(RT_TASK *task)
@@ -122,9 +125,6 @@ static inline int rtai_task_delete(RT_TASK *task)
 static inline int rtai_task_make_periodic_relative_ns(RT_TASK *task, RTIME start_delay, RTIME period)
 {
 	struct { RT_TASK *task; RTIME start_time, period; } arg = { task, start_delay, period };
-	if (!task) {
-		arg.task = rtai_tskext();
-	}	
 	return rtai_lxrt(BIDX, SIZARG, MAKE_PERIODIC_NS, &arg).i[LOW];
 }
 
@@ -170,6 +170,18 @@ static inline void stop_rtai_timer(void)
 {
 	struct { unsigned long dummy; } arg;
 	rtai_lxrt(BIDX, SIZARG, STOP_TIMER, &arg);
+}
+
+static inline void rt_request_rtc(int rtc_freq, void *handler)
+{
+	struct { long rtc_freq; void *handler; } arg = { rtc_freq, handler };
+	return rtai_lxrt(BIDX, SIZARG, REQUEST_RTC, &arg);
+}
+
+static inline void rt_release_rtc(void)
+{
+	struct { unsigned long dummy; } arg;
+	rtai_lxrt(BIDX, SIZARG, RELEASE_RTC, &arg);
 }
 
 #include <pthread.h>
