@@ -36,46 +36,41 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/io.h>
-#include <signal.h>
 
+#include "/usr/xenomai/include/rtdm/rtdm.h"
+#include "/usr/xenomai/include/rtdm/rtserial.h"
+
+#include "rtai_fusion.h"
 #include <rtai_lxrt.h>
 #include <rtai_sem.h>
-#include <rtdm/rtdm.h>
-#include <rtdm/rtserial.h>
 
-#define PRINT rt_printk // or printf to test going back and forth
+#define PRINT rt_printk
 
-#define LOOPS        1000
-#define TRX_TIMEOUT  1500000
-#define BAUD_RATE    115200
-#define PAUSE_TIME   5000
+#define LOOPS  1000
+#define TRX_TIMEOUT  1000000
+#define BAUD_RATE    115200 //RTSER_115200_BAUD
+#define PAUSE_TIME   100000
+#define FTICK_FREQ   8192
 
 static int sfd, rfd;
-
-static void endme(int dummy) 
-{ 
-//	stop_rt_timer();
-	rt_dev_close(sfd);
-	rt_dev_close(rfd);
-}
 
 int main(void)
 {
 	RT_TASK *testcomtsk;
+	FTASK ftask;
 	char hello[] = "Hello World\n\r";
 	rtser_config_t serconf;
 	struct rtser_status status;
 	int mcr_status, i;
-
-	signal(SIGINT, endme);
-	if (!(testcomtsk = rt_task_init(nam2num("TESTCOM"), 1, 0, 0))) {
+	
+	ftask_shadow(&ftask, "TESTCOM", 1, 0);
+ 	if (!(testcomtsk = ftask_init(nam2num("TESTCOM"), 1))) {
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
 	}
-	rt_set_oneshot_mode();
-	start_rt_timer(0);
+	ftimer_start((1000000000 + FTICK_FREQ/2)/FTICK_FREQ);
+	start_ftimer(0, FTICK_FREQ);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-        rt_make_hard_real_time();
 
 	if ((sfd = rt_dev_open("rtser0", O_RDWR)) < 0 || (rfd = rt_dev_open("rtser1", O_RDWR)) < 0) {
 		PRINT("hello_world_lxrt: error in rt_dev_open()\n");
@@ -92,7 +87,6 @@ int main(void)
 		serconf.rx_timeout  = TRX_TIMEOUT;
 		serconf.baud_rate   = BAUD_RATE;
 		rt_dev_ioctl(rfd, RTSER_RTIOC_SET_CONFIG, &serconf);
-		PRINT("\nhello_world_lxrt: rtser0 test started (fd_count = %d)\n", rt_dev_fdcount());
 		for (i = 1; i <= LOOPS; i++) {
 			strcpy(hello, "Hello World\n\r");
 			rt_dev_write(sfd, hello, sizeof(hello) - 1);
@@ -109,6 +103,8 @@ int main(void)
 			PRINT("\nhello_world_lxrt: %d - RECEIVED ON <rtser1>: >>%s<<.\n\n", i, hello);
 		}
 		rt_sleep(nano2count(PAUSE_TIME));
+		PRINT("hello_world_lxrt: let's help letting the booby become soft\n");
+		ftask_make_soft_real_time();
 		rt_dev_close(sfd);
 		rt_dev_close(rfd);
 		PRINT("hello_world_lxrt: wait event (forced to be wrong) - 0x%x\n",
@@ -117,8 +113,6 @@ int main(void)
 		PRINT("hello_world_lxrt: rtser0 and rtser1 test finished\n");
 	}    
 
-//	stop_rt_timer();
-//	rt_make_soft_real_time();
-//	rt_task_delete(testcomtsk);
+	stop_ftimer();
 	return 0;
 }
