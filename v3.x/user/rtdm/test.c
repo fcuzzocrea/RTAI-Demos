@@ -61,6 +61,7 @@ static void endme(int dummy)
 
 int main(void)
 {
+	RTIME t;
 	RT_TASK *testcomtsk;
 	char hello[] = "Hello World\n\r";
 	rtser_config_t serconf;
@@ -93,6 +94,7 @@ int main(void)
 		serconf.baud_rate   = BAUD_RATE;
 		rt_dev_ioctl(rfd, RTSER_RTIOC_SET_CONFIG, &serconf);
 		PRINT("\nhello_world_lxrt: rtser0 test started (fd_count = %d)\n", rt_dev_fdcount());
+		t = rt_get_cpu_time_ns();
 		for (i = 1; i <= LOOPS; i++) {
 			strcpy(hello, "Hello World\n\r");
 			rt_dev_write(sfd, hello, sizeof(hello) - 1);
@@ -108,6 +110,7 @@ int main(void)
 			rt_dev_read(rfd, hello, sizeof(hello) - 1);
 			PRINT("\nhello_world_lxrt: %d - RECEIVED ON <rtser1>: >>%s<<.\n\n", i, hello);
 		}
+		rt_printk("EXECT TIME: %lld (ms)\n", (rt_get_cpu_time_ns() - t)/1000000);
 		rt_sleep(nano2count(PAUSE_TIME));
 		rt_dev_close(sfd);
 		rt_dev_close(rfd);
