@@ -50,6 +50,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define BAUD_RATE    115200
 #define PAUSE_TIME   5000
 
+static const struct rtser_config rconf = \
+{ 0xFFFF, 115200, RTSER_DEF_PARITY, RTSER_DEF_BITS, RTSER_DEF_STOPB, RTSER_DEF_HAND, RTSER_DEF_FIFO_DEPTH, TRX_TIMEOUT, TRX_TIMEOUT, TRX_TIMEOUT, RTSER_RX_TIMESTAMP_HISTORY, RTSER_EVENT_RXPEND };
+
 static int sfd, rfd;
 
 static void endme(int dummy) 
@@ -61,6 +64,8 @@ static void endme(int dummy)
 
 int main(void)
 {
+  struct rtser_event rx_event;
+
 	RTIME t;
 	RT_TASK *testcomtsk;
 	char hello[] = "Hello World\n\r";
@@ -78,7 +83,7 @@ int main(void)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
         rt_make_hard_real_time();
 
-	if ((sfd = rt_dev_open("rtser0", O_RDWR)) < 0 || (rfd = rt_dev_open("rtser1", O_RDWR)) < 0) {
+	if ((sfd = rt_dev_open("rtser0", 0)) < 0 || (rfd = rt_dev_open("rtser1", 0)) < 0) {
 		PRINT("hello_world_lxrt: error in rt_dev_open()\n");
 		return 1;
 	} else {	
@@ -88,11 +93,7 @@ int main(void)
 		serconf.rx_timeout  = TRX_TIMEOUT;
 		serconf.baud_rate   = BAUD_RATE;
 		rt_dev_ioctl(sfd, RTSER_RTIOC_SET_CONFIG, &serconf);
-		rt_dev_ioctl(rfd, RTSER_RTIOC_GET_CONFIG, &serconf);
-		serconf.config_mask = RTSER_SET_BAUD | RTSER_SET_TIMEOUT_RX;
-		serconf.rx_timeout  = TRX_TIMEOUT;
-		serconf.baud_rate   = BAUD_RATE;
-		rt_dev_ioctl(rfd, RTSER_RTIOC_SET_CONFIG, &serconf);
+		rt_dev_ioctl(rfd, RTSER_RTIOC_SET_CONFIG, &rconf);
 		PRINT("\nhello_world_lxrt: rtser0 test started (fd_count = %d)\n", rt_dev_fdcount());
 		t = rt_get_cpu_time_ns();
 		for (i = 1; i <= LOOPS; i++) {
@@ -107,6 +108,9 @@ int main(void)
 			PRINT("\nhello_world_lxrt: %d - SENT ON <rtser0>: >>%s<<.\n\n", i, hello);
 			hello[0] = 0;
 			PRINT("hello_world_lxrt: waiting to receive with timeout %llu (ns).\n", serconf.rx_timeout);
+			if (rt_dev_ioctl(rfd, RTSER_RTIOC_WAIT_EVENT, &rx_event )) {
+				PRINT("SERIAL RECEIVE EVENT TIMED OUT\n");
+			}
 			rt_dev_read(rfd, hello, sizeof(hello) - 1);
 			PRINT("\nhello_world_lxrt: %d - RECEIVED ON <rtser1>: >>%s<<.\n\n", i, hello);
 		}
