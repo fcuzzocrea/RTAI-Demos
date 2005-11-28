@@ -243,7 +243,7 @@ exit_read_task:
   rt_make_soft_real_time();
   rt_task_delete(read_task);
 
-  printf(RTASK_PREFIX "exit\n");
+  printf(RTASK_PREFIX "exit (you can let the write task running if testing unconnected)\n");
 }
 
 static pthread_t write_thr, read_thr;
