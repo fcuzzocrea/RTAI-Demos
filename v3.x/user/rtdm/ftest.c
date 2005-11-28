@@ -156,7 +156,7 @@ void write_task_proc(void *arg)
   while (1) {
 
     ret = rt_task_wait_period();
-    if (ret || !(read_state & STATE_TASK_CREATED)) {
+    if (ret) {
       printf(WTASK_PREFIX "error while rt_task_wait_period, code %d\n",ret);
       goto exit_write_task;
     }
@@ -239,7 +239,7 @@ exit_read_task:
   }
   rt_make_soft_real_time();
   rt_task_delete(read_task);
-
+  sleep(1);
   printf(RTASK_PREFIX "exit\n");
 }
 
@@ -305,7 +305,6 @@ int main(int argc, char* argv[])
   printf(LOG_PREFIX "write-task created\n");
 
   pause();
-sleep(3);
   return 0;
 
 error:
