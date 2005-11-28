@@ -14,7 +14,7 @@ test: test.c
 	$(CC) $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 ftest: ftest.c
-	$(CC) -I/usr/xenomai/include/ $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt -L/usr/xenomai/lib/ -lrtdm -lnative
+	$(CC) $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean:
 	rm -f test ftest

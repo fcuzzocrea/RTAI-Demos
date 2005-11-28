@@ -1,7 +1,13 @@
-Ftest probes RTAI_TRIOSS using RTDM, just thorugh FUSION serial support though. 
-Overall seems OK, still to be ironed and finished maybe. 
-Notice the double independent etheregeneus timing: periodic for RTDM,
-oneshot for RTAI.
+RTDM serial tests.
 
-Test excercises the latest  RTAI RTDM compatibility layer with its serial 
-support.
+1)
+test.c is the original RTAI test, probing almost all of RTDM + serial.
+Usage:
+make
+./run
+
+2)
+ftest.c is an adaption of an equivalent test found at RTDM developers site.
+Usage:
+make
+./frun

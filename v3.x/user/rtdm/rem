@@ -1,8 +1,7 @@
 rmmod -f rtai_16550A
-rmmod -f xeno_16550A
 rmmod -f rtai_rtdm
+../remod
+rmmod -f xeno_16550A
 rmmod -f xeno_rtdm
 rmmod -f xeno_native
 rmmod -f xeno_nucleus
-rmmod -f xeno_hal
-../remod

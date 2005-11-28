@@ -13,7 +13,6 @@ echo "ERROR: please set your PATH variable to <rtai-install>/bin"
 exit
 fi
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/usr/xenomai/lib/:$LD_LIBRARY_PATH
 
 MODULES=$prefix/modules
 
@@ -24,12 +23,9 @@ echo "Press <enter> to load modules:"
 read junk
 setserial /dev/ttyS0 uart none
 setserial /dev/ttyS1 uart none
-insmod /usr/xenomai/modules/xeno_hal.ko
-insmod /usr/xenomai/modules/xeno_nucleus.ko
-insmod /usr/xenomai/modules/xeno_native.ko
 cd ..; ./ldmod; cd -
-insmod /usr/xenomai/modules/xeno_rtdm.ko
-insmod /usr/xenomai/modules/xeno_16550A.ko ioaddr=0x2f8,0x3f8 irq=3,4 tx_fifo=1,1
+insmod $MODULES/rtai_rtdm.ko
+insmod $MODULES/rtai_16550A.ko ioaddr=0x2f8,0x3f8 irq=3,4 tx_fifo=1,1
 echo
 echo "Now start the realtime process <enter> and wait for its end."
 read junk
