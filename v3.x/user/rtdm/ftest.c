@@ -26,6 +26,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/poll.h>
 
 #include <rtai_lxrt.h>
 #include <rtdm/rtserial.h>
@@ -149,9 +150,10 @@ void write_task_proc(void *arg)
   ssize_t written = 0;
 
   write_task = rt_task_init_schmod(nam2num("WRTSK"), 2, 0, 0, SCHED_FIFO, 0xF);
-  rt_task_make_periodic_relative_ns(NULL, 0, nano2count(write_task_period_ns));
+  poll(0, 0, 10);
   mlockall(MCL_CURRENT | MCL_FUTURE);
   rt_make_hard_real_time();
+  rt_task_make_periodic_relative_ns(NULL, 0, write_task_period_ns);
 
   while (1) {
 
@@ -200,6 +202,7 @@ void read_task_proc(void *arg)
   printf("-----------------------------------------------------------\n");
 
   read_task = rt_task_init_schmod(nam2num("RDTSK"), 1, 0, 0, SCHED_FIFO, 0xF);
+  poll(0, 0, 10);
   mlockall(MCL_CURRENT | MCL_FUTURE);
   rt_make_hard_real_time();
 
@@ -239,7 +242,7 @@ exit_read_task:
   }
   rt_make_soft_real_time();
   rt_task_delete(read_task);
-  sleep(1);
+
   printf(RTASK_PREFIX "exit\n");
 }
 
