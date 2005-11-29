@@ -49,11 +49,11 @@ unsigned int read_state = 0;
 unsigned int write_state = 0;
 
 //                           --s-ms-us-ns
-RTIME write_task_period_ns =    2000000llu;
+RTIME write_task_period_ns =    2500000llu;
 RT_TASK *write_task;
 RT_TASK *read_task;
 
-#define TIMEOUT  1000000
+#define TIMEOUT  100000000
 
 static const struct rtser_config read_config = {
     0xFFFF,                     /* config_mask */
@@ -107,14 +107,14 @@ static int close_file(int fd, char *name)
 
 void cleanup_all(void)
 {
-  if (write_state & STATE_FILE_OPENED) {
-    close_file( write_fd, WRITE_FILE " (write)");
-    write_state &= ~STATE_FILE_OPENED;
-  }
-
   if (read_state & STATE_FILE_OPENED) {
     close_file( read_fd, READ_FILE" (read)");
     read_state &= ~STATE_FILE_OPENED;
+  }
+
+  if (write_state & STATE_FILE_OPENED) {
+    close_file( write_fd, WRITE_FILE " (write)");
+    write_state &= ~STATE_FILE_OPENED;
   }
 
   if (write_state & STATE_TASK_CREATED) {
