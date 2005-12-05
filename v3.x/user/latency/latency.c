@@ -23,6 +23,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <fcntl.h>
 #include <sched.h>
 #include <sys/mman.h>
+#include <asm/io.h>
+
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
 
@@ -30,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -60,7 +62,7 @@ int main(int argc, char *argv[])
 	RTIME expected, exectime[3];
 	MBX *mbx;
 	RT_TASK *task;
-	struct sample { long long min; long long max; int index; } samp;
+	struct sample { long long min; long long max; int index, ovrn; } samp;
 	double s;
 
  	if (!(mbx = rt_mbx_init(nam2num("LATMBX"), 20*sizeof(samp)))) {
@@ -75,12 +77,7 @@ int main(int argc, char *argv[])
 
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
-	printf("# average time = %i (s)\n", AVRGTIME);
-#ifdef OVERALL
-	printf("# check overall worst case\n");
-#else
-	printf("# check each average worst case\n");
-#endif
+	printf("# average time = %i (s)\n", (int)AVRGTIME);
 	printf("# use the FPU\n");
 	printf("#%sstart the timer\n", argc == 1 ? " " : " do not ");
 	printf("# timer_mode is %s\n", TIMER_MODE ? "periodic" : "oneshot");
@@ -105,8 +102,11 @@ int main(int argc, char *argv[])
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	rt_make_hard_real_time();
-	rt_task_make_periodic(task, expected = rt_get_time() + 20*period, period);
+	expected = rt_get_time() + 200*period;
+	rt_task_make_periodic(task, expected, period);
 	svt = rt_get_cpu_time_ns();
+	i = 0;
+	samp.ovrn = 0;
 	while (1) {
 		min_diff = 1000000000;
 		max_diff = -1000000000;
@@ -114,14 +114,21 @@ int main(int argc, char *argv[])
 
 		for (sample = 0; sample < SMPLSXAVRG; sample++) {
 			expected += period;
-			rt_task_wait_period();
-
-			if (TIMER_MODE) {
-				diff = (int) ((t = rt_get_cpu_time_ns()) - svt - PERIOD);
-				svt = t;
+			if (!rt_task_wait_period()) {
+				if (TIMER_MODE) {
+					diff = (int) ((t = rt_get_cpu_time_ns()) - svt - PERIOD);
+					svt = t;
+				} else {
+					diff = (int) count2nano(rt_get_time() - expected);
+				}
 			} else {
-				diff = (int) count2nano(rt_get_time() - expected);
+				samp.ovrn++;
+				diff = 0;
+				if (TIMER_MODE) {
+					svt = rt_get_cpu_time_ns();
+				}
 			}
+			outb(i = 1 - i, 0x378);
 
 			if (diff < min_diff) {
 				min_diff = diff;
