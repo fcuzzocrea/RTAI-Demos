@@ -19,6 +19,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
+
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
 
@@ -30,8 +32,8 @@ int main(void)
 	struct timeval tv;
 	unsigned int msg, ch;
 	MBX *mbx;
-	long long max = 0;
-	struct sample { long long min; long long max; int index; } samp;
+	long long max = -1000000000, min = 1000000000;
+	struct sample { long long min; long long max; int index, ovrn; } samp;
 
 	tv.tv_sec = 0;
 
@@ -44,11 +46,14 @@ int main(void)
 		printf("CANNOT FIND MAILBOX\n");
 		exit(1);
 	}
+	mlockall(MCL_CURRENT | MCL_FUTURE);
+	rt_make_hard_real_time();
 
 	while (1) {
 		rt_mbx_receive(mbx, &samp, sizeof(samp));
 		if (max < samp.max) max = samp.max;
-		printf("*** min: %d, max: %lld/%lld average: %d  <Hit [RETURN] to stop> ***\n", (int) samp.min, samp.max, max, samp.index);
+		if (min > samp.min) min = samp.min;
+		printf("* min: %lld/%lld, max: %lld/%lld average: %d (%d) <Hit [RETURN] to stop> *\n", samp.min, min, samp.max, max, samp.index, samp.ovrn);
 		FD_ZERO(&input);
 		FD_SET(0, &input);
 		tv.tv_usec = 20000;
