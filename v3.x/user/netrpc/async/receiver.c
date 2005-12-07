@@ -131,10 +131,10 @@ if (SERVER) {
 }
 	}
 
+	rt_release_port(sndnode, sndport);
 	rt_make_soft_real_time();
 	rt_thread_join(athread);
 	rt_return(rt_receive(0, &i), i);
-	rt_release_port(sndnode, sndport);
 	stop_rt_timer();
 	rt_mbx_delete(mbx);
 	rt_task_delete(rcvtsk);
