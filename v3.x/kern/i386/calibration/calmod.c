@@ -125,6 +125,24 @@ static int rt_timer_tick_ext(int irq, unsigned long data)
 	return 1;
 }
 
+//this is not to be used
+int calibrate_apic (void)
+{
+        unsigned long flags;
+        RTIME t, dt;
+        int i;
+
+        flags = rtai_critical_enter(NULL);
+        t = rtai_rdtsc();
+        for (i = 0; i < 1000000; i++) {
+		apic_write_around(APIC_TMICT, 8000);
+        }
+        dt = rtai_rdtsc() - t;
+        rtai_critical_exit(flags);
+
+        return rtai_imuldiv(dt, 1000, RTAI_CPU_FREQ);
+}
+
 static long long user_srq(unsigned int whatever)
 {
 	extern int calibrate_8254(void);
@@ -133,7 +151,7 @@ static long long user_srq(unsigned int whatever)
 	copy_from_user(args, (unsigned int *)whatever, MAXARGS*sizeof(unsigned long));
 	switch (args[0]) {
 		case CAL_8254: {
-			return calibrate_8254();
+			return calibrate_8254(); //calibrate_apic()
 			break;
 		}
 
