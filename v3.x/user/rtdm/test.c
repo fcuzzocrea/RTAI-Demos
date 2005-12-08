@@ -45,8 +45,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define PRINT rt_printk // or printf to test going back and forth
 
-#define LOOPS        1000000
-#define TRX_TIMEOUT  1500000
+#define LOOPS        10000
+#define TRX_TIMEOUT  2000000
 #define BAUD_RATE    115200
 #define PAUSE_TIME   4000
 

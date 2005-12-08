@@ -21,6 +21,11 @@ echo
 echo "*** A TEST OF RTDM ***"
 echo "Press <enter> to load modules:"
 read junk
+#ensure RTDM finds a clean 16550A, otherwise it will not work a second time.
+setserial /dev/ttyS0 uart none
+setserial /dev/ttyS1 uart none
+setserial /dev/ttyS0 uart 16550A
+setserial /dev/ttyS1 uart 16550A
 setserial /dev/ttyS0 uart none
 setserial /dev/ttyS1 uart none
 cd ..; ./ldmod; cd -

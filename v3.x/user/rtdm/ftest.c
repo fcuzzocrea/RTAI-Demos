@@ -119,7 +119,7 @@ void cleanup_all(void)
 
   if (write_state & STATE_TASK_CREATED) {
     printf(LOG_PREFIX "delete write_task\n");
-//  rt_task_delete(write_task);
+//    rt_task_delete(write_task);
     write_state &= ~STATE_TASK_CREATED;
   }
 
