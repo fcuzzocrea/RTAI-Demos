@@ -21,6 +21,7 @@ TARGETS = \
 	sem_clock \
 	shm \
 	splocks \
+	switches \
 	sysreq \
 	tasklets \
 	tbx

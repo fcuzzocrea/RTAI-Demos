@@ -171,10 +171,10 @@ void cleanup_module(void)
 #endif
 	rt_free_timer();
 	rtf_destroy(CMDF);
+	rt_task_delete(&thread);
 	if (Mode) {
 		rt_sem_delete(&sem);
 	}
-	rt_task_delete(&thread);
 	printk("\n\nCPU USE SUMMARY\n");
 	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
 		printk("# %d -> %d\n", cpuid, cpu_used[cpuid]);

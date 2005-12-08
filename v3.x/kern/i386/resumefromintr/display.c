@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sched.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/poll.h>
 
 static int end;
 
@@ -31,27 +32,26 @@ static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
-	int cmd, count = 0;
+	int maxj, cmd, count = 0;
+	struct pollfd kbrd = { 0, POLLIN };
 #ifdef unused
 	struct sched_param mysched;
-#endif
-	int maxj;
-
-	signal(SIGINT, endme);
-#ifdef unused
 	mysched.sched_priority = 99;
-
 	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
 	puts(" ERROR IN SETTING THE SCHEDULER UP");
 	perror( "errno" );
 	exit( 0 );
  	}       
 #endif
+	signal(SIGINT, endme);
 	if ((cmd = open("/dev/rtf0", O_RDONLY)) < 0) {
 		fprintf(stderr, "Error opening /dev/rtf0\n");
 		exit(1);
 	}
 	while(!end) {
+		if (poll(&kbrd, 1, 0)) {
+			break;
+		}
 		read(cmd, &maxj, sizeof(int));
 		printf("> count = %d, maxj = %d (us).\n", count, maxj);
 		count++;

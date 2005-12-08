@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sched.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/poll.h>
 
 #include <rtai_fifos.h>
 
@@ -33,6 +34,7 @@ static void endme(int dummy) { end = 1; }
 
 int main(int argc, char *argv[])
 {
+	struct pollfd kbrd = { 0, POLLIN };
 	int fifosize, cmd, count = 0, nextcount = 0;
 	struct sched_param mysched;
 	char wakeup;
@@ -52,6 +54,9 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	while(!end) {
+        	if (poll(&kbrd, 1, 0)) {
+			break;
+		}
 		read(cmd, &wakeup, sizeof(wakeup));
 		if (++count > nextcount) {
 			nextcount += 100;
