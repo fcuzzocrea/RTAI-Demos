@@ -19,7 +19,8 @@ How it works
 To use this way a task must call:
 rt_linux_syscall_server_create(mytask);
 mytask being the task pointer returned by any task/thread init function
-available to extend a Linux task to RTAI hard real time.
+available to extend a Linux task to RTAI hard real time. Using NULL for 
+mytask is accettable.
 
 Such a call creates a server thread that blocks on a task receive. When the 
 RTAI scheduler intercepts a Linux syscall in hard real time mode it rpcs to 
