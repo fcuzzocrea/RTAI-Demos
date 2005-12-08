@@ -48,7 +48,6 @@ static void rt_fractionated_sleep(RTIME OneUnit)
 	while (i--) {
 		rt_sleep(OneUnit/FRACT);
 	}
-
 }
 
 static int ClockChrono_Read(void *args)

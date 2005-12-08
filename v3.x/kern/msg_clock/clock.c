@@ -66,6 +66,16 @@ static RT_TASK chrono;
 static RT_TASK write;
 
 
+static void rt_fractionated_sleep(RTIME OneUnit)
+{
+#define FRACT 100
+	int i = FRACT;
+	while (i--) {
+		rt_sleep(llimd(OneUnit, 1, FRACT));
+	}
+}
+
+
 static int keybrd_handler(unsigned int fifo)
 {
 	rt_sem_signal(&keybrd_sem);
@@ -95,7 +105,7 @@ static void ClockChrono_Read(long t)
 				break;
 			case 'P':
 				pause = TRUE;
-				rt_sleep(nano2count(FIVE_SECONDS));
+				rt_fractionated_sleep(nano2count(FIVE_SECONDS));
 				pause = FALSE;
 				break;
 			case 'K': case 'D':
@@ -128,7 +138,7 @@ static void ClockChrono_Clock(long t)
 		CommandClock_Get(&command);
 		switch(command) {
 			case 'R':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&hour, &display);
 				break;
 			case 'T': 
@@ -178,7 +188,7 @@ static void ClockChrono_Chrono(long t)
 				Intermediatetimes = FALSE;
 				break;
 			case 'C':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&times, &display);
 				if (Intermediatetimes) {
 					Intermediatetimes = !MenageHmsh_Equal(
