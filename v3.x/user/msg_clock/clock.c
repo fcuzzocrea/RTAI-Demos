@@ -41,6 +41,16 @@ static MBX *Screen;
 static BOOLEAN hide;
 static BOOLEAN Pause;
 
+static void rt_fractionated_sleep(RTIME OneUnit)
+{
+#define SCALE 100
+	int i = SCALE;
+	while (i--) {
+		rt_sleep(OneUnit/SCALE);
+	}
+
+}
+
 static int ClockChrono_Read(void *args)
 {
 	RT_TASK *mytask;
@@ -118,7 +128,7 @@ static int ClockChrono_Clock(void *args)
 		CommandClock_Get(&command);
 		switch(command) {
 			case 'R':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&hour, &display);
 				break;
 			case 'T': 
@@ -186,7 +196,7 @@ static int ClockChrono_Chrono(void *args)
 				Intermediatetimes = FALSE;
 				break;
 			case 'C':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&times, &display);
 				if (Intermediatetimes) {
 					Intermediatetimes = !MenageHmsh_Equal(
