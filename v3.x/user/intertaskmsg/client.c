@@ -6,7 +6,7 @@
 #include <sched.h>
 #include <rtai_msg.h>
 
-#define PRINTF printf //rt_printk
+#define PRINTF rt_printk
 
 int main(int argc, char* argv[])
 {
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 		exit(3);
 	}
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-//	rt_make_hard_real_time();
+	rt_make_hard_real_time();
 
 	if ((my_pid = rt_Alias_attach("CLIENT")) <= 0) {
 		PRINTF("Cannot attach name CLT\n");

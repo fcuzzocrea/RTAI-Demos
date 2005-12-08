@@ -16,7 +16,7 @@
 #include <ctype.h>
 #include <rtai_msg.h>
 
-#define PRINTF printf //rt_printk
+#define PRINTF rt_printk
 
 static char msg[512], rep[512];
 
