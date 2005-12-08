@@ -76,7 +76,7 @@ void CommandClock_Get(char *command)
 
 extern int cpu_used[];
 
-static void CommandClock_task(int t)
+static void CommandClock_task(long t)
 {
 	unsigned int command;
 	char R = 'R';

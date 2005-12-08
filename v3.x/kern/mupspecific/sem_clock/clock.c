@@ -67,6 +67,16 @@ static RTIME OneUnit;
 static int cpu_used[NR_RT_CPUS];
 
 
+static void rt_fractionated_sleep(RTIME OneUnit)
+{
+#define FRACT 100
+	int i = FRACT;
+	while (i--) {
+		rt_sleep(llimd(OneUnit, 1, FRACT));
+	}
+}
+
+
 static int keybrd_handler(unsigned int fifo)
 {
 	rt_sem_signal(&keybrd_sem);
@@ -74,7 +84,7 @@ static int keybrd_handler(unsigned int fifo)
 }
 
 
-static void ClockChrono_Read(int t)
+static void ClockChrono_Read(long t)
 {
 	char ch;
 	int run = 0;
@@ -96,7 +106,7 @@ static void ClockChrono_Read(int t)
 				break;
 			case 'P':
 				pause = TRUE;
-				rt_sleep(nano2count(FIVE_SECONDS));
+				rt_fractionated_sleep(nano2count(FIVE_SECONDS));
 				pause = FALSE;
 				break;
 			case 'K': case 'D':
@@ -110,7 +120,7 @@ static void ClockChrono_Read(int t)
 	}
 }
 
-static void ClockChrono_Clock(int t)
+static void ClockChrono_Clock(long t)
 {
 	const int hundredthes = FALSE;
 	MenageHmsh_tHour hour;
@@ -129,7 +139,7 @@ static void ClockChrono_Clock(int t)
 		CommandClock_Get(&command);
 		switch(command) {
 			case 'R':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&hour, &display);
 				break;
 			case 'T': 
@@ -155,7 +165,7 @@ static void ClockChrono_Clock(int t)
 	}
 }
 
-static void ClockChrono_Chrono(int t)
+static void ClockChrono_Chrono(long t)
 {
 	MenageHmsh_tHour times;			
 	MenageHmsh_tChain11 timesChain;
@@ -177,7 +187,7 @@ static void ClockChrono_Chrono(int t)
 				Intermediatetimes = FALSE;
 				break;
 			case 'C':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&times, &display);
 				if (Intermediatetimes) {
 					Intermediatetimes = !MenageHmsh_Equal(
@@ -206,7 +216,7 @@ static void ClockChrono_Chrono(int t)
 	}
 }
 
-static void ClockChrono_Write(int t)
+static void ClockChrono_Write(long t)
 {
 	Display_tDest receiver;
 	MenageHmsh_tChain11 chain;

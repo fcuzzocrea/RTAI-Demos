@@ -77,7 +77,7 @@ void CommandChrono_Get(char *command)
 
 extern int cpu_used[];
 
-static void CommandChrono_task(int t)
+static void CommandChrono_task(long t)
 {
 	RTIME fiveSeconds = nano2count(FIVE_SECONDS);
 	unsigned int command;
