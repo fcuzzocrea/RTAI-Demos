@@ -8,6 +8,8 @@ cd ../fastick
 ./run
 cd ../fp
 ./run
+cd ../heartbeat
+./run
 cd ../i386
 ./test_suite
 cd ../latency
@@ -29,8 +31,6 @@ cd ../netrpc
 ./run
 cd ../pqueue
 ./run
-cd ../preempt
-./run
 cd ../prioinher
 ./run 0
 ./run 1
@@ -42,7 +42,11 @@ cd ../rwlocks
 ./run
 cd ../sem_clock
 ./run
+cd ../shm
+./run
 cd ../splocks
+./run
+cd ../switches
 ./run
 cd ../sysreq
 ./run
