@@ -50,7 +50,7 @@ static int mstat[2];
 static int bstat;
 static int meant[2];
 
-static void mfun(int t)
+static void mfun(long t)
 {
 	RTIME time;
 	unsigned long long msg;
@@ -90,7 +90,7 @@ prem:
 	rt_printk("TASK # %d ENDS PREMATURELY\n", t);
 }
 
-static void bfun(int t)
+static void bfun(long t)
 {
 	unsigned long long msg;
 	unsigned long long name = 0xccccccccccccccccLL;
