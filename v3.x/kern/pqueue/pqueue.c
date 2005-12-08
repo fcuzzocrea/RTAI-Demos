@@ -4,7 +4,7 @@
 //
 // Authors:             Trevor Woolven (trevw@zentropix.com)
 // Original date:       Thu 15 Jul 1999
-// Id:                  @(#)$Id: pqueue.c,v 1.2 2004/09/01 15:44:48 mante Exp $
+// Id:                  @(#)$Id: pqueue.c,v 1.3 2005/12/08 17:35:02 mante Exp $
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -53,7 +53,7 @@ struct Msg {
 };
 
 //-----------------------------------------------------------------------------
-void child_func(int arg) {
+void child_func(long arg) {
 
 int i;
 size_t n = 0;
@@ -120,14 +120,14 @@ mqd_t rx_q = INVALID_PQUEUE, tx_q = INVALID_PQUEUE;
   //Unlink the queue I own
   mq_unlink("mq_queue2");
 
-  free_z_apps(rt_whoami());
+//  free_z_apps(rt_whoami());
   rt_task_delete(rt_whoami());
 }
 
 //------------------------------------------------------------------------------
 volatile int zdbg = 0;
 
-void parent_func(int arg) {
+void parent_func(long arg) {
 int i;
 int my_oflags, n = 0;
 mode_t my_mode;

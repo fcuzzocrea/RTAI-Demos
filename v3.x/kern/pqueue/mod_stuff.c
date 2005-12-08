@@ -4,7 +4,7 @@
 //
 // Authors:             Trevor Woolven (trevw@zentropix.com)
 // Original date:       Thu 15 Jul 1999
-// Id:                  @(#)$Id: mod_stuff.c,v 1.1 2004/06/06 14:17:23 rpm Exp $
+// Id:                  @(#)$Id: mod_stuff.c,v 1.2 2005/12/08 17:35:02 mante Exp $
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -64,7 +64,7 @@ int init_module(void) {
     rt_set_periodic_mode();
     rt_task_init(&parent_task, parent_func, 1, STACK_SIZE,
                                                 PARENT_PRIORITY, 1, 0);
-    init_z_apps(&parent_task);
+//    init_z_apps(&parent_task);
     rt_set_runnable_on_cpus(&parent_task, RUN_ON_CPUS);
     tick_period = start_rt_timer((int)nano2count(TICK_PERIOD));
     rt_assign_irq_to_cpu(TIMER_8254_IRQ, TIMER_TO_CPU);
@@ -74,7 +74,7 @@ int init_module(void) {
 #else
   rt_task_init(&parent_task, parent_func, 1, STACK_SIZE,
                                                 PARENT_PRIORITY, 1, 0);
-  init_z_apps(&parent_task);
+//  init_z_apps(&parent_task);
   rt_set_runnable_on_cpus(&parent_task, RUN_ON_CPUS);
   tick_period = start_rt_timer((int)nano2count(TICK_PERIOD));
   rt_assign_irq_to_cpu(TIMER_8254_IRQ, TIMER_TO_CPU);
