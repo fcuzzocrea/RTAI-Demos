@@ -1,9 +1,14 @@
 cd bitstest
 ./run
 cd ../forcesoft
-./run
+#./run
 cd ../forked
 ./run
+cd ../fusion
+./runs
+./runl
+./rund
+./runi
 cd ../hardsoftsw
 ./run
 cd ../heaps
@@ -28,6 +33,9 @@ cd ../preempt
 ./run
 cd ../rt_agent
 ./run
+cd ../rtdm
+./run
+./frun
 cd ../sem_clock
 ./run
 cd ../tasklets

@@ -1,5 +1,6 @@
 TARGETS = \
 	fifosound \
+	laurich \
 	resumefromintr \
 	simd \
 	sound \

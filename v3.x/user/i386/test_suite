@@ -1,5 +1,7 @@
 cd fifosound
 ./run
+cd ../laurich
+./run
 cd ../resumefromintr
 ./run
 cd ../sound
