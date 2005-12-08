@@ -40,7 +40,7 @@ MODULE_PARM(SemType, "i");
 //#define MUTEX_LOCK(mutex)  rt_sem_wait((mutex))
 #define MUTEX_LOCK(mutex)  rt_sem_wait_timed((mutex), 2000000000)
 
-void taskl_func(int tid)
+void taskl_func(long tid)
 {
 	unsigned int msg = 0;
 	rt_receive(0, &msg);
@@ -64,7 +64,7 @@ void taskl_func(int tid)
 	rt_task_suspend(0);
 }
 
-void taskm_func(int tid)
+void taskm_func(long tid)
 {
 	unsigned int msg = 0;
 	rt_receive(0, &msg);
@@ -75,7 +75,7 @@ void taskm_func(int tid)
 	}
 }
 
-void taskh_func(int tid)
+void taskh_func(long tid)
 {
 	RTIME time;
 	unsigned int msg = 0, wait;

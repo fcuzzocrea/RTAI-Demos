@@ -14,7 +14,7 @@ read junk
 echo "Example 1, type <return> to continue"
 read junk
 if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod ./prioinher1_rt.ko;
+then insmod ./prioinher1_rt.ko $semtype;
 else insmod ./prioinher1_rt.o; fi
 echo " "
 echo "Press <enter> to remove the modules."
@@ -23,7 +23,7 @@ rmmod prioinher1_rt
 echo "Example 2, type <return> to continue"
 read junk
 if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod ./prioinher2_rt.ko;
+then insmod ./prioinher2_rt.ko $semtype;
 else insmod ./prioinher2_rt.o; fi
 echo " "
 echo "Done. Press <enter> to remove the modules."
