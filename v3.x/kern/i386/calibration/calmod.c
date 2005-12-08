@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_fifos.h>
 #include "cal.h"
 
-#define LOCAL_TIMER_VECTOR  0x41
 #define COUNT               0xFFFFFFFFU
 
 static struct params_t params = { 0, SETUP_TIME_8254, LATENCY_8254, 0, LATENCY_APIC, SETUP_TIME_APIC, CALIBRATED_APIC_FREQ, 0, CALIBRATED_CPU_FREQ, CLOCK_TICK_RATE, LATCH };
@@ -143,7 +142,7 @@ int calibrate_apic (void)
         return rtai_imuldiv(dt, 1000, RTAI_CPU_FREQ);
 }
 
-static long long user_srq(unsigned int whatever)
+static long long user_srq(unsigned long whatever)
 {
 	extern int calibrate_8254(void);
 	unsigned long args[MAXARGS];

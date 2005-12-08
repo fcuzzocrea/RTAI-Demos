@@ -34,7 +34,7 @@ static struct task_struct *sleeping_process;
 
 static int srq;
 
-static long long user_srq_handler(unsigned int whatever)
+static long long user_srq_handler(unsigned long whatever)
 {
 	long long time;
 

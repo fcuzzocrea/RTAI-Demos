@@ -30,6 +30,8 @@ MODULE_LICENSE("GPL");
 
 #define CMDF 0
 
+#define rt_times (rt_smp_times[0])
+
 static void rt_timer_tick(void)
 {
 	char wakeup;
