@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: switches_rt.o
+all: bits_rt.o
 
-switches_rt.o: switches.c
+bits_rt.o: bitstest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:
