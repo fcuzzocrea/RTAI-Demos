@@ -43,10 +43,10 @@ static BOOLEAN Pause;
 
 static void rt_fractionated_sleep(RTIME OneUnit)
 {
-#define SCALE 100
-	int i = SCALE;
+#define FRACT 100
+	int i = FRACT;
 	while (i--) {
-		rt_sleep(OneUnit/SCALE);
+		rt_sleep(OneUnit/FRACT);
 	}
 
 }
@@ -79,7 +79,7 @@ static int ClockChrono_Read(void *args)
 				break;
 			case 'P':
 				Pause = TRUE;
-				rt_sleep(nano2count(FIVE_SECONDS));
+				rt_fractionated_sleep(nano2count(FIVE_SECONDS));
 				Pause = FALSE;
 				break;
 			case 'K': case 'D':

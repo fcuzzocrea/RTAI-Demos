@@ -47,6 +47,15 @@ static BOOLEAN Pause;
 
 static RTIME OneUnit;
 
+static void rt_fractionated_sleep(RTIME OneUnit)
+{
+#define FRACT 100
+	int i = FRACT;
+	while (i--) {
+		rt_sleep(OneUnit/FRACT);
+	}
+}
+
 void *ClockChrono_Read(void *args)
 {
 	RT_TASK *mytask;
@@ -75,7 +84,7 @@ void *ClockChrono_Read(void *args)
 				break;
 			case 'P':
 				Pause = TRUE;
-				rt_sleep(nano2count(FIVE_SECONDS));
+				rt_fractionated_sleep(nano2count(FIVE_SECONDS));
 				Pause = FALSE;
 				break;
 			case 'K': case 'D':
@@ -121,7 +130,7 @@ void *ClockChrono_Clock(void *args)
 		CommandClock_Get(&command);
 		switch(command) {
 			case 'R':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&hour, &display);
 				break;
 			case 'T': 
@@ -188,7 +197,7 @@ void *ClockChrono_Chrono(void *args)
 				Intermediatetimes = FALSE;
 				break;
 			case 'C':
-				rt_sleep(OneUnit);
+				rt_fractionated_sleep(OneUnit);
 				MenageHmsh_PlusOneUnit(&times, &display);
 				if (Intermediatetimes) {
 					Intermediatetimes = !MenageHmsh_Equal(
