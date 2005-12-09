@@ -4,7 +4,7 @@
 //
 // Authors:             Trevor Woolven (trevw@zentropix.com)
 // Original date:       Thu 15 Jul 1999
-// Id:                  @(#)$Id: mod_stuff.c,v 1.2 2005/12/08 17:35:02 mante Exp $
+// Id:                  @(#)$Id: mod_stuff.c,v 1.3 2005/12/09 17:28:21 mante Exp $
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,7 +35,7 @@
 extern int PARENT_PRIORITY;
 extern char *test_name;
 extern RT_TASK parent_task;
-void parent_func(int arg);
+void parent_func(long arg);
 
 //------------------------------------------------------------------------------
 #include <linux/ctype.h>
