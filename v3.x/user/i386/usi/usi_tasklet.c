@@ -83,11 +83,11 @@ int main(void)
 		rt_sem_wait(dspsem);
 		printf("OVERRUNS %d, INTERRUPT COUNT %d\n", ovr, intcnt);
 	}
-	printf("TEST ENDS\n");
         rt_release_irq_task(TIMER_IRQ);
+	printf("TEST ENDS\n");
 	rt_remove_tasklet(tasklet);
 	rt_delete_tasklet(tasklet);
-	rt_task_delete(maint);
 	rt_sem_delete(dspsem);
+	rt_task_delete(maint);
 	return 0;
 }
