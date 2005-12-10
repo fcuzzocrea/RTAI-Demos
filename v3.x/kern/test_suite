@@ -20,9 +20,9 @@ cd ../msg_clock
 ./run
 cd ../mupspecific
 cd msg_clock
-#./run
+./run
 cd ../sem_clock
-#./run
+./run
 cd ../../namedstuff
 ./run
 cd ../netrpc
