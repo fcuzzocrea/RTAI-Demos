@@ -91,10 +91,10 @@ static void *intr_handler(void *args)
 	}
 
 	rt_make_soft_real_time();
+	stop_rt_timer();
 	rtf_destroy(playfifo);
 	rtf_destroy(cntrfifo);
 	rt_task_delete(mytask);
-	stop_rt_timer();
 	printf("\nEND SOUND TASK\n");
 	return 0;
 }

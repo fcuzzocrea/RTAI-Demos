@@ -18,6 +18,7 @@ cd ../..; ./ldmod; cd -
 echo 
 echo "Now press <enter> to run the RT program:"
 read junk
+sync
 $SUDO ./fifosound
 echo 
 echo "To remove the modules, press <enter>:"
