@@ -71,6 +71,7 @@ int init_module(void)
 void cleanup_module(void)
 {
     end = 1;
+    rtdm_task_destroy(&heartbeat_task);
     rtdm_task_join_nrt(&heartbeat_task, 100);
     set_leds(0);
     stop_rt_timer();
