@@ -132,7 +132,7 @@ static void *start_task_code(void *arg)
 		pthread_create_rt(&thread[i], &attr, (void *)task_code, (void *)i);
 	}	
 	/* create the sync semaphore */
-	sem_init_rt(&sync_sem, 0, 0);
+	sem_init_rt(&sync_sem, CNT_SEM, 0);
 	/* create the priority-test semaphore */
 	sem_init_rt(&prio_sem, BIN_SEM, 0);
 	pthread_barrier_wait_rt(&barrier);
