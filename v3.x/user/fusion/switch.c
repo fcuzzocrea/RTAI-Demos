@@ -131,7 +131,7 @@ void worker(void *cookie)
                        add_histogram(dt);
        }
 
-       rt_timer_stop();
+//       rt_timer_stop();
        rt_sem_delete(&switch_sem);
 
        minjitter = minj;

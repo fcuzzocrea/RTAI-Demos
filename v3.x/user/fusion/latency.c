@@ -291,7 +291,7 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
         return;
 
     finished = 1;
-    rt_timer_stop();
+//    rt_timer_stop();
     rt_sem_delete(&display_sem);
 
     if (do_histogram || do_stats)
