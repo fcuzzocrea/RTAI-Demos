@@ -4,6 +4,7 @@ TARGETS = \
 	edf \
 	fastick \
 	fp \
+	heartbeat \
 	i386 \
 	latency \
 	mbx \
