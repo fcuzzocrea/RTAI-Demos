@@ -1,3 +1,3 @@
 rmmod heartbeat_rt.ko
 rmmod rtai_rtdm.ko
-../remod
+../../remod

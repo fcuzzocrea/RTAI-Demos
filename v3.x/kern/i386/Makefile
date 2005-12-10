@@ -1,5 +1,6 @@
 TARGETS = \
 	calibration \
+	heartbeat \
 	resumefromintr \
 	scb \
 	sound
