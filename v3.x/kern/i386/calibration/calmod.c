@@ -124,6 +124,7 @@ static int rt_timer_tick_ext(int irq, unsigned long data)
 	return 1;
 }
 
+#ifdef CONFIG_X86_LOCAL_APIC
 //this is not to be used
 int calibrate_apic (void)
 {
@@ -141,6 +142,7 @@ int calibrate_apic (void)
 
         return rtai_imuldiv(dt, 1000, RTAI_CPU_FREQ);
 }
+#endif
 
 static long long user_srq(unsigned long whatever)
 {
