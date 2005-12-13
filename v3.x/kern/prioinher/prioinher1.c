@@ -123,10 +123,10 @@ int init_module(void)
 		rt_typed_sem_init(&mutex, 1, BIN_SEM | PRIO_Q);
 	}
 	rt_task_init_cpuid(&taskl, taskl_func, 0, RT_STACK, 1000, 0, 0, 0);
-	rt_task_resume(&taskl);
 	rt_task_init_cpuid(&taskm, taskm_func, 0, RT_STACK,  500, 0, 0, 0);
-	rt_task_resume(&taskm);
 	rt_task_init_cpuid(&taskh, taskh_func, 0, RT_STACK,    0, 0, 0, 0);
+	rt_task_resume(&taskl);
+	rt_task_resume(&taskm);
 	rt_task_resume(&taskh);
 	return 0;
 }
