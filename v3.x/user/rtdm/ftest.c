@@ -311,6 +311,7 @@ int main(int argc, char* argv[])
   return 0;
 
 error:
+  cleanup_all();
   rt_task_delete(maint);
   return ret;
 }
