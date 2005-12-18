@@ -33,7 +33,7 @@
 #define NUM_TIMERS  4
 #define MY_TIMER    3
 
-#define TMR_INDX  15
+#define TMR_INDX  2
 
 #define TMR_GET_SETUP      0
 #define TMR_START          1
