@@ -135,8 +135,12 @@ void cleanup_all(void)
   }
 }
 
+static pthread_t write_thr, read_thr;
+
 void catch_signal(int sig)
 {
+  pthread_join(write_thr, NULL);
+  pthread_join(read_thr, NULL);
   cleanup_all();
   printf(LOG_PREFIX "exit\n");
   return;
@@ -245,8 +249,6 @@ exit_read_task:
 
   printf(RTASK_PREFIX "exit (you can let the write task running if testing unconnected)\n");
 }
-
-static pthread_t write_thr, read_thr;
 
 int main(int argc, char* argv[])
 {
