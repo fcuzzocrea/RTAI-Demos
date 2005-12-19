@@ -22,6 +22,9 @@ $rmmod rtai_sem
 sync
 if [ "$arch" = "i386" ]; then
 $rmmod rtai_lxrt
+$rmmod rtai_smp
+$rmmod rtai_mup
+$rmmod rtai_up
 else
 $rmmod rtai_up
 fi

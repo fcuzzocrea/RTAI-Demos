@@ -17,13 +17,11 @@ sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then 
 
-$insmod $MODULES/rtai_hal.ko;
+$insmod $MODULES/rtai_hal.ko IsolCpusMask=0;
 sync
 if [ "$arch" = "i386" ]; then
-$insmod $MODULES/rtai_lxrt.ko;
-#$insmod $MODULES/rtai_up.ko;
-#$insmod $MODULES/rtai_smp.ko;
-#$insmod $MODULES/rtai_mup.ko;
+#$insmod $MODULES/rtai_lxrt.ko;
+$insmod $MODULES/rtai_ksched.ko;
 else
 $insmod $MODULES/rtai_up.ko;
 fi
