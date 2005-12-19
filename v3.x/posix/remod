@@ -7,6 +7,9 @@ rmmod rtai_tbx
 rmmod rtai_msg
 rmmod rtai_mbx
 rmmod rtai_sem
+rmmod rtai_mup
+rmmod rtai_smp
+rmmod rtai_up
 rmmod rtai_lxrt
 rmmod rtai_hal
 sync

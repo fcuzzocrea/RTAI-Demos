@@ -13,9 +13,10 @@ sync;
 if (`rtai-config --linux-version | grep -q 2.6`);
 then 
 
-insmod $MODULES/rtai_hal.ko;
+insmod $MODULES/rtai_hal.ko IsolCpusMask=0;
 sync;
-insmod $MODULES/rtai_lxrt.ko;
+#insmod $MODULES/rtai_lxrt.ko;
+insmod $MODULES/rtai_ksched.ko;
 sync;
 insmod $MODULES/rtai_sem.ko;
 sync;
