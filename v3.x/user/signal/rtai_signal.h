@@ -20,7 +20,7 @@
 #ifndef _RTAI_SIGNAL_H_
 #define _RTAI_SIGNAL_H_
 
-#define RTAI_SIGNALS_IDX  1
+#define RTAI_SIGNALS_IDX  2
 
 #define SIGNAL_SYNCREQ  0
 #define SIGNAL_INFO     1

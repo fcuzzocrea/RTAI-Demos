@@ -36,7 +36,7 @@ static int rt_request_signal(RT_TASK *sigtask, RT_TASK *task, int signal)
 	int retval;
 	if (signal >= 0 && sigtask && task) {
 		if (!task->usp_signal) {
-			task->usp_signal = rt_malloc(MAXSIGNALS*sizeof(struct rt_signal_t));
+			task->usp_signal = (long)rt_malloc(MAXSIGNALS*sizeof(struct rt_signal_t));
 			task->pstate = 0;
 		}
 		SIGNAL[signal].flags = (1 << SIGNAL_ENBIT);
