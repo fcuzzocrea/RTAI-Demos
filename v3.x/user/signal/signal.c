@@ -28,15 +28,15 @@ MODULE_LICENSE("GPL");
 #define MODULE_NAME "RTAI_SIGNALS"
 
 #undef  SIGNAL
-#define SIGNAL ((struct rt_signal_t *)task->tsignals)
+#define SIGNAL ((struct rt_signal_t *)task->rt_signals)
 struct rt_signal_t { unsigned long flags; RT_TASK *sigtask; };
 
 int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, int signal)
 {
 	int retval;
 	if (signal >= 0 && sigtask && task) {
-		if (!task->tsignals) {
-			task->tsignals = rt_malloc(MAXSIGNALS*sizeof(struct rt_signal_t));
+		if (!task->rt_signals) {
+			task->rt_signals = rt_malloc(MAXSIGNALS*sizeof(struct rt_signal_t));
 			task->pstate = 0;
 		}
 		SIGNAL[signal].flags = (1 << SIGNAL_ENBIT);
