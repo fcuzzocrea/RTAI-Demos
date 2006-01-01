@@ -28,15 +28,15 @@ MODULE_LICENSE("GPL");
 #define MODULE_NAME "RTAI_SIGNALS"
 
 #undef  SIGNAL
-#define SIGNAL ((struct rt_signal_t *)task->usp_signal)
+#define SIGNAL ((struct rt_signal_t *)task->tsignals)
 struct rt_signal_t { unsigned long flags; RT_TASK *sigtask; };
 
-static int rt_request_signal(RT_TASK *sigtask, RT_TASK *task, int signal)
+int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, int signal)
 {
 	int retval;
 	if (signal >= 0 && sigtask && task) {
-		if (!task->usp_signal) {
-			task->usp_signal = (long)rt_malloc(MAXSIGNALS*sizeof(struct rt_signal_t));
+		if (!task->tsignals) {
+			task->tsignals = rt_malloc(MAXSIGNALS*sizeof(struct rt_signal_t));
 			task->pstate = 0;
 		}
 		SIGNAL[signal].flags = (1 << SIGNAL_ENBIT);
@@ -49,6 +49,7 @@ static int rt_request_signal(RT_TASK *sigtask, RT_TASK *task, int signal)
 	rt_task_resume(task);
 	return retval;
 }
+EXPORT_SYMBOL(_rt_request_signal);
 
 static inline void rt_exec_signal(RT_TASK *sigtask, RT_TASK *task)
 {
@@ -71,7 +72,7 @@ static inline void rt_exec_signal(RT_TASK *sigtask, RT_TASK *task)
 	rt_global_restore_flags(flags);
 }
 
-static int rt_release_signal(int signal, RT_TASK *task)
+int rt_release_signal(int signal, RT_TASK *task)
 {
 	if (!task) {
 		task = RT_CURRENT;
@@ -83,8 +84,9 @@ static int rt_release_signal(int signal, RT_TASK *task)
 	}
 	return -EINVAL;
 }
+EXPORT_SYMBOL(rt_release_signal);
 
-static void rt_send_signal(int signal, RT_TASK *task)
+void rt_send_signal(int signal, RT_TASK *task)
 {
 	if (!task) {
 		task = RT_CURRENT;
@@ -101,8 +103,9 @@ static void rt_send_signal(int signal, RT_TASK *task)
 		} while (test_and_clear_bit(SIGNAL_PNDBIT, &SIGNAL[signal].flags));
 	}
 }
+EXPORT_SYMBOL(rt_send_signal);
 
-static void rt_enable_signal(int signal, RT_TASK *task)
+void rt_enable_signal(int signal, RT_TASK *task)
 {
 	if (!task) {
 		task = RT_CURRENT;
@@ -111,6 +114,7 @@ static void rt_enable_signal(int signal, RT_TASK *task)
 		set_bit(SIGNAL_ENBIT, &SIGNAL[signal].flags);
 	}
 }
+EXPORT_SYMBOL(rt_enable_signal);
 
 void rt_disable_signal(int signal, RT_TASK *task)
 {
@@ -121,6 +125,7 @@ void rt_disable_signal(int signal, RT_TASK *task)
 		clear_bit(SIGNAL_ENBIT, &SIGNAL[signal].flags);
 	}
 }
+EXPORT_SYMBOL(rt_disable_signal);
 
 static int rt_sync_sigreq(RT_TASK *task)
 {
@@ -136,7 +141,7 @@ static unsigned long long rt_signal_info(void)
 	return retval.rt;
 }
 
-static int rt_wait_signal(RT_TASK *sigtask, RT_TASK *task)
+int rt_wait_signal(RT_TASK *sigtask, RT_TASK *task)
 {
 	unsigned long flags;
 
@@ -152,12 +157,13 @@ static int rt_wait_signal(RT_TASK *sigtask, RT_TASK *task)
 	rt_global_restore_flags(flags);
 	return sigtask->retval;
 }
+EXPORT_SYMBOL(rt_wait_signal);
 
 static struct rt_fun_entry rtai_signals_fun[] = {
 	[SIGNAL_SYNCREQ] = { 1, rt_sync_sigreq },   // internal, not for users
 	[SIGNAL_INFO]    = { 1, rt_signal_info },   // internal, not for users
 	[SIGNAL_WAITSIG] = { 1, rt_wait_signal },   // internal, not for users
-	[SIGNAL_REQUEST] = { 1, rt_request_signal },
+	[SIGNAL_REQUEST] = { 1, _rt_request_signal },
 	[SIGNAL_RELEASE] = { 1, rt_release_signal },
 	[SIGNAL_ENABLE]  = { 1, rt_enable_signal },
 	[SIGNAL_DISABLE] = { 1, rt_disable_signal },
