@@ -31,6 +31,10 @@
 #define SIGNAL_DISABLE  6
 #define SIGNAL_SEND     7
 
+#define SIGNAL_TASK_INIPRIO     0
+
+struct sigsuprt_t { RT_TASK *sigtask; RT_TASK *task; int signal; void (*sighdl)(int, RT_TASK *); unsigned long runnable_on; };
+
 #ifdef __KERNEL__
 
 #define MAXSIGNALS  8
@@ -40,14 +44,63 @@
 
 #define RT_SCHED_SIGSUSP  (1 << 15)
 
+#define SIGNAL_TASK_STACK_SIZE  4096
+ 
+#ifndef __SIGNAL_SUPPORT_FUN__
+#define __SIGNAL_SUPPORT_FUN__
+
+int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, int signal);
+
+int rt_wait_signal(RT_TASK *sigtask, RT_TASK *task);
+
+static void signal_suprt_fun(struct sigsuprt_t *funarg)
+{		
+	struct sigsuprt_t arg = *funarg;
+
+	arg.sigtask = rt_whoami();
+	if (!_rt_request_signal(arg.sigtask, arg.task, arg.signal)) {
+		while (rt_wait_signal(arg.sigtask, arg.task)) {
+			arg.sighdl(arg.signal, arg.task);
+		}
+	} else {
+		rt_task_resume(arg.task);
+	}
+}
+
+#endif /* __SIGNAL_SUPPORT_FUN__ */
+
+static inline int rt_request_signal(int signal, void (*sighdl)(int, RT_TASK *))
+{
+	if (signal >= 0 && sighdl) {
+		RT_TASK *signal_suprt_task;
+		struct sigsuprt_t arg;
+		arg.task        = rt_whoami();
+		arg.signal      = signal;
+		arg.sighdl      = sighdl;
+		arg.runnable_on = arg.task->runnable_on_cpus;
+		if ((signal_suprt_task = rt_malloc(sizeof(RT_TASK)))) {
+			rt_task_init_cpuid(signal_suprt_task, (void *)signal_suprt_fun, (long)&arg, SIGNAL_TASK_STACK_SIZE, arg.task->priority, 0, 0, arg.runnable_on);
+			rt_task_resume(signal_suprt_task);
+			rt_task_suspend(arg.task);
+			return arg.task->retval;
+		}
+	}
+	return -EINVAL;
+}
+
+int rt_release_signal(int signal, RT_TASK *task);
+
+void rt_enable_signal(int signal, RT_TASK *task);
+
+void rt_disable_signal(int signal, RT_TASK *task);
+
+void rt_send_signal(int signal, RT_TASK *task);
+
 #else /* !__KERNEL__ */
 
 #include <rtai_lxrt.h>
 
 #define SIGNAL_TASK_STACK_SIZE  0x4000
-#define SIGNAL_TASK_INIPRIO     0
-
-struct sigsuprt_t { RT_TASK *sigtask; RT_TASK *task; int signal; void (*sighdl)(int, RT_TASK *); unsigned long runnable_on; };
 
 #ifndef __SIGNAL_SUPPORT_FUN__
 #define __SIGNAL_SUPPORT_FUN__

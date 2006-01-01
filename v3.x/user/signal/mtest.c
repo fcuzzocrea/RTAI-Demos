@@ -27,7 +27,7 @@ MODULE_LICENSE("GPL");
 #include <rtai_malloc.h>
 #include "rtai_signal.h"
 
-#define NTASKS       5
+#define NTASKS       10
 #define SMLTN        5
 #define CPUMAP       1
 
