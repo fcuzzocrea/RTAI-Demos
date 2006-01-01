@@ -42,8 +42,6 @@ struct sigsuprt_t { RT_TASK *sigtask; RT_TASK *task; int signal; void (*sighdl)(
 #define SIGNAL_ENBIT   0
 #define SIGNAL_PNDBIT  1
 
-#define RT_SCHED_SIGSUSP  (1 << 15)
-
 #define SIGNAL_TASK_STACK_SIZE  4096
  
 #ifndef __SIGNAL_SUPPORT_FUN__

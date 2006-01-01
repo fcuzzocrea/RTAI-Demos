@@ -35,7 +35,7 @@ clean::
 
 endif
 
-test: test.c 
+test: test.c rtai_signal.h
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean::

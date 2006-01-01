@@ -25,6 +25,7 @@
 
 MODULE_LICENSE("GPL");
 
+#define RT_SCHED_SIGSUSP  (1 << 15)
 #define MODULE_NAME "RTAI_SIGNALS"
 
 #define RT_SIGNAL ((struct rt_signal_t *)task->rt_signals)
