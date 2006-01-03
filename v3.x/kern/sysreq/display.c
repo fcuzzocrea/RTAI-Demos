@@ -48,12 +48,12 @@ int main(void)
  	}       
 
 	srq = rtai_open_srq(0xcacca);
-	rtai_srq(srq, (unsigned int)&time0);
+	rtai_srq(srq, (unsigned long)&time0);
 	tick = rtai_srq(srq, 1);
 	dt = time0;
 
 	while (!end) {
-		rtai_srq(srq, (unsigned int)&time);
+		rtai_srq(srq, (unsigned long)&time);
 		if (++count > nextcount) {
 			nextcount += PRINT_REPEAT;
 			printf("# %d TICK: %d TIME: %lld DTOT: %lld\n", nextcount, tick, time - time0, time - dt);
