@@ -20,7 +20,36 @@
 #ifndef _RTAI_XNTIMER_H
 #define _RTAI_XNTIMER_H
 
+#ifndef _RTAI_TASKLETS_H
+#define _RTAI_TASKLETS_H
+
+struct rt_task_struct;
+
+struct rt_tasklet_struct {
+	struct rt_tasklet_struct *next, *prev;
+	int priority, uses_fpu;
+	RTIME firing_time, period;
+	void (*handler)(unsigned long);
+	unsigned long data, id;
+	int thread;
+	struct rt_task_struct *task;
+	struct rt_tasklet_struct *usptasklet;
+        struct { void *rb_parent; int rb_color; void *rb_right, *rb_left; } rbn;        struct { void *rb_node; } rbr;
+};
+
 RTIME rt_get_time(void);
+
+int rt_insert_timer(struct rt_tasklet_struct *timer,
+		    int priority,
+		    RTIME firing_time,
+		    RTIME period,
+		    void (*handler)(unsigned long),
+		    unsigned long data,
+		    int pid);
+
+void rt_remove_timer(struct rt_tasklet_struct *timer);
+
+#endif /* !_RTAI_TASKLETS_H */
 
 #define XN_INFINITE           0
 #define RTDM_CLASS_BENCHMARK  6
