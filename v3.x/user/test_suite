@@ -1,4 +1,6 @@
-cd bitstest
+cd benchrtdm
+./run
+cd ../bitstest
 ./run
 cd ../forcesoft
 #./run
@@ -30,13 +32,15 @@ cd ../netrpc
 cd ../pqueue
 ./run
 cd ../preempt
-./run
+#./run
 cd ../rt_agent
 ./run
 cd ../rtdm
 ./run
 ./frun
 cd ../sem_clock
+./run
+cd ../switches
 ./run
 cd ../tasklets
 ./test_suite

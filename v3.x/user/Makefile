@@ -1,4 +1,5 @@
 TARGETS = \
+	benchrtdm \
 	bitstest \
 	forcesoft \
 	forked \
@@ -17,6 +18,7 @@ TARGETS = \
 	rt_agent \
 	rtdm \
 	sem_clock \
+	switches \
 	tasklets \
 	tbx \
 	threaded
