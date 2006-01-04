@@ -1,0 +1,3 @@
+rmmod timerbench_rt
+rmmod rtai_tasklets
+../remod

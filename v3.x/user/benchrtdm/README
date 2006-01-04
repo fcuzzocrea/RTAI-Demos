@@ -1,0 +1,13 @@
+Quick adaption of another RTDM test to RTAI (with a small fix).
+
+To use:
+- make
+- ./run 0  // something like RTAI latency in user space
+- ./run 1  // something like RTAI latency in kern space
+- ./run 2  // something like RTAI tasklets timers in kern space
+- Ctrl-C to end anything
+
+To know more about execution options:
+- ./run
+then edit the "run" script accordingly; 
+alternatively execute it your own way.
