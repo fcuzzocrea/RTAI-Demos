@@ -17,7 +17,9 @@ static inline void xntimer_init(xntimer_t *timer, void (*handler)(void *cookie),
 
 static inline void xntimer_start (xntimer_t *timer, xnticks_t value, xnticks_t interval)
 {
-	rt_insert_timer(timer, 0, value, interval, timer->handler, timer->data, 0);
+//waltzing Matilda zaniness here, they subtract we add again!
+	extern RTIME rt_get_time(void);
+	rt_insert_timer(timer, 0, rt_get_time() + value, interval, timer->handler, timer->data, 0);
 }
 
 static inline void xntimer_destroy (xntimer_t *timer)

@@ -165,9 +165,8 @@ void timer_proc(void *arg)
 
     ctx->start_time = rtdm_clock_read();
     /* FIXME: convert to RTDM timers */
-//    xntimer_start(&ctx->timer, xnpod_ns2ticks(ctx->date-ctx->start_time),
-//                  XN_INFINITE);
-    xntimer_start(&ctx->timer, xnpod_ns2ticks(ctx->date), XN_INFINITE);
+    xntimer_start(&ctx->timer, xnpod_ns2ticks(ctx->date-ctx->start_time),
+                  XN_INFINITE);
 
     if (++ctx->curr.test_loops < ctx->samples_per_sec)
         return;
