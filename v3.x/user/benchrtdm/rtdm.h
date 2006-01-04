@@ -313,6 +313,13 @@ static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags, 
 	return ret;
 }
 
+#define HARD_TIMER_RUNNING              38
+static inline int rt_is_hard_timer_running(void)
+{
+        struct { unsigned long dummy; } arg;
+        return rtai_lxrt(0, SIZARG, HARD_TIMER_RUNNING, &arg).i[LOW];
+}
+
 #ifdef __cplusplus
 }
 #endif
