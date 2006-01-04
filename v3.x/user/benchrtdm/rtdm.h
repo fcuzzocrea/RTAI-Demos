@@ -36,8 +36,6 @@
 #ifndef _RTDM_H
 #define _RTDM_H
 
-//#define TRUE_LXRT_WAY
-
 #define RTDM_INDX  15
 
 #define __rtdm_fdcount          0
@@ -239,77 +237,11 @@ extern "C" {
 #include <sys/mman.h>
 #include <stdarg.h>
 
-//#include <rtai_lxrt.h>
-
 static inline int rt_dev_fdcount(void)
 {
         struct { long dummy; } arg = { 0 };
         return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_fdcount, &arg).i[LOW];
 }
-
-#ifdef TRUE_LXRT_WAY
-
-#define UINFO  1
-
-static inline int rt_dev_open(const char *path, int oflag, ...)
-{
-        struct { long uinfo; const char *path; long oflag; } arg = { UINFO, path, oflag };
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_open, &arg).i[LOW];
-}
-
-static inline int rt_dev_socket(int protocol_family, int socket_type, int protocol)
-{
-        struct { long uinfo; long protocol_family; long socket_type; long protocol; } arg = { UINFO, protocol_family, socket_type, protocol };
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_socket, &arg).i[LOW];
-}
-
-static inline int rt_dev_close(int fd)
-{
-        struct { long uinfo; long fd; long forced; } arg = { UINFO, fd, 0 };
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_close, &arg).i[LOW];
-}
-
-static inline int rt_dev_close_forced(int fd)
-{
-        struct { long uinfo; long fd; long forced; } arg = { UINFO, fd, 1 };
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_close, &arg).i[LOW];
-}
-
-static inline int rt_dev_ioctl(int fd, int request, ...)
-{
-        struct { long uinfo; long fd; long request; void *arg; } arg = { UINFO, fd, request };
-	va_list ap;
-	va_start(ap, request);
-	arg.arg = va_arg(ap, void *);
-	va_end(ap);
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_ioctl, &arg).i[LOW];
-}
-
-static inline ssize_t rt_dev_read(int fd, void *buf, size_t nbytes)
-{
-        struct { long uinfo; long fd; void *buf; long nbytes; } arg = { UINFO, fd, buf, nbytes };
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_read, &arg).i[LOW];
-}
-
-static inline ssize_t rt_dev_write(int fd, const void *buf, size_t nbytes)
-{
-        struct { long uinfo; long fd; const void *buf; long nbytes; } arg = { UINFO, fd, buf, nbytes };
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_write, &arg).i[LOW];
-}
-
-static inline ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags)
-{
-        struct { long uinfo; long fd; struct msghdr *msg; long flags; } arg = { UINFO, fd, msg, flags };
-        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_recvmsg, &arg).i[LOW];
-}
-
-static inline ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags)
-{
-	struct { long uinfo; long fd; const struct msghdr *msg; long flags; } arg = { UINFO, fd, msg, flags };
-	return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_sendmsg, &arg).i[LOW];
-}
-
-#else /* !TRUE_LXRT_WAY */
 
 static inline int rt_dev_open(const char *path, int oflag, ...)
 {
@@ -368,8 +300,6 @@ static inline ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags
 	struct { long fd; const struct msghdr *msg; long flags; } arg = { fd, msg, flags };
 	return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_sendmsg, &arg).i[LOW];
 }
-
-#endif /* TRUE_LXRT_WAY */
 
 static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen)
 {
