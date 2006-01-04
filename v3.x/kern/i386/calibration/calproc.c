@@ -96,7 +96,7 @@ int main(void)
 
 			case '8': {
 				args[0] = CAL_8254;
-			 	printf("\n*** '#define SETUP_TIME_8254 %lu', IN USE %lu ***\n\n", (unsigned long) rtai_srq(srq, (unsigned int)args), params.setup_time_8254);
+			 	printf("\n*** '#define SETUP_TIME_8254 %lu', IN USE %lu ***\n\n", (unsigned long) rtai_srq(srq, (unsigned long)args), params.setup_time_8254);
 				break;
 			}
 
@@ -110,7 +110,7 @@ int main(void)
 				printf("\n*** Wait %lu seconds for it ... ***\n", args[2]);
 				args[2] = (1000000*args[2])/args[1];
 				args[1] *= 1000;
-				rtai_srq(srq, (unsigned int)args);
+				rtai_srq(srq, (unsigned long)args);
 				read(fifo, &average, sizeof(average));
 				average /= (int)args[2];
 			        if (params.mp) {
@@ -119,7 +119,7 @@ int main(void)
 					printf("\n*** '#define LATENCY_8254 %d' (IN USE %lu)\n\n", (int)params.latency_8254 + average, params.latency_8254);
 				}
 				args[0] = END_KLATENCY;
-				rtai_srq(srq, (unsigned int)args);
+				rtai_srq(srq, (unsigned long)args);
 				break;
 			}
 
@@ -162,7 +162,7 @@ int main(void)
 				printf("Echo calibration time (seconds): ");
 				getint(args[1]);
 				printf("\n->>> HERE WE GO (PRINTING EVERY %lu SECONDS, press enter to end calibrating) <<<-\n\n", args[1]);
-				rtai_srq(srq, (unsigned int)args);
+				rtai_srq(srq, (unsigned long)args);
 				time = 0;
 				while (1) {
 					time += args[1];
@@ -177,7 +177,7 @@ int main(void)
 					}
 					if (poll(polls, 1, 0) > 0) {
 						args[0] = END_FREQ_CAL;
-						rtai_srq(srq, (unsigned int)args);
+						rtai_srq(srq, (unsigned long)args);
 						if (command == 'c' || command == 'b') {
 				 			printf("\n*** '#define CPU_FREQ %lu', IN USE %lu ***\n\n", cpu_freq, params.cpu_freq);
 						}
@@ -209,13 +209,13 @@ int main(void)
 				printf("\n->>> HERE WE GO (press enter to end check) <<<-\n\n");
 				args[1] *= 1000;
 				args[2] *= 1000;
-				rtai_srq(srq, (unsigned int)args);
+				rtai_srq(srq, (unsigned long)args);
 				while (1) {
 					int maxj;
 					if (poll(polls, 2, 100) > 0) {
 						if (polls[0].revents) {
 							args[0] = END_BUS_CHECK;
-							rtai_srq(srq, (unsigned int)args);
+							rtai_srq(srq, (unsigned long)args);
 							break;
 						}
 						read(fifo, &maxj, sizeof(maxj));
