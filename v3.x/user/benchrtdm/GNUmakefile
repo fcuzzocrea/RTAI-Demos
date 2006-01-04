@@ -35,7 +35,7 @@ clean::
 endif
 
 latency: latency.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< -lm -lpthread
+	$(CC) -I../fusion $(LXRT_CFLAGS) -o $@ $< -lm -lpthread
 
 clean::
 	$(RM) latency
