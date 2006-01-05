@@ -131,7 +131,7 @@ static void ClockChrono_Clock(long t)
 	MenageHmsh_tChain11 hourChain;
 	char command;
 	BOOLEAN display;
-	unsigned int msg;
+	unsigned long msg;
 
 	rt_receive(&read, &msg);
 	MenageHmsh_Initialise(&hour);
@@ -178,7 +178,7 @@ static void ClockChrono_Chrono(long t)
 	BOOLEAN display;
 	BOOLEAN hundredthes = FALSE;
 	char command;
-	unsigned int msg;
+	unsigned long msg;
 
 	rt_receive(&read, &msg);
 	command = 'R';

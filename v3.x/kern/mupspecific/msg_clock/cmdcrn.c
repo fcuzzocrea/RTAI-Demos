@@ -52,7 +52,7 @@ void CommandChrono_Put(char command)
 {
 	static RT_TASK *ackn = 0;
 	unsigned int put = 'c';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != &Chrono) {
 		ackn = rt_rpc(&Chrono, put, &msg);
@@ -66,7 +66,7 @@ void CommandChrono_Get(char *command)
 {
 	static RT_TASK *ackn = 0;
 	unsigned int get = 'd';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != &Chrono) {
 		ackn = rt_rpc(&Chrono, get, &msg);
@@ -80,7 +80,7 @@ extern int cpu_used[];
 static void CommandChrono_task(long t)
 {
 	RTIME fiveSeconds = nano2count(FIVE_SECONDS);
-	unsigned int command;
+	unsigned long command;
 	unsigned int buffered = 0;
 	unsigned int C = 'C';
 	unsigned int R = 'R';

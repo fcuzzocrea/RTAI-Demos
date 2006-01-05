@@ -51,7 +51,7 @@ void CommandClock_Put(char command)
 {
 	static RT_TASK *ackn = 0;
 	unsigned int put = 'a';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != &Clock) {
 		ackn = rt_rpc(&Clock, put, &msg);
@@ -65,7 +65,7 @@ void CommandClock_Get(char *command)
 {
 	static RT_TASK *ackn = 0;
 	unsigned int get = 'b';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != &Clock) {
 		ackn = rt_rpc(&Clock, get, &msg);
@@ -78,7 +78,7 @@ extern int cpu_used[];
 
 static void CommandClock_task(long t)
 {
-	unsigned int command;
+	unsigned long command;
 	char R = 'R';
 	int ackn = 0;
 	RT_TASK *get = (RT_TASK *)0, *put = (RT_TASK *)0, *task;
