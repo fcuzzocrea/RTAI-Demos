@@ -23,8 +23,8 @@ if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod $MODULES/rtai_tasklets.ko;
 else insmod $MODULES/rtai_tasklets.o; fi
 if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod ./timerbench_rt.ko
-else insmod ./timerbench_rt.o; fi
+then insmod $MODULES/rtai_rtdm.ko; insmod ./timerbench_rt.ko
+else insmod $MODULES/rtai_rtdm.o; insmod ./timerbench_rt.o; fi
 ./latency -t $1
 sync
 echo
