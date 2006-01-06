@@ -216,6 +216,7 @@ void display (void *cookie)
     if (quiet)
         fprintf(stderr, "running quietly for %d seconds\n", test_duration);
 
+    rt_make_hard_real_time();
     for (;;)
         {
         long minj, gminj, maxj, gmaxj, avgj;
@@ -241,7 +242,6 @@ void display (void *cookie)
         } else {
             struct rtbnch_interm_result result;
 
-    	    rt_make_hard_real_time();
             err = rt_dev_ioctl(benchdev, RTBNCH_RTIOC_INTERM_RESULT, &result);
 
             if (err)
