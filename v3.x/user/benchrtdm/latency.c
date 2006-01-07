@@ -35,7 +35,7 @@ int data_lines = 21;    /* data lines per header line, -l <lines> to change */
 int quiet = 0;          /* suppress printing of RTH, RTD lines when -T given */
 int benchdev_no = 0;
 int benchdev = -1;
-long freeze_threshold = 0;
+int freeze_max = 0;
 
 #define USER_TASK       0
 #define KERNEL_TASK     1
@@ -86,8 +86,6 @@ void latency (void *cookie)
         return;
         }
 
-    freeze_threshold = rt_timer_ns2tsc(freeze_threshold);
-
     nsamples = ONE_BILLION / period_ns;
     period_tsc = rt_timer_ns2tsc(period_ns);
     /* start time: one millisecond from now. */
@@ -129,15 +127,15 @@ void latency (void *cookie)
             if (dt < minj) minj = dt;
             sumj += dt;
 
-            if (!(finished || warmup))
+            if (freeze_max && (dt > gmaxjitter) && !(finished || warmup))
                 {
-                if ((freeze_threshold > 0) && (dt > freeze_threshold))
-                    rt_dev_ioctl(benchdev, RTBNCH_RTIOC_FREEZE_TRACE,
-                                 freeze_threshold);
-
-                if (do_histogram || do_stats)
-                    add_histogram(histogram_avg, dt);
+                rt_dev_ioctl(benchdev, RTBNCH_RTIOC_REFREEZE_TRACE,
+                             rt_timer_tsc2ns(dt));
+                gmaxjitter = dt;
                 }
+
+            if (!(finished || warmup) && (do_histogram || do_stats))
+                add_histogram(histogram_avg, dt);
             }
 
         if(!warmup)
@@ -187,7 +185,7 @@ void display (void *cookie)
     } else {
         struct rtbnch_timerconfig   config;
 
-        rt_make_soft_real_time();
+	rt_make_soft_real_time();
         if (test_mode == KERNEL_TASK)
             config.mode = RTBNCH_TIMER_TASK;
         else
@@ -197,7 +195,7 @@ void display (void *cookie)
         config.warmup_loops         = WARMUP_TIME;
         config.histogram_size       = (do_histogram || do_stats) ? histogram_size : 0;
         config.histogram_bucketsize = bucketsize;
-        config.freeze_threshold     = freeze_threshold;
+        config.freeze_max           = freeze_max;
 
         err = rt_dev_ioctl(benchdev, RTBNCH_RTIOC_START_TMTEST, &config);
 
@@ -425,7 +423,7 @@ int main (int argc, char **argv)
 {
     int c, err;
 
-    while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:f:")) != EOF)
+    while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:f")) != EOF)
         switch (c)
             {
             case 'h':
@@ -481,7 +479,7 @@ int main (int argc, char **argv)
 
             case 'f':
 
-                freeze_threshold = atoi(optarg)*1000;
+                freeze_max = 1;
                 break;
 
             default:
@@ -497,7 +495,7 @@ int main (int argc, char **argv)
                         "  [-q]                         # supresses RTD, RTH lines if -T is used\n"
                         "  [-D <benchmark_device_no>]   # number of benchmark device, default=0\n"
                         "  [-t <test_mode>]             # 0=user task (default), 1=kernel task, 2=timer IRQ\n"
-                        "  [-f <threshold_us>]          # freeze trace on latency exceeding threshold\n");
+                        "  [-f]                         # freeze trace for each new max latency\n");
                 exit(2);
             }
 
@@ -547,7 +545,7 @@ int main (int argc, char **argv)
         return 0;
         }
 
-    if ((test_mode != USER_TASK) || (freeze_threshold > 0))
+    if ((test_mode != USER_TASK) || freeze_max)
         {
         char devname[RTDM_MAX_DEVNAME_LEN];
 

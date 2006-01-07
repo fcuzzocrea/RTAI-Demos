@@ -1,6 +1,6 @@
 Quick adaption of another RTDM test to RTAI (with a small fix).
 
-To use:
+To use it:
 - make
 - ./run 0  // something like RTAI latency in user space
 - ./run 1  // something like RTAI latency in kern space
