@@ -68,7 +68,7 @@ static int sfd, rfd;
 
 static void endme(int dummy) 
 { 
-	stop_rt_timer();
+//	stop_rt_timer();
 	rt_dev_close(sfd);
 	rt_dev_close(rfd);
 }
@@ -145,7 +145,7 @@ struct rtser_event rx_event;
 		PRINT("hello_world_lxrt: rtser0 and rtser1 test finished\n");
 	}    
 
-	stop_rt_timer();
+//	stop_rt_timer();
 	rt_make_soft_real_time();
 	rt_task_delete(testcomtsk);
 	return 0;
