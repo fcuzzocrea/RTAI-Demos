@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/io.h>
 #include <signal.h>
 
-#include <rtai_lxrt.h>
 #include <rtai_sem.h>
 #include <rtdm/rtdm.h>
 #include <rtdm/rtserial.h>
@@ -83,7 +82,10 @@ int main(void)
 	struct rtser_status status;
 	int mcr_status, i;
 
-	signal(SIGINT, endme);
+	signal(SIGINT,  endme);
+	signal(SIGKILL, endme);
+	signal(SIGTERM, endme);
+
 	if (!(testcomtsk = rt_task_init(nam2num("TESTCOM"), 1, 0, 0))) {
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
@@ -91,7 +93,7 @@ int main(void)
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-        rt_make_hard_real_time();
+	rt_make_hard_real_time();
 
 	if ((sfd = rt_dev_open("rtser0", O_RDWR)) < 0 || (rfd = rt_dev_open("rtser1", O_RDWR)) < 0) {
 		PRINT("hello_world_lxrt: error in rt_dev_open()\n");
