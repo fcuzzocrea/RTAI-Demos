@@ -17,6 +17,7 @@
  */
 
 #include <linux/module.h>
+#include <linux/moduleparam.h>
 #include <asm/semaphore.h>
 
 #include <rtdm/rtdm_driver.h>

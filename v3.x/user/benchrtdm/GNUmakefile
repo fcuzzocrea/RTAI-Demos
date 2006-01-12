@@ -26,7 +26,7 @@ MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
 all:: timerbench_rt.o
 
-timerbench.o: %.c
+timerbench_rt.o: timerbench.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
