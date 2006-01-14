@@ -98,7 +98,7 @@ void rt_send_signal(int signal, RT_TASK *task);
 
 #include <rtai_lxrt.h>
 
-#define SIGNAL_TASK_STACK_SIZE  0x4000
+#define SIGNAL_TASK_STACK_SIZE  4096
 
 #ifndef __SIGNAL_SUPPORT_FUN__
 #define __SIGNAL_SUPPORT_FUN__
@@ -133,8 +133,9 @@ static inline int rt_request_signal(int signal, void (*sighdl)(int, RT_TASK *))
 		arg.signal      = signal;
 		arg.sighdl      = sighdl;
 		arg.runnable_on = tskarg.i[LOW];
-		rt_thread_create(signal_suprt_fun, &arg, SIGNAL_TASK_STACK_SIZE);
-		return rtai_lxrt(RTAI_SIGNALS_IDX, sizeof(RT_TASK *), SIGNAL_SYNCREQ, &arg.task).i[LOW];
+		if (rt_clone(signal_suprt_fun, &arg, SIGNAL_TASK_STACK_SIZE, 0) > 0) {
+			return rtai_lxrt(RTAI_SIGNALS_IDX, sizeof(RT_TASK *), SIGNAL_SYNCREQ, &arg.task).i[LOW];
+		}
 	}
 	return -EINVAL;
 }
