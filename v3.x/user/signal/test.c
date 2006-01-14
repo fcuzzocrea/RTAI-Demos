@@ -37,21 +37,21 @@ static volatile int endmaster, endtask[NTASKS];
 
 static SEM *barrier;
 
-static void master_sighdl(int signal, RT_TASK *sched_task)
+static void master_sighdl(long signal, RT_TASK *sched_task)
 {
 	static int taskidx;
 	int i;
 	for (i = 0; i < SMLTN; i++) {
-		rt_send_signal(RESUME_SIGNAL, task[taskidx++%NTASKS]);
+		rt_trigger_signal(RESUME_SIGNAL, task[taskidx++%NTASKS]);
 	}
 }
 
-static void resume_sighdl(int signal, RT_TASK *task)
+static void resume_sighdl(long signal, RT_TASK *task)
 {
 	rt_task_resume(task);
 }
 
-static void end_sighdl(int signal, RT_TASK *task2end)
+static void end_sighdl(long signal, RT_TASK *task2end)
 {
 	int i;
 	for (i = 0; i < NTASKS; i++) {
@@ -63,7 +63,7 @@ static void end_sighdl(int signal, RT_TASK *task2end)
 	}
 }
 
-static void *task_fun(int taskidx)
+static void *task_fun(long taskidx)
 {
 	int loop;
 	float f;
@@ -86,7 +86,7 @@ static void *task_fun(int taskidx)
 	rt_return(rt_receive(0, &loop), 0);
 	rt_sem_wait_barrier(barrier);
 	rt_task_delete(task[taskidx]);
-	printf("TASK %d ENDs\n", taskidx + 1);
+	printf("TASK %ld ENDs\n", taskidx + 1);
 	return 0;
 }
 
@@ -99,10 +99,10 @@ static void *master_fun(void *arg)
 	rt_sem_wait_barrier(barrier);
 	while (!endmaster) {
 		rt_sleep(nano2count(PERIOD));
-		rt_send_signal(MASTER_SIGNAL, 0);
+		rt_trigger_signal(MASTER_SIGNAL, 0);
 	}
 	for (i = 0; i < NTASKS; i++) {
-		rt_send_signal(END_SIGNAL, task[i]);
+		rt_trigger_signal(END_SIGNAL, task[i]);
 		rt_rpc(task[i], 0, &ret);
 	}
 	rt_release_signal(MASTER_SIGNAL, 0);

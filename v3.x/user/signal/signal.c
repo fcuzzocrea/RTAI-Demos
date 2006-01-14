@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Paolo Mantegazza <mantegazza@aero.polimi.it>
+ * Copyright (C) 2006 Paolo Mantegazza <mantegazza@aero.polimi.it>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -24,14 +24,14 @@
 #include "rtai_signal.h"
 
 MODULE_LICENSE("GPL");
+#define MODULE_NAME "RTAI_SIGNALS"
 
 #define RT_SCHED_SIGSUSP  (1 << 15)
-#define MODULE_NAME "RTAI_SIGNALS"
 
 #define RT_SIGNAL ((struct rt_signal_t *)task->rt_signals)
 struct rt_signal_t { unsigned long flags; RT_TASK *sigtask; };
 
-int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, int signal)
+static int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, long signal)
 {
 	int retval;
 	if (signal >= 0 && sigtask && task) {
@@ -72,9 +72,9 @@ static inline void rt_exec_signal(RT_TASK *sigtask, RT_TASK *task)
 	rt_global_restore_flags(flags);
 }
 
-int rt_release_signal(int signal, RT_TASK *task)
+int rt_release_signal(long signal, RT_TASK *task)
 {
-	if (!task) {
+	if (task == NULL) {
 		task = RT_CURRENT;
 	}
 	if (signal >= 0 && RT_SIGNAL && RT_SIGNAL[signal].sigtask) {
@@ -86,9 +86,9 @@ int rt_release_signal(int signal, RT_TASK *task)
 }
 EXPORT_SYMBOL(rt_release_signal);
 
-void rt_send_signal(int signal, RT_TASK *task)
+void rt_trigger_signal(long signal, RT_TASK *task)
 {
-	if (!task) {
+	if (task == NULL) {
 		task = RT_CURRENT;
 	}
 	if (signal >= 0 && RT_SIGNAL && RT_SIGNAL[signal].sigtask) {
@@ -103,11 +103,11 @@ void rt_send_signal(int signal, RT_TASK *task)
 		} while (test_and_clear_bit(SIGNAL_PNDBIT, &RT_SIGNAL[signal].flags));
 	}
 }
-EXPORT_SYMBOL(rt_send_signal);
+EXPORT_SYMBOL(rt_trigger_signal);
 
-void rt_enable_signal(int signal, RT_TASK *task)
+void rt_enable_signal(long signal, RT_TASK *task)
 {
-	if (!task) {
+	if (task == NULL) {
 		task = RT_CURRENT;
 	}
 	if (signal >= 0 && RT_SIGNAL) {
@@ -116,9 +116,9 @@ void rt_enable_signal(int signal, RT_TASK *task)
 }
 EXPORT_SYMBOL(rt_enable_signal);
 
-void rt_disable_signal(int signal, RT_TASK *task)
+void rt_disable_signal(long signal, RT_TASK *task)
 {
-	if (!task) {
+	if (task == NULL) {
 		task = RT_CURRENT;
 	}
 	if (signal >= 0 && RT_SIGNAL) {
@@ -127,18 +127,13 @@ void rt_disable_signal(int signal, RT_TASK *task)
 }
 EXPORT_SYMBOL(rt_disable_signal);
 
-static int rt_sync_sigreq(RT_TASK *task)
+static int rt_signal_helper(RT_TASK *task)
 {
-	rt_task_suspend(task);
-	return task->retval;
-}
-
-static unsigned long long rt_signal_info(void)
-{
-	union rtai_lxrt_t retval;
-	retval.v[HIGH] = RT_CURRENT;
-	retval.i[LOW] = ((RT_TASK *)retval.v[HIGH])->runnable_on_cpus;
-	return retval.rt;
+	if (task) {
+		rt_task_suspend(task);
+		return task->retval;
+	}
+	return (RT_CURRENT)->runnable_on_cpus;
 }
 
 int rt_wait_signal(RT_TASK *sigtask, RT_TASK *task)
@@ -159,21 +154,50 @@ int rt_wait_signal(RT_TASK *sigtask, RT_TASK *task)
 }
 EXPORT_SYMBOL(rt_wait_signal);
 
+static void signal_suprt_fun(struct sigsuprt_t *funarg)
+{		
+	struct sigsuprt_t arg = *funarg;
+
+	arg.sigtask = RT_CURRENT;
+	if (!_rt_request_signal(arg.sigtask, arg.task, arg.signal)) {
+		while (rt_wait_signal(arg.sigtask, arg.task)) {
+			arg.sighdl(arg.signal, arg.task);
+		}
+	} else {
+		rt_task_resume(arg.task);
+	}
+}
+
+int rt_request_signal(long signal, void (*sighdl)(long, RT_TASK *))
+{
+	if (signal >= 0 && sighdl) {
+		RT_TASK *task = RT_CURRENT;
+		struct sigsuprt_t arg = { NULL, task, signal, sighdl, task->runnable_on_cpus };
+		if ((task = rt_malloc(sizeof(RT_TASK)))) {
+			rt_task_init_cpuid(task, (void *)signal_suprt_fun, (long)&arg, SIGNAL_TASK_STACK_SIZE, arg.task->priority, 0, 0, arg.cpuid);
+			rt_task_resume(task);
+			rt_task_suspend(arg.task);
+			return arg.task->retval;
+		}
+	}
+	return -EINVAL;
+}
+EXPORT_SYMBOL(rt_request_signal);
+
 static struct rt_fun_entry rtai_signals_fun[] = {
-	[SIGNAL_SYNCREQ] = { 1, rt_sync_sigreq },   // internal, not for users
-	[SIGNAL_INFO]    = { 1, rt_signal_info },   // internal, not for users
-	[SIGNAL_WAITSIG] = { 1, rt_wait_signal },   // internal, not for users
+	[SIGNAL_HELPER]  = { 1, rt_signal_helper   }, // internal, not for users
+	[SIGNAL_WAITSIG] = { 1, rt_wait_signal     }, // internal, not for users
 	[SIGNAL_REQUEST] = { 1, _rt_request_signal },
-	[SIGNAL_RELEASE] = { 1, rt_release_signal },
-	[SIGNAL_ENABLE]  = { 1, rt_enable_signal },
-	[SIGNAL_DISABLE] = { 1, rt_disable_signal },
-	[SIGNAL_SEND]    = { 1, rt_send_signal }
+	[SIGNAL_RELEASE] = { 1, rt_release_signal  },
+	[SIGNAL_ENABLE]  = { 1, rt_enable_signal   },
+	[SIGNAL_DISABLE] = { 1, rt_disable_signal  },
+	[SIGNAL_SEND]    = { 1, rt_trigger_signal  }
 };
 
 int init_module(void)
 {
 	if (set_rt_fun_ext_index(rtai_signals_fun, RTAI_SIGNALS_IDX)) {
-		printk("Wrong index module for lxrt: %d.\n", RTAI_SIGNALS_IDX);
+		printk("Wrong or already used LXRT extension: %d.\n", RTAI_SIGNALS_IDX);
 		return -EACCES;
 	}
 	printk("%s: loaded.\n", MODULE_NAME);
