@@ -28,7 +28,7 @@ MODULE_LICENSE("GPL");
 
 #define RT_SCHED_SIGSUSP  (1 << 15)
 
-#define RT_SIGNAL ((struct rt_signal_t *)task->rt_signals)
+#define RT_SIGNALS ((struct rt_signal_t *)task->rt_signals)
 struct rt_signal_t { unsigned long flags; RT_TASK *sigtask; };
 
 static int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, long signal)
@@ -39,8 +39,8 @@ static int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, long signal)
 			task->rt_signals = rt_malloc(MAXSIGNALS*sizeof(struct rt_signal_t));
 			task->pstate = 0;
 		}
-		RT_SIGNAL[signal].flags = (1 << SIGNAL_ENBIT);
-		RT_SIGNAL[signal].sigtask = sigtask;
+		RT_SIGNALS[signal].flags = (1 << SIGNAL_ENBIT);
+		RT_SIGNALS[signal].sigtask = sigtask;
 		retval = 0;
 	} else {
 		retval = -EINVAL;
@@ -92,9 +92,9 @@ int rt_release_signal(long signal, RT_TASK *task)
 	if (task == NULL) {
 		task = RT_CURRENT;
 	}
-	if (signal >= 0 && RT_SIGNAL && RT_SIGNAL[signal].sigtask) {
-		RT_SIGNAL[signal].sigtask->priority = task->priority; 
-		rt_exec_signal(RT_SIGNAL[signal].sigtask, 0);
+	if (signal >= 0 && RT_SIGNALS && RT_SIGNALS[signal].sigtask) {
+		RT_SIGNALS[signal].sigtask->priority = task->priority; 
+		rt_exec_signal(RT_SIGNALS[signal].sigtask, 0);
 		return 0;
 	}
 	return -EINVAL;
@@ -119,16 +119,16 @@ void rt_trigger_signal(long signal, RT_TASK *task)
 	if (task == NULL) {
 		task = RT_CURRENT;
 	}
-	if (signal >= 0 && RT_SIGNAL && RT_SIGNAL[signal].sigtask) {
+	if (signal >= 0 && RT_SIGNALS && RT_SIGNALS[signal].sigtask) {
 		do {
-			if (test_and_clear_bit(SIGNAL_ENBIT, &RT_SIGNAL[signal].flags)) {
-				rt_exec_signal(RT_SIGNAL[signal].sigtask, task);
-				test_and_set_bit(SIGNAL_ENBIT, &RT_SIGNAL[signal].flags);
+			if (test_and_clear_bit(SIGNAL_ENBIT, &RT_SIGNALS[signal].flags)) {
+				rt_exec_signal(RT_SIGNALS[signal].sigtask, task);
+				test_and_set_bit(SIGNAL_ENBIT, &RT_SIGNALS[signal].flags);
 			} else {
-				test_and_set_bit(SIGNAL_PNDBIT, &RT_SIGNAL[signal].flags);
+				test_and_set_bit(SIGNAL_PNDBIT, &RT_SIGNALS[signal].flags);
 				break;
 			}
-		} while (test_and_clear_bit(SIGNAL_PNDBIT, &RT_SIGNAL[signal].flags));
+		} while (test_and_clear_bit(SIGNAL_PNDBIT, &RT_SIGNALS[signal].flags));
 	}
 }
 EXPORT_SYMBOL(rt_trigger_signal);
@@ -150,8 +150,8 @@ void rt_enable_signal(long signal, RT_TASK *task)
 	if (task == NULL) {
 		task = RT_CURRENT;
 	}
-	if (signal >= 0 && RT_SIGNAL) {
-		set_bit(SIGNAL_ENBIT, &RT_SIGNAL[signal].flags);
+	if (signal >= 0 && RT_SIGNALS) {
+		set_bit(SIGNAL_ENBIT, &RT_SIGNALS[signal].flags);
 	}
 }
 EXPORT_SYMBOL(rt_enable_signal);
@@ -173,8 +173,8 @@ void rt_disable_signal(long signal, RT_TASK *task)
 	if (task == NULL) {
 		task = RT_CURRENT;
 	}
-	if (signal >= 0 && RT_SIGNAL) {
-		clear_bit(SIGNAL_ENBIT, &RT_SIGNAL[signal].flags);
+	if (signal >= 0 && RT_SIGNALS) {
+		clear_bit(SIGNAL_ENBIT, &RT_SIGNALS[signal].flags);
 	}
 }
 EXPORT_SYMBOL(rt_disable_signal);
