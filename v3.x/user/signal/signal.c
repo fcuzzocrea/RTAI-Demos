@@ -31,7 +31,7 @@ MODULE_LICENSE("GPL");
 #define RT_SIGNALS ((struct rt_signal_t *)task->rt_signals)
 struct rt_signal_t { unsigned long flags; RT_TASK *sigtask; };
 
-static int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, long signal)
+static int rt_request_signal_(RT_TASK *sigtask, RT_TASK *task, long signal)
 {
 	int retval;
 	if (signal >= 0 && sigtask && task) {
@@ -49,7 +49,7 @@ static int _rt_request_signal(RT_TASK *sigtask, RT_TASK *task, long signal)
 	rt_task_resume(task);
 	return retval;
 }
-EXPORT_SYMBOL(_rt_request_signal);
+EXPORT_SYMBOL(rt_request_signal_);
 
 static inline void rt_exec_signal(RT_TASK *sigtask, RT_TASK *task)
 {
@@ -212,7 +212,7 @@ static void signal_suprt_fun(struct sigsuprt_t *funarg)
 	struct sigsuprt_t arg = *funarg;
 
 	arg.sigtask = RT_CURRENT;
-	if (!_rt_request_signal(arg.sigtask, arg.task, arg.signal)) {
+	if (!rt_request_signal_(arg.sigtask, arg.task, arg.signal)) {
 		while (rt_wait_signal(arg.sigtask, arg.task)) {
 			arg.sighdl(arg.signal, arg.task);
 		}
@@ -259,7 +259,7 @@ EXPORT_SYMBOL(rt_request_signal);
 static struct rt_fun_entry rtai_signals_fun[] = {
 	[SIGNAL_HELPER]  = { 1, rt_signal_helper   }, // internal, not for users
 	[SIGNAL_WAITSIG] = { 1, rt_wait_signal     }, // internal, not for users
-	[SIGNAL_REQUEST] = { 1, _rt_request_signal },
+	[SIGNAL_REQUEST] = { 1, rt_request_signal_ }, // internal, not for users
 	[SIGNAL_RELEASE] = { 1, rt_release_signal  },
 	[SIGNAL_ENABLE]  = { 1, rt_enable_signal   },
 	[SIGNAL_DISABLE] = { 1, rt_disable_signal  },
