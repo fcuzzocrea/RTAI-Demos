@@ -65,7 +65,7 @@ static inline void rt_exec_signal(RT_TASK *sigtask, RT_TASK *task)
 			}
 		}
 		sigtask->state &= ~RT_SCHED_SIGSUSP;
-		sigtask->retval = (int)task;
+		sigtask->retval = (long)task;
 		enq_ready_task(sigtask);
 		RT_SCHEDULE(sigtask, rtai_cpuid());
 	}
