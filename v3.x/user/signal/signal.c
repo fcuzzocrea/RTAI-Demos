@@ -72,6 +72,21 @@ static inline void rt_exec_signal(RT_TASK *sigtask, RT_TASK *task)
 	rt_global_restore_flags(flags);
 }
 
+/**
+ * Release a signal previously requested for a task.
+ *
+ * @param signal, >= 0, is the signal.
+ *
+ * @param task is the task for which the signal was previously requested.
+ *
+ * A call of this function will release a signal previously requested for 
+ * a task.
+ *
+ * @retval 0 on success.
+ * @return -EINVAL in case of error.
+ *
+ */
+
 int rt_release_signal(long signal, RT_TASK *task)
 {
 	if (task == NULL) {
@@ -85,6 +100,19 @@ int rt_release_signal(long signal, RT_TASK *task)
 	return -EINVAL;
 }
 EXPORT_SYMBOL(rt_release_signal);
+
+/**
+ * Trigger a signal for a task, executing the related handler.
+ *
+ * @param signal, >= 0, is the signal.
+ *
+ * @param task is the task to which the signal is sent.
+ *
+ * A call of this function will stop the task, if executing, till the triggered
+ * handler has finished its execution, carried out at the same priority and on
+ * the same CPU of the task it is serving.
+ *
+ */
 
 void rt_trigger_signal(long signal, RT_TASK *task)
 {
@@ -105,6 +133,18 @@ void rt_trigger_signal(long signal, RT_TASK *task)
 }
 EXPORT_SYMBOL(rt_trigger_signal);
 
+/**
+ * Enable a signal for a task.
+ *
+ * @param signal, >= 0, is the signal.
+ *
+ * @param task is the task which signal is enabled.
+ *
+ * A call of this function will enable reception of the related signal by
+ * task.
+ *
+ */
+
 void rt_enable_signal(long signal, RT_TASK *task)
 {
 	if (task == NULL) {
@@ -115,6 +155,18 @@ void rt_enable_signal(long signal, RT_TASK *task)
 	}
 }
 EXPORT_SYMBOL(rt_enable_signal);
+
+/**
+ * disable a signal for a task.
+ *
+ * @param signal, >= 0, is the signal.
+ *
+ * @param task is the task which signal is enabled.
+ *
+ * A call of this function will disable reception of the related signal by
+ * task.
+ *
+ */
 
 void rt_disable_signal(long signal, RT_TASK *task)
 {
@@ -167,6 +219,24 @@ static void signal_suprt_fun(struct sigsuprt_t *funarg)
 		rt_task_resume(arg.task);
 	}
 }
+
+/**
+ * Install a handler for catching RTAI real time async signals.
+ *
+ * @param signal, >= 0, is the signal.
+ *
+ * @param sighdl is the handler that will execute upon signal reception.
+ *
+ * RTAI real time signal handlers are executed within a host hard real time
+ * thread, assigned to the same CPU of the receiving task, while the task 
+ * receiving the signal is kept stopped. No difference between kernel and 
+ * user space, the usual symmetric usage.
+ * If the request is succesfull signal reception will be enabled.
+ *
+ * @retval 0 on success.
+ * @return -EINVAL in case of error.
+ *
+ */
 
 int rt_request_signal(long signal, void (*sighdl)(long, RT_TASK *))
 {
