@@ -102,15 +102,16 @@ int rt_release_signal(long signal, RT_TASK *task)
 EXPORT_SYMBOL(rt_release_signal);
 
 /**
- * Trigger a signal for a task, executing the related handler.
+ * Trigger a signal for a task (i.e. send a signal to the task), executing 
+ * the related handler.
  *
  * @param signal, >= 0, is the signal.
  *
  * @param task is the task to which the signal is sent.
  *
- * A call of this function will stop the task, if executing, till the triggered
- * handler has finished its execution, carried out at the same priority and on
- * the same CPU of the task it is serving.
+ * A call of this function will stop the task served by signal, if executing, 
+ * till the triggered handler has finished its execution, carried out at the 
+ * same priority and on the same CPU of the task it is serving.
  *
  */
 
@@ -231,7 +232,8 @@ static void signal_suprt_fun(struct sigsuprt_t *funarg)
  * thread, assigned to the same CPU of the receiving task, while the task 
  * receiving the signal is kept stopped. No difference between kernel and 
  * user space, the usual symmetric usage.
- * If the request is succesfull signal reception will be enabled.
+ * If the request is succesfull the function will return with signal reception 
+ * enabled.
  *
  * @retval 0 on success.
  * @return -EINVAL in case of error.
