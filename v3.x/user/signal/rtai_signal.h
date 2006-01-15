@@ -28,7 +28,7 @@
 #define SIGNAL_RELEASE  3 
 #define SIGNAL_ENABLE   4
 #define SIGNAL_DISABLE  5
-#define SIGNAL_SEND     6
+#define SIGNAL_TRIGGER  6
 
 #define SIGNAL_TASK_INIPRIO     0
 
@@ -115,7 +115,7 @@ static inline void rt_disable_signal(long signal, RT_TASK *task)
 static inline void rt_trigger_signal(long signal, RT_TASK *task)
 {
 	struct { long signal; RT_TASK *task; } arg = { signal, task };
-	rtai_lxrt(RTAI_SIGNALS_IDX, SIZARG, SIGNAL_SEND, &arg);
+	rtai_lxrt(RTAI_SIGNALS_IDX, SIZARG, SIGNAL_TRIGGER, &arg);
 }
 
 #endif /* __KERNEL__ */

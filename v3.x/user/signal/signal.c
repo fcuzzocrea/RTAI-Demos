@@ -261,7 +261,7 @@ static struct rt_fun_entry rtai_signals_fun[] = {
 	[SIGNAL_RELEASE] = { 1, rt_release_signal  },
 	[SIGNAL_ENABLE]  = { 1, rt_enable_signal   },
 	[SIGNAL_DISABLE] = { 1, rt_disable_signal  },
-	[SIGNAL_SEND]    = { 1, rt_trigger_signal  }
+	[SIGNAL_TRIGGER] = { 1, rt_trigger_signal  }
 };
 
 int init_module(void)
