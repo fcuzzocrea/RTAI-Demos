@@ -80,11 +80,11 @@ static void *task_fun(long taskidx)
 		rt_printk("Task %d executing loop # %d\n", taskidx + 1, ++loop);
 		rt_busy_sleep(nano2count(WAISTIME));
 	}
-	rt_make_soft_real_time();
 	rt_release_signal(RESUME_SIGNAL, 0);
 	rt_release_signal(END_SIGNAL, 0);
 	rt_return(rt_receive(0, &loop), 0);
 	rt_sem_wait_barrier(barrier);
+	rt_make_soft_real_time();
 	rt_task_delete(task[taskidx]);
 	printf("TASK %ld ENDs\n", taskidx + 1);
 	return 0;
@@ -107,8 +107,8 @@ static void *master_fun(void *arg)
 	}
 	rt_release_signal(MASTER_SIGNAL, 0);
 	rt_sleep(NTASKS*PERIOD);  // leave some time to clean them all up
-	rt_make_soft_real_time();
 	rt_sem_wait_barrier(barrier);
+	rt_make_soft_real_time();
 	rt_task_delete(mastertask);
 	printf("MASTER TASK ENDs\n");
 	return 0;
