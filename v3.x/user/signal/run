@@ -1,6 +1,13 @@
 sync
 #!/bin/sh
 
+prefix=`rtai-config --prefix`
+
+if [ "$prefix" == "" ]; then
+echo "ERROR: please set your PATH variable to <rtai-install>/bin"
+exit
+fi
+
 libpath=`rtai-config --library-dir`
 
 if [ "$libpath" == "" ]; then
@@ -9,6 +16,8 @@ exit
 fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
+
+MODULES=$prefix/modules
 
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
@@ -20,8 +29,8 @@ echo
 echo "Now start the realtime process <enter>:"
 read junk
 if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod ./signal_rt.ko;
-else insmod ./signal.o; fi
+then insmod $MODULES/rtai_signal.ko;
+else insmod $MODULES/rtai_signal.o; fi
 $SUDO ./test
 echo
 echo "Done. Press <enter> to remove the modules."

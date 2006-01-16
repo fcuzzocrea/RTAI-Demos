@@ -25,10 +25,7 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: signal.o mtest.o
-
-signal.o: signal.c
-	$(CC) $(MODULE_CFLAGS) -c $<
+all:: mtest.o
 
 mtest.o: mtest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
@@ -38,7 +35,7 @@ clean::
 
 endif
 
-test: test.c rtai_signal.h
+test: test.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean::
