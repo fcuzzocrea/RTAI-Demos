@@ -1,3 +1,4 @@
 rmmod mtest_rt
 rmmod signal_rt
+rmmod signal
 ../remod
