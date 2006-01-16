@@ -17,7 +17,6 @@
  */
 
 #include <linux/module.h>
-#include <linux/moduleparam.h>
 #include <asm/semaphore.h>
 
 #include <rtdm/rtdm_driver.h>
@@ -150,7 +149,7 @@ void timer_task_proc(void *arg)
                 err = rtdm_task_sleep_until(ctx->date);
             );
 
-            if (err)
+            if (err == -EIDRM)
                 return;
 
             eval_inner_loop(ctx, (long)(rtdm_clock_read() - ctx->date));
