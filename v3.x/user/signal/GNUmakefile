@@ -25,9 +25,12 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: handler_rt.o
+all:: signal.o mtest.o
 
-handler_rt.o: %.c
+signal.o: signal.c
+	$(CC) $(MODULE_CFLAGS) -c $<
+
+mtest.o: mtest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
