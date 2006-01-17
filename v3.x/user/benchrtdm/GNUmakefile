@@ -24,9 +24,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: timerbench_rt.o
+all:: timerbench.o
 
-timerbench_rt.o: timerbench.c
+timerbench.o: timerbench.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::

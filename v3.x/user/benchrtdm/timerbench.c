@@ -18,6 +18,7 @@
 
 #include <linux/module.h>
 #include <asm/semaphore.h>
+#include <linux/moduleparam.h>
 
 #include <rtdm/rtdm_driver.h>
 #include "rtbenchmark.h"
