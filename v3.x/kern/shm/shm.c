@@ -36,23 +36,26 @@ MODULE_AUTHOR("Wolfgang Grandegger <wg@denx.de>");
 MODULE_LICENSE("GPL");
 
 #define STACK_SIZE   4000
-#define TICK_PERIOD  1000000
-#define PERIOD_COUNT 1000	/* 1 sec */
+#define TICK_PERIOD  100000
+#define PERIOD_COUNT 1
 
 #define SHMNAM "MYSHM"
-#define SHMSIZ 4*1024
+#define SHMSIZ 4*1024*1024
 
 #undef SHM_DEBUG
 
 static RT_TASK thread;
 
 static int *shm;
-static int counter = 0;
 
 static void fun(long t)
 {
+	int *p = shm, counter = 0;
 	while (1) {
-		*shm = ++counter;
+		if ((*p++ = ++counter) == (SHMSIZ - sizeof(int))/sizeof(int)) {
+			p = shm; counter = 0;
+		}
+		*shm = counter;
 #ifdef SHM_DEBUG
 		rt_printk("counter=%d\n", counter);
 #endif
@@ -85,13 +88,9 @@ int init_module (void)
 #endif
 
 	rt_task_init(&thread, fun, 0, STACK_SIZE, 0, 0, 0);
-
-	rt_set_oneshot_mode();
 	tick_period = start_rt_timer(nano2count(TICK_PERIOD));
 	now = rt_get_time();
-  
-	rt_task_make_periodic(&thread, now + tick_period,  
-			      tick_period * PERIOD_COUNT);
+	rt_task_make_periodic(&thread, now + tick_period, tick_period*PERIOD_COUNT);
 
 	return 0;
 }
