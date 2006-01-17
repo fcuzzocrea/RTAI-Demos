@@ -24,9 +24,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: resumefromintr_rt.o
+all:: shm.o
 
-shm%.o: %.c
+shm.o: shm.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
