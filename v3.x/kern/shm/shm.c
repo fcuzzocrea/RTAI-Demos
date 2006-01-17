@@ -40,7 +40,7 @@ MODULE_LICENSE("GPL");
 #define PERIOD_COUNT 1000	/* 1 sec */
 
 #define SHMNAM "MYSHM"
-#define SHMSIZ 4096
+#define SHMSIZ 4*1024
 
 #undef SHM_DEBUG
 
@@ -86,6 +86,7 @@ int init_module (void)
 
 	rt_task_init(&thread, fun, 0, STACK_SIZE, 0, 0, 0);
 
+	rt_set_oneshot_mode();
 	tick_period = start_rt_timer(nano2count(TICK_PERIOD));
 	now = rt_get_time();
   
