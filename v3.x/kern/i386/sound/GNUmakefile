@@ -24,9 +24,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: speaker_rt.o
+all:: speaker.o
 
-speaker%.o: %.c
+speaker.o: speaker.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::

@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: cond_rt.o
+all: condtest.o
 
-cond_rt.o: condtest.c
+condtest.o: condtest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:
