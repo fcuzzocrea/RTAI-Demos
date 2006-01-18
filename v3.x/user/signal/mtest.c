@@ -123,7 +123,7 @@ int init_module(void)
 	rt_task_init(&mastertask, master_fun, 0, STKSZ, 0, 0, 0);
 	rt_task_resume(&mastertask);
 	for (i = 0; i < NTASKS; i++) {
-		rt_task_init(&task[i], task_fun, i, STKSZ, 0, 0, 0);
+		rt_task_init(&task[i], task_fun, i, STKSZ, 0, 1, 0);
 		rt_task_resume(&task[i]);
 	}
 	printk("EXECUTION STARTED\n");
