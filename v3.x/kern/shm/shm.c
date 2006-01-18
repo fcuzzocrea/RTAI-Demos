@@ -35,12 +35,13 @@ MODULE_DESCRIPTION("Simple SHM demo");
 MODULE_AUTHOR("Wolfgang Grandegger <wg@denx.de>");
 MODULE_LICENSE("GPL");
 
-#define STACK_SIZE   4000
-#define TICK_PERIOD  100000
-#define PERIOD_COUNT 1
+#define STACK_SIZE    4000
+#define TICK_PERIOD   100000
+#define PERIOD_COUNT  1
 
-#define SHMNAM "MYSHM"
-#define SHMSIZ 4*1024*1024
+#define MEGS    4
+#define SHMNAM  "MYSHM"
+#define SHMSIZ  MEGS*1024*1024
 
 #undef SHM_DEBUG
 
@@ -52,7 +53,7 @@ static void fun(long t)
 {
 	int *p = shm, counter = 0;
 	while (1) {
-		if ((*p++ = ++counter) == (SHMSIZ - sizeof(int))/sizeof(int)) {
+		if ((*p++ = ++counter) == (SHMSIZ - 2*sizeof(int))/sizeof(int)) {
 			p = shm; counter = 0;
 		}
 		*shm = counter;
@@ -71,6 +72,9 @@ int init_module (void)
 	int size = SHMSIZ ;
 	unsigned long vaddr, paddr;
 #endif
+	shm = (int *)rtai_kmalloc(nam2num(SHMNAM), SHMSIZ);
+	shm = (int *)rtai_kmalloc(nam2num(SHMNAM), SHMSIZ);
+	shm = (int *)rtai_kmalloc(nam2num(SHMNAM), SHMSIZ);
 	shm = (int *)rtai_kmalloc(nam2num(SHMNAM), SHMSIZ);
 	if (shm == NULL)
 		return -ENOMEM;
@@ -100,5 +104,10 @@ void cleanup_module (void)
 	stop_rt_timer();
 	rt_busy_sleep(10000000);
 	rt_task_delete(&thread);
+	rtai_kfree(nam2num(SHMNAM));
+	rtai_kfree(nam2num(SHMNAM));
+	rtai_kfree(nam2num(SHMNAM));
+	rtai_kfree(nam2num(SHMNAM));
+	rtai_kfree(nam2num(SHMNAM));
 	rtai_kfree(nam2num(SHMNAM));
 }

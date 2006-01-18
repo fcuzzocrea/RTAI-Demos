@@ -34,17 +34,20 @@ lists a counter incremented by the RTAI kernel modue "shm.c".
 
 
 #define SHMNAM "MYSHM"
-#define SHMSIZ 4096
+#define SHMSIZ 0
 
 static int end = 0;
 static void endme (int dummy) { end = 1; }
 
 int main (int argc, char* argv[])
 {
-    int *shm, value = 0, old_value = 9999999;
+    int *p, *shm, value = 0, count = 0;
 
     printf("nam2num(%s) = 0x%lx\n", SHMNAM, nam2num(SHMNAM));
     shm = (int *)rtai_malloc(nam2num(SHMNAM), SHMSIZ);
+    shm = (int *)rtai_malloc(nam2num(SHMNAM), SHMSIZ);
+    shm = (int *)rtai_malloc(nam2num(SHMNAM), SHMSIZ);
+    p = shm = (int *)rtai_malloc(nam2num(SHMNAM), SHMSIZ);
     if (shm == NULL) {
 	printf("rtai_malloc() failed (maybe /dev/rtai_shm is missing)!\n");
 	return -1;
@@ -52,15 +55,18 @@ int main (int argc, char* argv[])
 
     signal(SIGINT, endme);
 
-    while (value >= 0 && !end) {
-	value = *shm;
-	if (value != old_value) {
-	    printf("%d\n", value);
-	    old_value = value;
+    while (!end) {
+	value = *p++;
+	printf("%d\n", value);
+	if (value != ++count) {
+		count = 0;
+		p = shm;
 	}
     }
-
-   rtai_free (nam2num(SHMNAM), shm);
+    rtai_free (nam2num(SHMNAM), shm);
+    rtai_free (nam2num(SHMNAM), shm);
+    rtai_free (nam2num(SHMNAM), shm);
+    rtai_free (nam2num(SHMNAM), shm);
 
    return 0;
 }
