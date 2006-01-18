@@ -24,12 +24,12 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: calmod_rt.o smi_rt.o
+all:: calmod.o smi.o
 
-calmod%.o: %.c
+calmod.o: calmod.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
-smi%.o: %.c
+smi.o: calmod.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::

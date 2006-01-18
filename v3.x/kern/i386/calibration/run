@@ -17,7 +17,7 @@ read junk
 cd ../..; ./ldmod; cd -
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./calmod_rt.ko;
-else insmod ./calmod_rt.o; fi
+else insmod ./calmod.o; fi
 echo
 echo "Now start the realtime process and follow the menu."
 read junk
