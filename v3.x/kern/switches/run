@@ -12,7 +12,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./switches_rt.ko;
-else insmod ./switches_rt.o; fi
+else insmod ./switches.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
