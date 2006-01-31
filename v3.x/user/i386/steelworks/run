@@ -21,7 +21,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./handler_rt.ko;
-else insmod ./handler_rt.o; fi
+else insmod ./handler.o; fi
 $SUDO ./press < pdata
 echo
 echo "Done. Press <enter> to remove the modules."
