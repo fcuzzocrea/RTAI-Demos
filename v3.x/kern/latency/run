@@ -12,7 +12,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./latency_rt.ko;
-else insmod ./latency_rt.o; fi
+else insmod ./latency.o; fi
 ./display
 sync
 echo

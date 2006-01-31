@@ -24,9 +24,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: latency_rt.o
+all:: latency.o
 
-latency.o: %.c
+latency.o: latency.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
