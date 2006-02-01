@@ -12,9 +12,8 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./bits_rt.ko;
-else insmod ./bits_rt.o; fi
+else insmod ./bitstest.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-sync
 ./rem

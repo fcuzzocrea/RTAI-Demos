@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: namedstuff_rt.o
+all: namedstuff.o
 
-namedstuff_rt.o: namedstuf.c
+namedstuff.o: namedstuff.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

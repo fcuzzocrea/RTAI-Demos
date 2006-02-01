@@ -11,7 +11,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./namedstuff_rt.ko;
-else insmod ./namedstuff_rt.o; fi
+else insmod ./namedstuff.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

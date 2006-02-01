@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: edf_rt.o
+all: edf.o
 
-edf_rt.o: edf.c
+edf.o: edf.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

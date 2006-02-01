@@ -24,9 +24,12 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: fastick1_rt.o fastick2_rt.o
+all:: fastick1.o fastick2.o
 
-fastick%.o: %.c
+fastick1.o: fastick1.c
+	$(CC) $(MODULE_CFLAGS) -c $<
+
+fastick2.o: fastick2.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
