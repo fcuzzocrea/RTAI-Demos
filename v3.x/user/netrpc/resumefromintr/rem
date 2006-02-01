@@ -1,3 +1,4 @@
 rmmod handler_rt
+rmmod handler
 rmmod rtai_netrpc
 ../../remod

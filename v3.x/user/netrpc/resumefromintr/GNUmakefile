@@ -24,12 +24,12 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: handler_rt.o
+all:: handler.o
 
-handler_rt.o: %.c
+handler.o: handler.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
-clean:
+clean::
 	$(RM) *.o
 
 endif
