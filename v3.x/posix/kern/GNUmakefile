@@ -22,7 +22,7 @@ MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
 all: condtest.o jepplin.o mqtest.o rwlocks.o
 
-%_rt.o: %.c
+%.o: %.c
 	$(CC) $(MODULE_CFLAGS) -D_GNU_SOURCE -c $<
 
 clean:

@@ -1,4 +1,5 @@
 rmmod condtest_rt
+rmmod condtest
 rmmod jepplin_rt
 rmmod mqtest_rt
 rmmod rwlocks_rt
