@@ -21,7 +21,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./intrlat_rt.ko;
-else insmod ./intrlat_rt.o; fi
+else insmod ./intrlat.o; fi
 echo
 echo "Press <enter> to remove the module."
 read junk
