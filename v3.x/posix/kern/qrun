@@ -11,7 +11,7 @@ echo "Now start the realtime process <enter>."
 read junk
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./mqtest_rt.ko;
-else insmod ./mqtest_rt.o; fi
+else insmod ./mqtest.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
