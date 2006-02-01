@@ -11,7 +11,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./tbx2_rt.ko;
-else insmod ./tbx2_rt.o; fi
+else insmod ./tbx2.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

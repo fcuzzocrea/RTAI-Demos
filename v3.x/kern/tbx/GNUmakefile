@@ -22,9 +22,15 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: tbx1_rt.o tbx2_rt.o tbx3_rt.o
+all:: tbx1.o tbx2.o tbx3.o
 
-tbx%.o: %.c
+tbx1.o: tbx1.c
+	$(CC) $(MODULE_CFLAGS) -c $<
+
+tbx2.o: tbx2.c
+	$(CC) $(MODULE_CFLAGS) -c $<
+
+tbx3.o: tbx3.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::

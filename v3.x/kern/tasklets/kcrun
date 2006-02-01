@@ -31,8 +31,8 @@ insmod ./kuctest_rt.ko;
 else 
 
 insmod $MODULES/rtai_tasklets.o;
-insmod ./kctest_rt.o;
-insmod ./kuctest_rt.o;
+insmod ./kctest.o;
+insmod ./kuctest.o;
 
 fi
 echo

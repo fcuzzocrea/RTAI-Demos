@@ -23,15 +23,15 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: ktest_rt.o kctest_rt.o kuctest_rt.o
+all:: ktest.o kctest.o kuctest.o
 
-ktest_rt.o: %.c
+ktest.o: ktest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
-kctest_rt.o: %.c
+kctest.o: kctest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
-kuctest_rt.o: %.c
+kuctest.o: kuctest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
