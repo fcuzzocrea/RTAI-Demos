@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: rndrob_rt.o
+all: rndrob.o
 
-rndrob_rt.o: rndrob.c
+rndrob.o: rndrob.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

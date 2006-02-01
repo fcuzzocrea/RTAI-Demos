@@ -22,9 +22,12 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: prioinher1_rt.o prioinher2_rt.o
+all:: prioinher1.o prioinher2.o
 
-prioinher%.o: %.c
+prioinher1.o: prioinher1.c
+	$(CC) $(MODULE_CFLAGS) -c $<
+
+prioinher2.o: prioinher2.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
