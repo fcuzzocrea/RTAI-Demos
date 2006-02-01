@@ -20,7 +20,6 @@ echo " "
 echo "Press <enter> to remove the modules."
 read junk
 rmmod prioinher1_rt
-rmmod prioinher1
 echo "Example 2, type <return> to continue"
 read junk
 if (`rtai-config --linux-version | grep -q 2.6`);
@@ -29,6 +28,5 @@ else insmod ./prioinher2.o; fi
 echo " "
 echo "Done. Press <enter> to remove the modules."
 read junk
-rmmod prioinher2_rt
 rmmod prioinher2
 ./rem
