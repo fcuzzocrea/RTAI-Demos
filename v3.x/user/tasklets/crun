@@ -21,7 +21,7 @@ cd ..; ./ldmod; cd -
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod $MODULES/rtai_tasklets.ko; insmod ./kctest_rt.ko;
-else insmod $MODULES/rtai_tasklets.o; insmod ./kctest_rt.o; fi
+else insmod $MODULES/rtai_tasklets.o; insmod ./kctest.o; fi
 echo
 echo "Now start the realtime process <enter> and wait for its end."
 read junk
