@@ -29,10 +29,10 @@ insmod ./clock_rt.ko;
 
 else
 
-insmod ./dispclk_rt.o;
-insmod ./cmdclk_rt.o;
-insmod ./cmdcrn_rt.o;
-insmod ./clock_rt.o;
+insmod ./dispclk.o;
+insmod ./cmdclk.o;
+insmod ./cmdcrn.o;
+insmod ./clock.o;
 
 fi
 ./keybrd
