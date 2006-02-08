@@ -89,7 +89,7 @@ int main(void)
 
 	if (!mytask_indx) {
 		for (i = 1; i < NTASKS; i++) {
-			rt_send(rt_get_adr(TASKBASE + i), (unsigned long)sem);
+			rt_send((struct rt_task_struct *)rt_get_adr(TASKBASE + i), (unsigned long)sem);
 		}
 	} else {
 		rt_receive(0, (unsigned int *)(unsigned long)&sem);
