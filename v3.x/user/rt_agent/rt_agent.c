@@ -128,7 +128,11 @@ void fun(long t)
 int init_module(void)
 {
 	int period;
-	shm = rt_shm_alloc(nam2num("MEM"), (SHMSIZE + 2)*sizeof(int), SUPRT);
+	
+	if (!(shm = rt_shm_alloc(nam2num("MEM"), (SHMSIZE + 2)*sizeof(int), SUPRT))) {
+		printk("ERROR IN SHM ALLOC\n");
+		return 0;
+	}
 	shm[0] = SHMSIZE;
 	rt_sem_init(&shmsem, 0);
 	rt_sem_init(&agentsem, 0);
