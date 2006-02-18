@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <sys/poll.h>
 
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
@@ -28,14 +29,11 @@ static RT_TASK *task;
 
 int main(void)
 {
-	fd_set input;
-	struct timeval tv;
+	struct pollfd ufds = { 0, POLLIN, };
 	unsigned int msg, ch;
 	MBX *mbx;
 	long long max = -1000000000, min = 1000000000;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
-
-	tv.tv_sec = 0;
 
  	if (!(task = rt_task_init(nam2num("LATCHK"), 20, 0, 0))) {
 		printf("CANNOT INIT MASTER TASK\n");
@@ -54,10 +52,7 @@ int main(void)
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
 		printf("* min: %lld/%lld, max: %lld/%lld average: %d (%d) <Hit [RETURN] to stop> *\n", samp.min, min, samp.max, max, samp.index, samp.ovrn);
-		FD_ZERO(&input);
-		FD_SET(0, &input);
-		tv.tv_usec = 20000;
-	        if (select(1, &input, NULL, NULL, &tv)) {
+	        if (poll(&ufds, 1, 1)) {
 			ch = getchar();
 			break;
 		}
