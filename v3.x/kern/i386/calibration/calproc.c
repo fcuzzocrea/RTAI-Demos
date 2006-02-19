@@ -82,6 +82,7 @@ int main(void)
 	read(fifo, &params, sizeof(params));
 
 	while (1) {
+		printf("\n< IF YOU ARE USING THE RTAI_LXRT SCHEDULER NOTICE THAT RTAI KTASKS AND LINUX >\n<  KTHREADS ARE THE SAME AND YOU'LL CALIBRATE HARDENED LINUX KTHREADS ONLY   >\n");
 		printf("\n\n- 8254 programming time.\n");
 		printf("- Kernel space latency, rtai own kernel tasks.\n");
 		printf("- kernel space latency, hardened linux kThreads.\n");
