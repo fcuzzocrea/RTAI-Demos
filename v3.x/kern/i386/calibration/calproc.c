@@ -83,7 +83,8 @@ int main(void)
 
 	while (1) {
 		printf("\n\n- 8254 programming time.\n");
-		printf("- Kernel space latency.\n");
+		printf("- Kernel space latency, rtai own kernel tasks.\n");
+		printf("- kernel space latency, hardened linux kThreads.\n");
 		printf("- User space latency, requires LXRT.\n");
 		printf("- Cpu frequency calibration.\n");
 		printf("- Apic frequency calibration.\n");
@@ -100,9 +101,10 @@ int main(void)
 				break;
 			}
 
-			case 'k': {
+			case 'k':
+			case 't': {
 				int average;
-				args[0] = KLATENCY;
+				args[0] = command == 'k' ? KLATENCY : KTHREADS;
 				printf("Calibration period (microseconds): ");
 				getint(args[1]);
 				printf("Calibration time (seconds): ");

@@ -2,11 +2,12 @@
 
 #define CAL_8254      1
 #define KLATENCY      2
-#define END_KLATENCY  3
-#define FREQ_CAL      4
-#define END_FREQ_CAL  5
-#define BUS_CHECK     6
-#define END_BUS_CHECK 7
+#define KTHREADS      3
+#define END_KLATENCY  4
+#define FREQ_CAL      5
+#define END_FREQ_CAL  6
+#define BUS_CHECK     7
+#define END_BUS_CHECK 8
 
 #define PARPORT       0x370
 
