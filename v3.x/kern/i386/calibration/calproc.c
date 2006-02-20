@@ -92,7 +92,7 @@ int main(void)
 		printf("- Both cpu and apic frequency calibration.\n");
 		printf("- bus Lock check.\n");
 		printf("- End.\n");
-		printf("<Keypress Upper case char for a choice>\n");
+		printf("<Keypress 8 or the only Upper case char in each line for a choice>\n");
 		str[0] = getkey();
 		switch(command = tolower(str[0])) {
 
