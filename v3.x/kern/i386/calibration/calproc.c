@@ -85,7 +85,7 @@ int main(void)
 		printf("\n< IF YOU ARE USING THE RTAI_LXRT SCHEDULER NOTICE THAT RTAI KTASKS ARE NOTHING >\n<     BUT LINUX KTHREADS, SO YOU'LL CALIBRATE HARDENED LINUX KTHREADS ONLY     >\n");
 		printf("\n\n- 8254 programming time.\n");
 		printf("- Kernel space latency, rtai own kernel tasks.\n");
-		printf("- kernel space latency, hardened linux kThreads.\n");
+		printf("- kernel space latency, hardened linuX kthreads.\n");
 		printf("- User space latency, requires LXRT.\n");
 		printf("- Cpu frequency calibration.\n");
 		printf("- Apic frequency calibration.\n");
@@ -103,7 +103,7 @@ int main(void)
 			}
 
 			case 'k':
-			case 't': {
+			case 'x': {
 				int average;
 				args[0] = command == 'k' ? KLATENCY : KTHREADS;
 				printf("Calibration period (microseconds): ");
