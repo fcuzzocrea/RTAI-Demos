@@ -191,7 +191,7 @@ void display (void *cookie)
         else
             config.mode = RTBNCH_TIMER_HANDLER;
 
-        config.period               = period_ns;
+        config.period               = (float)period_ns;
         config.warmup_loops         = WARMUP_TIME;
         config.histogram_size       = (do_histogram || do_stats) ? histogram_size : 0;
         config.histogram_bucketsize = bucketsize;
@@ -273,13 +273,13 @@ void display (void *cookie)
                        "----lat best","---lat worst");
                 }
 
-            printf("RTD|%12ld|%12ld|%12ld|%8ld|%12ld|%12ld\n",
-                   minj,
-                   avgj,
-                   maxj,
+            printf("RTD|%12.3f|%12.3f|%12.3f|%8ld|%12.3f|%12.3f\n",
+                   (double)minj / 1000,
+                   (double)avgj / 1000,
+                   (double)maxj / 1000,
                    goverrun,
-                   gminj,
-                   gmaxj);
+                   (double)gminj / 1000,
+                   (double)gmaxj / 1000);
             }
         }
 }
@@ -400,10 +400,10 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     if (!test_duration) test_duration = actual_duration;
 
     printf("---|------------|------------|------------|--------|-------------------------\n"
-           "RTS|%12ld|%12ld|%12ld|%8ld|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
-           gminj,
-           gavgj,
-           gmaxj,
+           "RTS|%12.3f|%12.3f|%12.3f|%8ld|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
+           (double)gminj / 1000,
+           (double)gavgj / 1000,
+           (double)gmaxj / 1000,
            goverrun,
            actual_duration / 3600,
            (actual_duration / 60) % 60,
@@ -531,7 +531,8 @@ int main (int argc, char **argv)
     setlinebuf(stdout);
 
     printf("== Sampling period: %Ld us\n"
-           "== Test mode: %s\n",
+           "== Test mode: %s\n"
+           "== All results in microseconds\n",
            period_ns / 1000,
            test_mode_names[test_mode]);
 
