@@ -161,9 +161,11 @@ static long long user_srq(unsigned long whatever)
 			rt_set_oneshot_mode();
 			period = start_rt_timer(nano2count(args[1]));
 			if (args[0] == KLATENCY) {
-				rt_task_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, hard_cpu_id());
+//				rt_task_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, hard_cpu_id());
+				rt_task_init(&rtask, spv, args[2], STACKSIZE, 0, 0, 0);
 			} else {
-				rt_kthread_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, hard_cpu_id());
+//				rt_kthread_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, hard_cpu_id());
+				rt_kthread_init(&rtask, spv, args[2], STACKSIZE, 0, 0, 0);
 			}
 			expected = rt_get_time() + 100*period;
 			rt_task_make_periodic(&rtask, expected, period);
