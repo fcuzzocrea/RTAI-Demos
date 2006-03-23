@@ -53,7 +53,7 @@ static RT_TASK mytask;
 
 static int cpu_used[NR_RT_CPUS];
 
-static void fun(int t) {
+static void fun(long t) {
 	int flag;
 	double sine[2] = {1., 2.,}, time;
 	unsigned int loops = LOOPS;
