@@ -100,9 +100,9 @@ int main(void)
 #ifdef ONE_SHOT
 	rt_set_oneshot_mode();
 #endif
+	period = nano2count(TICK_PERIOD);
 	start_rt_timer(period);
 	firing_time = rt_get_time() + nano2count(100000000);
-	period = nano2count(TICK_PERIOD);
 	prt = rt_init_timer();
 	rt_insert_timer(prt, 1, firing_time, period, prh, 0xAAAAAAAA, 1);
 	ost = rt_init_timer();
