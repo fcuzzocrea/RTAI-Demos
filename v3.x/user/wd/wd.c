@@ -52,6 +52,7 @@ static void *fast_fun(void *arg)
         rt_printk("FAST\n");
 	rt_sleep(nano2count(300000000));
 	rt_task_suspend(Slow_Task);
+	rt_task_delete(Slow_Task);
 	rt_make_soft_real_time();
 	rt_task_delete(Fast_Task);
 	return 0;
