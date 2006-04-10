@@ -89,10 +89,10 @@ void catch_signal(int sig)
 /**********************************************************/
 void my_task_proc(void *arg)
 {
-	ssize_t sz = sizeof(RTIME);
-	ssize_t written = 0;
-	ssize_t read = 0;
-	int counter = 0;
+	ssize_t sz;
+	ssize_t written;
+	ssize_t read;
+	int counter;
 	int readbackcounter;
 	unsigned char buf[17] = "CAPTAIN WAS HERE\0";
 	unsigned char buf2[17] = "XXXXXXXXXXXXXXXX\0";
@@ -106,9 +106,8 @@ void my_task_proc(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
     
-	while (1) {
+	for (counter = 0; 1; counter++) {
 		sprintf(buf, "CAPTAIN %d", counter);
-		counter++;
 
 		sz = sizeof(buf);
 		written = rt_dev_write(my_fd, &buf, sizeof(buf));
