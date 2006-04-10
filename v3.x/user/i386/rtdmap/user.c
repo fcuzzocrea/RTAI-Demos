@@ -104,10 +104,10 @@ void my_task_proc(void *arg)
 #endif
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	rt_make_hard_real_time();
     
 	for (counter = 0; 1; counter++) {
 		sprintf(buf, "CAPTAIN %d", counter);
+		rt_make_hard_real_time();
 
 		sz = sizeof(buf);
 		written = rt_dev_write(my_fd, &buf, sizeof(buf));
@@ -139,6 +139,7 @@ void my_task_proc(void *arg)
 		*((int *)mmappointer + 10) = counter;
 		printf("MMAP: *((int *)mmappointer + 10) = %d\n", *((int *)mmappointer + 10));
 #endif
+		rt_make_soft_real_time();
 		rt_dev_ioctl(my_fd, SETVALUE, &counter);
 		rt_dev_ioctl(my_fd, GETVALUE, &readbackcounter);
 		printf("IOCTL: readbackcounter=%d\n", readbackcounter);
