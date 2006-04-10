@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <linux/autoconf.h>
 
 #include <rtdm/rtdm.h>
 #include "inc.h"
@@ -91,7 +92,7 @@ void my_task_proc(void *arg)
 	ssize_t sz = sizeof(RTIME);
 	ssize_t written = 0;
 	ssize_t read = 0;
-	int counter = 0;
+	int counter = 0, carry = 0;
 	int readbackcounter;
 	unsigned char buf[17] = "CAPTAIN WAS HERE\0";
 	unsigned char buf2[17] = "XXXXXXXXXXXXXXXX\0";
@@ -108,8 +109,9 @@ void my_task_proc(void *arg)
 	while (1) {
 		sprintf(buf, "CAPTAIN %d", counter);
 		counter++;
-		if (counter > 100) {
+		if (counter > CONFIG_HZ) {
 			counter = 0;
+			carry += CONFIG_HZ;
 		}
 
 		sz = sizeof(buf);
@@ -139,7 +141,7 @@ void my_task_proc(void *arg)
   		if (shutdownnow == 1) break;
     
 #ifdef USEMMAP
-		*((int *)mmappointer + 10) = counter + 1000;
+		*((int *)mmappointer + 10) = counter + carry;
 		printf("MMAP: *((int *)mmappointer + 10) = %d\n", *((int *)mmappointer + 10));
 #endif
 		rt_dev_ioctl(my_fd, SETVALUE, &counter);
