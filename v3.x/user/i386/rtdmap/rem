@@ -1,0 +1,3 @@
+rmmod driver_rt
+rmmod rtai_rtdm
+../../remod
