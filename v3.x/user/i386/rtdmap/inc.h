@@ -18,5 +18,7 @@
 #define GETVALUE        1
 #define SETVALUE        2
 
+#define EVENT_SIGNAL_COUNT  0
+
 #define STATE_FILE_OPENED         1
 #define STATE_TASK_CREATED        2

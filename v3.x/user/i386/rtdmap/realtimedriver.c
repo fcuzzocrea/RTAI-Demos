@@ -62,7 +62,7 @@ static int demo_interrupt(rtdm_irq_t *irq_context)
 
     // do stuff
 #ifdef TIMERINT
-    if (events > 100) {
+    if (events > EVENT_SIGNAL_COUNT) {
         rtdm_event_signal(&ctx->irq_event);
         events = 0;
     }
