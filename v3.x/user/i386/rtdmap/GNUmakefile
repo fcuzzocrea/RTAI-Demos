@@ -29,7 +29,7 @@ MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
 all:: realtimedriver.o
 
-realtimedriver.o: realtimedriver.c
+realtimedriver.o: realtimedriver.c inc.h
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::

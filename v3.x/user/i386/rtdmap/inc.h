@@ -9,7 +9,7 @@
 #define DEV_FILE_NAME             "demodev"
 #define DRV_NAME                  "demodrv"
 
-#define BUFFER_SIZE     100000
+#define BUFFER_SIZE     (128*1024)
 #define BUFSIZE         17
 #define PAR_INT         7
 #define TIMER_INT       0

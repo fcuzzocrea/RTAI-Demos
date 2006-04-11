@@ -106,7 +106,7 @@ int demo_open_rt(struct rtdm_dev_context    *context,
 
 #ifdef USEMMAP
     // allocate and prepare memory for our buffer
-    my_context->buf = kmalloc(BUFFER_SIZE, 0);
+    my_context->buf = kmalloc(BUFFER_SIZE, GFP_KERNEL);
     /* mark pages reserved so that remap_pfn_range works */
     for (vaddr = (unsigned long)my_context->buf;
          vaddr < (unsigned long)my_context->buf + BUFFER_SIZE;

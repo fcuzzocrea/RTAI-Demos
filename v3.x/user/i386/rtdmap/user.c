@@ -107,11 +107,11 @@ void my_task_proc(void *arg)
     
 	counter = 0;
 	while (1) {
-		sprintf(buf, "CAPTAIN %d", counter);
-		rt_make_hard_real_time();
 		if (++counter >= (BUFFER_SIZE/sizeof(int))) {
 			counter = 0;
 		}
+		sprintf(buf, "CAPTAIN %d", counter);
+		rt_make_hard_real_time();
 
 		sz = sizeof(buf);
 		written = rt_dev_write(my_fd, &buf, sizeof(buf));
