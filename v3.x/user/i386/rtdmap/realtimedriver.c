@@ -237,10 +237,11 @@ int demo_ioctl_rt(struct rtdm_dev_context   *context,
             break;
         case SETVALUE: // read "ioctlvalue" from user
             if (user_info) {
-                if (!rtdm_read_user_ok(user_info, arg, sizeof(int)) ||
+                if ((unsigned long)arg > BUFFER_SIZE && (!rtdm_read_user_ok(user_info, arg, sizeof(int)) ||
                     rtdm_copy_from_user(user_info, &ioctlvalue, arg,
-                                        sizeof(int)))
+                                        sizeof(int))))
                     return -EFAULT;
+		else ioctlvalue = (unsigned long)arg;
             }
             break;
         default:
