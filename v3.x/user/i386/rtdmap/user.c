@@ -105,16 +105,17 @@ void my_task_proc(void *arg)
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
     
-	for (counter = 0; 1; counter++) {
+	counter = 0;
+	while (1) {
 		sprintf(buf, "CAPTAIN %d", counter);
 		rt_make_hard_real_time();
-		if (counter >= (BUFFER_SIZE/sizeof(int))) {
+		if (++counter >= (BUFFER_SIZE/sizeof(int))) {
 			counter = 0;
 		}
 
 		sz = sizeof(buf);
 		written = rt_dev_write(my_fd, &buf, sizeof(buf));
-		printf("WRITE: written=%d sz=%d\n", written, sz);
+		printf("\nWRITE: written=%d sz=%d\n", written, sz);
 		if (written != sz) {
 			if (written < 0 ) {
 				printf("error while rt_dev_write, code %d\n",written);
@@ -138,17 +139,17 @@ void my_task_proc(void *arg)
 
   		if (shutdownnow == 1) break;
     
+		rt_make_soft_real_time();
 #ifdef USEMMAP
 		mmappointer[counter] = counter;
 		printf("MMAP: mmappointer[%d] = %d\n", counter, mmappointer[counter]);
-#endif
-		rt_make_soft_real_time();
 		rt_dev_ioctl(my_fd, SETVALUE, counter);
 		rt_dev_ioctl(my_fd, GETVALUE, &readbackcounter);
-		printf("IOCTL: mmapd readbackcounter=%d\n", readbackcounter);
+		printf("IOCTL: mmap readbackcounter=%d\n", readbackcounter);
+#endif
 		rt_dev_ioctl(my_fd, SETVALUE, &counter);
 		rt_dev_ioctl(my_fd, GETVALUE, &readbackcounter);
-		printf("IOCTL: saved readbackcounter=%d\n", readbackcounter);
+		printf("IOCTL: pass readbackcounter=%d\n", readbackcounter);
 	}
 
 exit_my_task:
