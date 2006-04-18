@@ -19,16 +19,9 @@
 #include <linux/module.h>
 
 #include <rtai.h>
+#include <asm/rtai_lxrt.h>
 
 /*+++++++++++++++++++++ OUR LITTLE STAND ALONE LIBRARY +++++++++++++++++++++++*/
-
-extern struct desc_struct idt_table[];
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-#define __LXRT_GET_DATASEG(reg) "movl $" STR(__KERNEL_DS) ",%" #reg "\n\t"
-#else /* KERNEL_VERSION >= 2.6.0 */
-#define __LXRT_GET_DATASEG(reg) "movl $" STR(__USER_DS) ",%" #reg "\n\t"
-#endif  /* KERNEL_VERSION < 2.6.0 */
 
 #ifndef STR
 #define __STR(x) #x
