@@ -15,8 +15,8 @@ then
 
 insmod $MODULES/rtai_hal.ko  IsolCpusMask=0;
 sync;
-insmod $MODULES/rtai_lxrt.ko;
-#insmod $MODULES/rtai_ksched.ko;
+#insmod $MODULES/rtai_lxrt.ko;
+insmod $MODULES/rtai_ksched.ko;
 sync;
 insmod $MODULES/rtai_sem.ko;
 sync;
@@ -38,7 +38,8 @@ else
 
 insmod $MODULES/rtai_hal.o;
 sync;
-insmod $MODULES/rtai_lxrt.o;
+#insmod $MODULES/rtai_lxrt.o;
+insmod $MODULES/rtai_ksched.o;
 sync;
 insmod $MODULES/rtai_sem.o;
 sync;
