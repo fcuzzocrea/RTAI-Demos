@@ -1,2 +1,2 @@
 rmmod dsp_rt
-../../remod
+rmmod rtai_hal
