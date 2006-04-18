@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2006 Paolo Mantegazza <mantegazza@aero.polimi.it>.
+ *
+ * RTAI/fusion is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * RTAI/fusion is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RTAI/fusion; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include <linux/module.h>
 
 #include <rtai.h>
@@ -12,39 +30,14 @@ extern struct desc_struct idt_table[];
 #define __LXRT_GET_DATASEG(reg) "movl $" STR(__USER_DS) ",%" #reg "\n\t"
 #endif  /* KERNEL_VERSION < 2.6.0 */
 
-#define save_cr0(x) \
-	do { \
-		__asm__ __volatile__ ("movl %%cr0,%0; clts": "=r" (x)); \
-	} while (0)
+#ifndef STR
+#define __STR(x) #x
+#define STR(x) __STR(x)
+#endif
 
-#define rest_cr0(x) \
-	do { \
-		if (x & 8) { \
-                       unsigned long flags; \
-                       adeos_hw_local_irq_save(flags); \
-			__asm__ __volatile__ ("movl %%cr0, %0": "=r" (x)); \
-			__asm__ __volatile__ ("movl %0, %%cr0": :"r" (8 | x)); \
-                       adeos_hw_local_irq_restore(flags); \
-		} \
-	} while (0)
-
-#define save_fpenv(x) \
-	do { \
-		if (cpu_has_fxsr) { \
-			__asm__ __volatile__ ("fxsave %0; fnclex": "=m" (x)); \
-		} else { \
-			__asm__ __volatile__ ("fnsave %0; fwait": "=m" (x)); \
-		} \
-	} while (0)
-
-#define rest_fpenv(x) \
-	do { \
-		if (cpu_has_fxsr) { \
-			__asm__ __volatile__ ("fxrstor %0": : "m" (x)); \
-		} else { \
-			__asm__ __volatile__ ("frstor %0": : "m" (x)); \
-		} \
-	} while (0)
+#ifndef SYMBOL_NAME_STR
+#define SYMBOL_NAME_STR(X) #X
+#endif
 
 static void asm_handler (void)
 {
@@ -100,47 +93,60 @@ static int vector = 0x20; //  UPwise it is likely 0x20
 
 static unsigned long cr0;
 union i387_union saved_fpu_reg, my_fpu_reg;
-static float fcnt = 0.0;
+static volatile float fcnt = 0.0;
+static volatile int cnt;
 
-static void c_handler (void)
+void c_handler (void)
 {
-	static int cnt;
-	adp_root->irqs[IRQ].acknowledge(IRQ);
-	save_cr0(cr0);
+	hal_root_domain->irqs[IRQ].acknowledge(IRQ);
+	save_fpcr_and_enable_fpu(cr0);
 	save_fpenv(saved_fpu_reg);
-	rest_fpenv(my_fpu_reg);
-	fcnt++;
-	printk("HEY HERE I AM %d\n", ++cnt);
+	restore_fpenv(my_fpu_reg);
+	++cnt;
+	++fcnt;
 	save_fpenv(my_fpu_reg);
-	rest_fpenv(saved_fpu_reg);
-	rest_cr0(cr0);
+	restore_fpenv(saved_fpu_reg);
+	restore_fpcr(cr0);
 	rt_pend_linux_irq(IRQ);
 }
 
 static struct desc_struct desc;
 
-int xinit_module(void)
+#define ECHO_PERIOD 1
+static struct timer_list timer;
+
+static void timer_fun(unsigned long none)
+{
+	printk("HEY HERE I AM, INTERRUPTS COUNT %d\n", cnt);
+	mod_timer(&timer, jiffies + ECHO_PERIOD*HZ);
+}
+
+int _init_module(void)
 {
 	unsigned long flags;
+	init_timer(&timer);
+	timer.function = timer_fun;
+	mod_timer(&timer, jiffies + ECHO_PERIOD*HZ);
 	printk("TIMER IRQ/VECTOR %d/%d\n", IRQ, vector);
-        save_cr0(cr0);
+	save_fpcr_and_enable_fpu(cr0);
         save_fpenv(my_fpu_reg);
-        rest_cr0(cr0);
-	flags = adeos_critical_enter(NULL);
+	restore_fpcr(cr0);
+	flags = hal_critical_enter(NULL);
 	desc = rtai_set_gate_vector(vector, 14, 0, asm_handler);
-	adeos_critical_exit(flags);
+	hal_critical_exit(flags);
 	return 0;
 }
 
-void xcleanup_module(void)
+void _cleanup_module(void)
 {
 	unsigned long flags;
-	flags = adeos_critical_enter(NULL);
+	del_timer(&timer);
+	flags = hal_critical_enter(NULL);
 	rtai_reset_gate_vector(vector, desc);
-	adeos_critical_exit(flags);
+	hal_critical_exit(flags);
 	printk("TIMER IRQ/VECTOR %d/%d, FPCOUNT %lu\n", IRQ, vector, (unsigned long)fcnt);
 	return;
 }
 
-module_init(xinit_module);
-module_exit(xcleanup_module);
+module_init(_init_module);
+module_exit(_cleanup_module);
