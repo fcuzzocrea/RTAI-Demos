@@ -105,7 +105,7 @@ static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
-	unsigned int player;
+	int player;
 	int playfifo, cntrfifo, thread;
 	char data;
 
