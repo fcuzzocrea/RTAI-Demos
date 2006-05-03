@@ -36,7 +36,7 @@ int main(void)
 	struct sample { long long min; long long max; int index, ovrn; } samp;
 
 	rt_allow_nonroot_hrt();
- 	if (!(task = rt_task_init_schmod(nam2num("RMTCHK"), 40, 0, 0, SCHED_FIFO, 0xF))) {
+ 	if (!(task = rt_task_init_schmod(nam2num("CHEKER"), 40, 0, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
 	}

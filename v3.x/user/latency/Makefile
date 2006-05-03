@@ -8,7 +8,7 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: latency display remote makesoft
+all: latency display checker makesoft
 
 latency: latency.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
@@ -16,13 +16,13 @@ latency: latency.c
 display: display.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
-remote: remote.c
+checker: checker.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 makesoft: makesoft.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 clean:
-	rm -f *.o latency display makesoft remote
+	rm -f *.o latency display makesoft checker
 
 .PHONY: clean
