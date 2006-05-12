@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sched.h>
 #include <sys/mman.h>
 #include <asm/io.h>
+#include <math.h>
 
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 	MBX *mbx;
 	RT_TASK *task;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
-	double s;
+	double s, sref;
 
  	if (!(mbx = rt_mbx_init(nam2num("LATMBX"), 20*sizeof(samp)))) {
 		printf("CANNOT CREATE MAILBOX\n");
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
         for(i = 0; i < MAXDIM; i++) {
                 a[i] = b[i] = 3.141592;
         }
-	dot(a, b, MAXDIM);
+	sref = dot(a, b, MAXDIM);
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
@@ -138,6 +139,10 @@ int main(int argc, char *argv[])
 			}
 			average += diff;
 			s = dot(a, b, MAXDIM);
+			if (fabs(s/sref - 1.0) > 1.0e-16) {
+				printf("\nDOT PRODUCT RESULT = %lf %lf %lf\n", s, sref, sref - s);
+				return 0;
+			}
 		}
 		samp.min = min_diff;
 		samp.max = max_diff;
