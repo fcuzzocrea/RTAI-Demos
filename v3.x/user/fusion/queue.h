@@ -155,16 +155,18 @@ return 0;
 static inline ssize_t rt_queue_recv(RT_QUEUE *q, void **buf, RTIME timeout)
 {
 	int size;
-        struct { void *msgq; void *msg; int msg_size; int msgprio; RTIME until; int space; } arg = { q->msgq, buf, sizeof(void *), Q_NORMAL, timeout, 0 };
 	if (timeout == TM_INFINITE) {
+        	struct { void *msgq; void *msg; int msg_size; int *msgprio; int space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, 0 };
 		if ((size = rtai_lxrt(BIDX, SIZARG, MSG_RECEIVE, &arg).i[LOW])) {
 			size = -EINVAL;
 		}
 	} else if (timeout == TM_NONBLOCK) {
+        	struct { void *msgq; void *msg; int msg_size; int *msgprio; int space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, 0 };
 		if ((size = rtai_lxrt(BIDX, SIZARG, MSG_RECEIVE_IF, &arg).i[LOW])) {
 			size = -EWOULDBLOCK;
 		}
 	} else {
+        	struct { void *msgq; void *msg; int msg_size; int *msgprio; RTIME until; int space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, timeout, 0 };
 		if ((size = rtai_lxrt(BIDX, SIZARG, MSG_RECEIVE_TIMED, &arg).i[LOW])) {
 			size = -ETIMEDOUT;
 		}
