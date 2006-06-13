@@ -126,9 +126,9 @@ static void timer_fun(unsigned long none)
 	int t;
 	if (echo < maxj) {
 		echo = maxj;
+		t = imuldiv(echo, 1000000000, rtai_tunables.cpu_freq);
+		printk("INCREASED TO: %d.%-3d (us)\n", t/1000, t%1000);
 	}
-	t = imuldiv(echo, 1000000000, rtai_tunables.cpu_freq);
-	printk("INCREASED TO: %d.%-3d (us)\n", t/1000, t%1000);
 	mod_timer(&timer, jiffies + ECHO_PERIOD*HZ/1000);
 }
 
