@@ -76,10 +76,14 @@ void rtai_reset_gate_vector (unsigned vector, struct desc_struct e)
 
 /*++++++++++++++++++ END OF OUR LITTLE STAND ALONE LIBRARY +++++++++++++++++++*/
 
-#define IRQ 0
+int IRQ = 0;
+MODULE_PARM(IRQ,"i");
 
 int PERIOD = 100000; // nanos
 MODULE_PARM(PERIOD,"i");
+
+int ECHO_PERIOD = 1000; // ms
+MODULE_PARM(ECHO_PERIOD,"i");
 
 #ifdef CONFIG_SMP
 static int vector = 0x31; // SMPwise it is likely 0x31
@@ -88,18 +92,17 @@ static int vector = 0x20; //  UPwise it is likely 0x20
 #endif
 
 static RTIME t0;
-static int bus_period, tick, maxj, echo;
-static volatile int cnt;
+static int tsc_period, period, maxj, maxj_echo, cnt;
 
 void c_handler (void)
 {
-	RTIME t;
-	int jit;
-
 	hal_root_domain->irqs[IRQ].acknowledge(IRQ);
 	if (cnt) {
+		RTIME t;
+		int jit;
+
 		t = rdtsc();
-		if ((jit = abs((int)(t - t0) - bus_period)) > maxj) {
+		if ((jit = abs((int)(t - t0) - tsc_period)) > maxj) {
 			maxj = jit;
 		}
 		t0 = t;
@@ -117,17 +120,15 @@ void c_handler (void)
 
 static struct desc_struct desc;
 
-int ECHO_PERIOD = 1000; // ms
-MODULE_PARM(ECHO_PERIOD,"i");
 static struct timer_list timer;
 
 static void timer_fun(unsigned long none)
 {
 	int t;
-	if (echo < maxj) {
-		echo = maxj;
-		t = imuldiv(echo, 1000000000, rtai_tunables.cpu_freq);
-		printk("INCREASED TO: %d.%-3d (us)\n", t/1000, t%1000);
+	if (maxj_echo < maxj) {
+		maxj_echo = maxj;
+		t = imuldiv(maxj_echo, 1000000000, rtai_tunables.cpu_freq);
+		printk("INCREASED TO: %d.%-3d (us)\n", t/1000, t%1000); // silly and wrong but acceptable
 	}
 	mod_timer(&timer, jiffies + ECHO_PERIOD*HZ/1000);
 }
@@ -139,17 +140,17 @@ int _init_module(void)
 	timer.function = timer_fun;
 	mod_timer(&timer, jiffies + ECHO_PERIOD*HZ/1000);
 	printk("\nCHECKING WITH PERIOD: %d (us)\n\n", PERIOD/1000);
-	bus_period = imuldiv(PERIOD, rtai_tunables.cpu_freq, 1000000000);
-	tick = imuldiv(PERIOD, FREQ_8254, 1000000000);
+	tsc_period = imuldiv(PERIOD, rtai_tunables.cpu_freq, 1000000000);
+	period = imuldiv(PERIOD, FREQ_8254, 1000000000);
 	rt_times.linux_tick = LATCH;
 	rt_times.tick_time = ((RTIME)rt_times.linux_tick)*(jiffies + 1);
-	rt_times.intr_time = rt_times.tick_time + tick;
+	rt_times.intr_time = rt_times.tick_time + period;
 	rt_times.linux_time = rt_times.tick_time + rt_times.linux_tick;
-	rt_times.periodic_tick = tick;
+	rt_times.periodic_tick = period;
 	flags = hal_critical_enter(NULL);
 	outb(0x34, 0x43);
-	outb(tick & 0xff, 0x40);
-	outb(tick >> 8, 0x40);
+	outb(period & 0xff, 0x40);
+	outb(period >> 8, 0x40);
 	desc = rtai_set_gate_vector(vector, 14, 0, asm_handler);
 	hal_critical_exit(flags);
 	return 0;
@@ -167,7 +168,7 @@ void _cleanup_module(void)
 	outb(LATCH >> 8,0x40);
 	rtai_reset_gate_vector(vector, desc);
 	hal_critical_exit(flags);
-	t = imuldiv(echo, 1000000000, rtai_tunables.cpu_freq);
+	t = imuldiv(maxj_echo, 1000000000, rtai_tunables.cpu_freq);
 	printk("\nCHECKED WITH PERIOD: %d (us), MAXJ: %d.%-3d (us)\n", PERIOD/1000, t/1000, t%1000);
 	return;
 }
