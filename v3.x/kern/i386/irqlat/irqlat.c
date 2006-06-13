@@ -169,7 +169,7 @@ void _cleanup_module(void)
 	rtai_reset_gate_vector(vector, desc);
 	hal_critical_exit(flags);
 	t = imuldiv(maxj_echo, 1000000000, rtai_tunables.cpu_freq);
-	printk("\nCHECKED WITH PERIOD: %d (us), MAXJ: %d.%-3d (us)\n", PERIOD/1000, t/1000, t%1000);
+	printk("\nCHECKED WITH PERIOD: %d (us), MAXJ: %d.%-3d (us)\n\n", PERIOD/1000, t/1000, t%1000);
 	return;
 }
 
