@@ -101,9 +101,9 @@ static int tmr_get_count(int timer, RTIME *cputime)
 	int count;
 
 	t = rdtsc();
-	adeos_hw_local_irq_save(flags);
+	hal_hw_local_irq_save(flags);
 	count = _timer_get_count(timer);
-	adeos_hw_local_irq_restore(flags);
+	hal_hw_local_irq_restore(flags);
 	*cputime = rt_get_cpu_time_ns();
 	t8254 += (rdtsc() - t);
 	cnt8254++;
@@ -118,9 +118,9 @@ static int wait_on_timer_ext(int timer, int *count, RTIME *cputime)
 
 	semcnt = rt_sem_wait(&tmr_sema[timer]);
 	t = rdtsc();
-	adeos_hw_local_irq_save(flags);
+	hal_hw_local_irq_save(flags);
 	*count = _timer_get_count(timer);
-	adeos_hw_local_irq_restore(flags);
+	hal_hw_local_irq_restore(flags);
 	*cputime = rt_get_cpu_time_ns();
 	t8254 += (rdtsc() - t);
 	cnt8254++;

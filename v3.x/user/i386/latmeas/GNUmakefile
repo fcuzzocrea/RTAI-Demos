@@ -27,9 +27,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: handler_rt.o
+all:: rt_handler.o
 
-handler_rt.o: rt_handler.c
+rt_handler.o: rt_handler.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
