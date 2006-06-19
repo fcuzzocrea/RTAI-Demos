@@ -11,5 +11,6 @@ rmmod rtai_mup
 rmmod rtai_smp
 rmmod rtai_up
 rmmod rtai_lxrt
+rmmod rtai_sched
 rmmod rtai_hal
 sync
