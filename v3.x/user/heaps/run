@@ -22,7 +22,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./agent_rt.ko;
-else insmod ./agent_rt.o; fi
+else insmod ./rt_agent.o; fi
 $SUDO ./sender &
 $SUDO ./receiver
 echo

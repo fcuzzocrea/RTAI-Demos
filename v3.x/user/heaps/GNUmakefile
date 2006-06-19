@@ -25,9 +25,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: agent_rt.o
+all:: rt_agent.o
 
-agent_rt.o: %.c
+rt_agent.o: rt_agent.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
