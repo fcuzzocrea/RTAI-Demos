@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: splocks_rt.o
+all: splocks.o
 
-splocks_rt.o: splocks.c
+splocks.o: splocks.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

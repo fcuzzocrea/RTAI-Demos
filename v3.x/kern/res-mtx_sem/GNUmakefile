@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: res-mtx_sem_rt.o
+all: res-mtx_sem.o
 
-res-mtx_sem_rt.o: res-mtx_sem.c
+res-mtx_sem.o: res-mtx_sem.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

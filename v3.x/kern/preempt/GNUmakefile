@@ -24,9 +24,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: preempt_rt.o
+all:: preempt.o
 
-preempt.o: %.c
+preempt.o: preempt.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::

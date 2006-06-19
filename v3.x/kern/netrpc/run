@@ -33,9 +33,9 @@ else
 
 insmod $MODULES/rtai_netrpc.o ThisNode="127.0.0.1";
 sync
-insmod ./comnode_rt.o;
-insmod ./task_code_rt.o ComNode="127.0.0.1";
-insmod ./start_task_rt.o ComNode="127.0.0.1" TaskNode="127.0.0.1";
+insmod ./comnode.o;
+insmod ./task_code.o ComNode="127.0.0.1";
+insmod ./start_task.o ComNode="127.0.0.1" TaskNode="127.0.0.1";
 
 fi
 

@@ -81,7 +81,7 @@ int init_module (void)
 	memset(shm, 0, SHMSIZ);
 #ifdef SHM_DEBUG
 	/* Show physical addresses of */
-	vaddr=(unsigned long)shm;
+	vaddr = (unsigned long)shm;
 	while (size > 0)
 	{
 		paddr = kvirt_to_pa(vaddr);

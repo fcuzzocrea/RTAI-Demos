@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: rwlocks_rt.o
+all: rwlocks.o
 
-rwlocks_rt.o: rwlocks.c
+rwlocks.o: rwlocks.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

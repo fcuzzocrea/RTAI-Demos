@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: comnode_rt.o start_task_rt.o task_code_rt.o
+all: comnode.o start_task.o task_code.o
 
-%_rt.o: %.c
+%.o: %.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

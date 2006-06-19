@@ -12,7 +12,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./preempt_rt.ko;
-else insmod ./preempt_rt.o; fi
+else insmod ./preempt.o; fi
 ./display
 sync
 echo
