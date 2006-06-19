@@ -19,9 +19,12 @@ exit
 fi
 
 if [ "$arch" = "i386" ]; then
+if (`rtai-config --linux-version | grep -q 2.6`);
+then
 $insmod $MODULES/rtai_hal.ko;
 else
-$insmod $MODULES/rtai_hal.o
+$insmod $MODULES/rtai_hal.o;
+fi
 fi
 
 echo
@@ -32,4 +35,4 @@ then insmod ./irqlat_rt.ko;
 else insmod ./irqlat.o; fi
 echo
 read junk
-./rem
+#./rem

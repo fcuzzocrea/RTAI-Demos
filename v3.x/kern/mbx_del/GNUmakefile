@@ -20,9 +20,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: mbxdel_rt.o
+all: mbxdel.o
 
-mbxdel_rt.o: mbxdel.c
+mbxdel.o: mbxdel.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:
