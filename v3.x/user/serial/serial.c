@@ -52,7 +52,7 @@ static void write_fun(void *arg)
 			if (written < 0 ) {
 				printf("rt_spwrite_timed, code %d\n", written);
 			} else {
-				printf("only %d instead of %d bytes transmitted\n",written, sizeof(msg));
+				printf("only %d instead of %d bytes transmitted\n", written, sizeof(msg));
 			}
 			goto exit_task;
 		}
@@ -67,7 +67,7 @@ exit_task:
 
 static void read_fun(void *arg)
 {
-	int read, nr = 0;
+	int read = 0, nr = 0;
 	struct { int nr; RTIME write_time; } msg;
 
 	rt_task_init_schmod(nam2num("RDTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
