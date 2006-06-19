@@ -12,7 +12,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./fastick1_rt.ko;
-else insmod ./fastick1_rt.o; fi
+else insmod ./fastick1.o; fi
 ./display
 sync
 rmmod fastick1_rt
@@ -23,7 +23,7 @@ read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./fastick2_rt.ko;
-else insmod ./fastick2_rt.o; fi
+else insmod ./fastick2.o; fi
 ./display
 sync
 rmmod fastick2_rt
