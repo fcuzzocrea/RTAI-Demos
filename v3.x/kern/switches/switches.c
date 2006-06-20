@@ -93,9 +93,13 @@ static void sched_task(long t) {
 		}
 	}
 	t = rdtsc() - t;
-	rt_printk("\n\nFOR %d TASKS: ", ntasks);
+	if (rt_whoami()->lnxtsk) {
+		rt_printk("\n\nFOR %d HARDENED KERNEL THREADS:\n", ntasks);
+	} else {
+		rt_printk("\n\nFOR %d RTAI OWN KERNEL TASKS:\n", ntasks);
+	}
 	rt_printk("TIME %d (ms), SUSP/RES SWITCHES %d, ", (int)llimd(t, 1000, CPU_FREQ), 2*ntasks*loops);
-	rt_printk("SWITCH TIME%s %d (ns)\n", use_fpu ? " (INCLUDING FULL FP SUPPORT)":"",
+	rt_printk("SWITCH TIME%s %d (ns)\n", use_fpu || rt_whoami()->lnxtsk ? " (FP SUPPORT)" : "",
 	       (int)llimd(llimd(t, 1000000000, CPU_FREQ), 1, 2*ntasks*loops));
 
 	change = 1;
@@ -109,9 +113,13 @@ static void sched_task(long t) {
 		}
 	}
 	t = rdtsc() - t;
-	rt_printk("\nFOR %d TASKS: ", ntasks);
+	if (rt_whoami()->lnxtsk) {
+		rt_printk("\nFOR %d HARDENED KERNEL THREADS:\n", ntasks);
+	} else {
+		rt_printk("\nFOR %d RTAI OWN KERNEL TASKS:\n", ntasks);
+	}
 	rt_printk("TIME %d (ms), SEM SIG/WAIT SWITCHES %d, ", (int)llimd(t, 1000, CPU_FREQ), 2*ntasks*loops);
-	rt_printk("SWITCH TIME%s %d (ns)\n", use_fpu ? " (INCLUDING FULL FP SUPPORT)":"",
+	rt_printk("SWITCH TIME%s %d (ns)\n", use_fpu || rt_whoami()->lnxtsk ? " (FP SUPPORT)" : "",
 	       (int)llimd(llimd(t, 1000000000, CPU_FREQ), 1, 2*ntasks*loops));
 
 	change = 2;
@@ -125,9 +133,13 @@ static void sched_task(long t) {
 		}
 	}
 	t = rdtsc() - t;
-	rt_printk("\nFOR %d TASKS: ", ntasks);
+	if (rt_whoami()->lnxtsk) {
+		rt_printk("\nFOR %d HARDENED KERNEL THREADS:\n", ntasks);
+	} else {
+		rt_printk("\nFOR %d RTAI OWN KERNEL TASKS:\n", ntasks);
+	}
 	rt_printk("TIME %d (ms), RPC/RCV-RET SWITCHES %d, ", (int)llimd(t, 1000, CPU_FREQ), 2*ntasks*loops);
-	rt_printk("SWITCH TIME%s %d (ns)\n\n", use_fpu ? " (INCLUDING FULL FP SUPPORT)":"",
+	rt_printk("SWITCH TIME%s %d (ns)\n", use_fpu || rt_whoami()->lnxtsk ? " (FP SUPPORT)" : "",
 	       (int)llimd(llimd(t, 1000000000, CPU_FREQ), 1, 2*ntasks*loops));
 }
 
