@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_sem.h>
 
-#define LOOPS  1000
+#define LOOPS  2000
 #define NR_RT_TASKS 10
 #define taskname(x) (1000 + (x))
 
@@ -62,7 +62,7 @@ static void *thread_fun(void *arg)
 	while (!end) {
 		switch (change) {
 			case 0:
-			 	rt_task_suspend(mytask[mytask_indx]);
+				rt_task_suspend(mytask[mytask_indx]);
 				break;
 			case 1:
 				rt_sem_wait(sem);
@@ -147,7 +147,7 @@ int main(void)
 	change = 2;
 
 	for (k = 0; k < NR_RT_TASKS; k++) {
-        	rt_sem_signal(sem);
+		rt_sem_signal(sem);
 	} 
 
 	tsm = rt_get_cpu_time_ns();
