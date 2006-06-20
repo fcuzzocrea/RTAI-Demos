@@ -19,11 +19,15 @@ read junk
 echo
 echo "Now start the realtime process <enter>, <ctrl-C> to end it."
 read junk
-insmod $MODULES/rtai_hal.ko
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod ./sysreq_rt.ko;
-else insmod ./sysreq_rt.o; fi
+then 
+insmod $MODULES/rtai_hal.ko; 
+insmod ./sysreq_rt.ko;
+else 
+insmod $MODULES/rtai_hal.o; 
+insmod ./sysreq.o; 
+fi
 ./display
 echo
 echo "Done. Press <enter> to remove the modules."

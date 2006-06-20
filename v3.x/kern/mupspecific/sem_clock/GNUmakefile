@@ -24,18 +24,18 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: clock_rt.o cmdclk_rt.o cmdcrn_rt.o dispclk_rt.o
+all:: clock.o cmdclk.o cmdcrn.o dispclk.o
 
-clock%.o: %.c
+clock.o: clock.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
-cmdclk%.o: %.c
+cmdclk.o: cmdclk.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
-cmdcrn%.o: %.c
+cmdcrn.o: cmdcrn.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
-dispclk%.o: %.c
+dispclk.o: dispclk.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
