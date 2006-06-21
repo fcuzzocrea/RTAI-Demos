@@ -38,35 +38,35 @@ MODULE_AUTHOR("Paolo Mantegazza <mantegazza@aero.polimi.it>, Robert Schwebel <ro
  */
 
 int overall = 1;
-MODULE_PARM(overall, "i");
+RTAI_MODULE_PARM(overall, int);
 MODULE_PARM_DESC(overall,
 		 "Calculate overall (1) or per-loop (0) statistics (default: 1)");
 
-int period = 100000;
-MODULE_PARM(period, "i");
+int period = 25000;
+RTAI_MODULE_PARM(period, int);
 MODULE_PARM_DESC(period, "period in ns (default: 100000)");
 
 static int loops;
 int avrgtime = 1;
-MODULE_PARM(avrgtime, "i");
+RTAI_MODULE_PARM(avrgtime, int);
 MODULE_PARM_DESC(avrgtime, "Averages are calculated for <avrgtime (s)> runs (default: 1)");
 
 int use_fpu = 1;
-MODULE_PARM(use_fpu, "i");
+RTAI_MODULE_PARM(use_fpu, int);
 MODULE_PARM_DESC(use_fpu, "do we want to use the FPU? (default: 0)");
 
 int start_timer = 1;
-MODULE_PARM(start_timer, "i");
+RTAI_MODULE_PARM(start_timer, int);
 MODULE_PARM_DESC(start_timer,
 		 "declares if the timer should be started or not (default: 1)");
 
 int timer_mode = 0;
-MODULE_PARM(timer_mode, "i");
+RTAI_MODULE_PARM(timer_mode, int);
 MODULE_PARM_DESC(timer_mode, "timer running mode: 0-oneshot, 1-periodic");
 
 #define DEBUG_FIFO 3
 #define TIMER_TO_CPU 3		// < 0  || > 1 to maintain a symmetric processed timer.
-#define RUNNABLE_ON_CPUS 3	// 1: on cpu 0 only, 2: on cpu 1 only, 3: on any;
+#define RUNNABLE_ON_CPUS 1	// 1: on cpu 0 only, 2: on cpu 1 only, 3: on any;
 #define RUN_ON_CPUS (num_online_cpus() > 1 ? RUNNABLE_ON_CPUS : 1)
 
 /*
@@ -81,7 +81,7 @@ struct sample {
 	long long max;
 	int index;
 } samp;
-double dotres;
+double dotres, refres, tdif;
 
 static int cpu_used[NR_RT_CPUS];
 
@@ -149,6 +149,7 @@ fun(long thread)
 			a[i] = b[i] = 3.141592;
 		}
 	}
+	refres = dot(a, b, MAXDIM);
 #endif
 	svt = rt_get_cpu_time_ns();
 	while (1) {
@@ -160,7 +161,6 @@ fun(long thread)
 		}
 
 		average = 0;
-
 		for (i = 0; i < loops; i++) {
 			cpu_used[hard_cpu_id()]++;
 			expected += period_counts;
@@ -179,6 +179,13 @@ fun(long thread)
 #ifdef CONFIG_RTAI_FPU_SUPPORT
 			if (use_fpu) {
 				dotres = dot(a, b, MAXDIM);
+                        	if ((tdif = dotres/refres - 1.0) < 0.0) {
+                        		tdif = -tdif;
+				}
+	                        if (tdif > 1.0e-16) {
+      	                          	rt_printk("\nDOT PRODUCT ERROR\n");
+                	                return;
+                        	}
 			}
 #endif
 		}
@@ -186,8 +193,8 @@ fun(long thread)
 		samp.max = max_diff;
 		samp.index = average / loops;
 		rtf_put(DEBUG_FIFO, &samp, sizeof (samp));
+//while(1);
 	}
-	rt_printk("\nDOT PRODUCT RESULT = %lu\n", (unsigned long)dotres);
 }
 
 

@@ -46,7 +46,7 @@ static RTIME t0, t;
 static int passed, maxj, jit;
 
 static int Mode = 1;
-MODULE_PARM(Mode, "i");
+RTAI_MODULE_PARM(Mode, int);
 
 #ifndef IRQEXT
 
