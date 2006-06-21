@@ -35,7 +35,7 @@ static RT_TASK taskl, taskm, taskh;
 static SEM mutex;
 
 static int SemType = 1;
-MODULE_PARM(SemType, "i");
+RTAI_MODULE_PARM(SemType, int);
 
 //#define MUTEX_LOCK(mutex)  rt_sem_wait((mutex))
 #define MUTEX_LOCK(mutex)  rt_sem_wait_timed((mutex), 2000000000)

@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_netrpc.h>
 
 static char *ComNode = "127.0.0.1";
-MODULE_PARM(ComNode, "s");
+RTAI_MODULE_PARM(ComNode, charp);
 
 static unsigned long comnode;
 
