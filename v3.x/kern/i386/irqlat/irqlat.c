@@ -77,13 +77,13 @@ void rtai_reset_gate_vector (unsigned vector, struct desc_struct e)
 /*++++++++++++++++++ END OF OUR LITTLE STAND ALONE LIBRARY +++++++++++++++++++*/
 
 int IRQ = 0;
-MODULE_PARM(IRQ,"i");
+RTAI_MODULE_PARM(IRQ, int);
 
 int PERIOD = 100000; // nanos
-MODULE_PARM(PERIOD,"i");
+RTAI_MODULE_PARM(PERIOD, int);
 
 int ECHO_PERIOD = 1000; // ms
-MODULE_PARM(ECHO_PERIOD,"i");
+RTAI_MODULE_PARM(ECHO_PERIOD, int);
 
 #ifdef CONFIG_SMP
 static int vector = 0x31; // SMPwise it is likely 0x31
