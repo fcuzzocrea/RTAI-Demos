@@ -83,7 +83,7 @@ static void fun(long t)
 	rt_sleep(nano2count(SLEEP_TIME));
 	rt_printk("SIGNAL CLR_BITS 0xFFFF0000 AND RETURNS BITS MASK %lx\n",
 	rt_bits_signal(&bits, CLR_BITS, 0xFFFF0000));
-	rt_sleep(nano2count(2*SLEEP_TIME));
+	rt_sleep(nano2count(4*SLEEP_TIME));
 	rt_printk("RESET BITS TO 0\n");
 	rt_bits_reset(&bits, 0);
 	rt_sleep(nano2count(SLEEP_TIME));
