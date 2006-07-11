@@ -1,5 +1,15 @@
 #!/bin/sh
 
+if test \! -c $/dev/rtai_shm; then
+	mknod -m 666 /dev/rtai_shm c 10 254
+fi
+for n in `seq 0 9`; do
+	f=/dev/rtf$n
+	if test \! -c $if; then
+		mknod -m 666 $f c 150 $n
+	fi
+done
+
 prefix=`rtai-config --prefix`
 
 if [ "$prefix" == "" ]; then
