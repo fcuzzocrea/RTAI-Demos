@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if test \! -c $/dev/rtai_shm; then
+if test \! -c /dev/rtai_shm; then
 	mknod -m 666 /dev/rtai_shm c 10 254
 fi
 for n in `seq 0 9`; do
