@@ -53,11 +53,11 @@ void *child_func(void *arg)
 	struct timespec timeout;
 
 	rt_task_init_schmod(nam2num("CHDTSK"), 2, 0, 0, SCHED_FIFO, 0x1);
-	pthread_barrier_wait_rt(&barrier);
+	pthread_barrier_wait(&barrier);
 	DISPLAY("Starting child task\n");
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
-	sem_wait_rt(&sem1);
+	sem_wait(&sem1);
 
 	//Open a queue for reading
 	rx_q = mq_open("my_queue1", O_RDONLY, my_mode, &my_attrs);
@@ -95,7 +95,7 @@ void *child_func(void *arg)
 
 	//...and a semaphore to wake the lazy git up!
 	DISPLAY("Child wakes up parent\n");
-	sem_post_rt(&sem2);
+	sem_post(&sem2);
 
 	//Close queue (at least my access to it)
 	DISPLAY("Child closing queues\n");
@@ -104,7 +104,7 @@ void *child_func(void *arg)
 	//Unlink the queue I own
 	mq_unlink("mq_queue2");
 	DISPLAY("Child end\n");
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
@@ -128,7 +128,7 @@ void *parent_func(void *arg)
 	struct timespec timeout;
 
 	rt_task_init_schmod(nam2num("PRNTSK"), 1, 0, 0, SCHED_FIFO, 0x1);
-	pthread_barrier_wait_rt(&barrier);
+	pthread_barrier_wait(&barrier);
 	DISPLAY("Starting parent task\n");
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
@@ -152,11 +152,11 @@ void *parent_func(void *arg)
 	} else {
 		DISPLAY("ERROR: parent could not create my_queue1\n");
 	}
-	sem_post_rt(&sem1);
+	sem_post(&sem1);
 
 	//Wait for comms back from kiddy
 	DISPLAY("Parent waiting\n");
-	sem_wait_rt(&sem2);
+	sem_wait(&sem2);
 	DISPLAY("Parent waking up\n");
 
 	//Now open the receive queue to read what kiddy has to say
@@ -172,7 +172,7 @@ void *parent_func(void *arg)
 	}
 
 	//Tidy-up...
-	pthread_join_rt(child_thread, NULL);
+	pthread_join(child_thread, NULL);
 	DISPLAY("Parent closing queues\n");
 	mq_close(tx_q);
 	mq_close(rx_q);
@@ -180,7 +180,7 @@ void *parent_func(void *arg)
 	mq_unlink("my_queue2");
 	rt_sleep(nano2count(100000));
 	DISPLAY("Parent end\n");
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
@@ -188,20 +188,20 @@ int main(void)
 {
 	RT_TASK *me;
 	me = rt_task_init_schmod(nam2num("MAIN"), 3, 0, 0, SCHED_FIFO, 0x1);
-	pthread_barrier_init_rt(&barrier, NULL, 3);
-	sem_init_rt(&sem1, 0, 0);
-	sem_init_rt(&sem2, 0, 0);
+	pthread_barrier_init(&barrier, NULL, 3);
+	sem_init(&sem1, 0, 0);
+	sem_init(&sem2, 0, 0);
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 	printf("\n==== Posix Queues test program ====\n");
-	pthread_create_rt(&parent_thread, NULL, parent_func, NULL);
-	pthread_create_rt(&child_thread, NULL, child_func, NULL);
-	pthread_barrier_wait_rt(&barrier);
+	pthread_create(&parent_thread, NULL, parent_func, NULL);
+	pthread_create(&child_thread, NULL, child_func, NULL);
+	pthread_barrier_wait(&barrier);
 	printf("\n==== All Posix Queues threads running ====\n");
-	pthread_join_rt(parent_thread, NULL);
-	pthread_barrier_destroy_rt(&barrier);
-	sem_destroy_rt(&sem1);
-	sem_destroy_rt(&sem2);
+	pthread_join(parent_thread, NULL);
+	pthread_barrier_destroy(&barrier);
+	sem_destroy(&sem1);
+	sem_destroy(&sem2);
 	stop_rt_timer();
 	rt_task_delete(me);
 	printf("\n==== Posix Queues test program removed====\n");

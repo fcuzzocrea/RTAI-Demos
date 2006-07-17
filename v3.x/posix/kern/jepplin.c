@@ -38,8 +38,8 @@ static sem_t sems[NUM_TASKS], sync_sem, prio_sem;
 static pthread_barrier_t barrier;
 
 static pthread_mutex_t print_mtx;
-#define PRINT_LOCK    pthread_mutex_lock_rt(&print_mtx);
-#define PRINT_UNLOCK  pthread_mutex_unlock_rt(&print_mtx);
+#define PRINT_LOCK    pthread_mutex_lock(&print_mtx);
+#define PRINT_UNLOCK  pthread_mutex_unlock(&print_mtx);
 
 #define MAX_MSG_SIZE  10
 static MQ_ATTR mqattrs = { NUM_TASKS, MAX_MSG_SIZE, 0, 0};
@@ -61,9 +61,9 @@ static void *task_code(int task_no)
 
 	mq_in  = mq_open("mq_in", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	mq_out = mq_open("mq_out", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
-	pthread_barrier_wait_rt(&barrier);
+	pthread_barrier_wait(&barrier);
 	for (i = 0; i < 5; ++i) {
-		sem_wait_rt(&sems[task_no]);
+		sem_wait(&sems[task_no]);
 		PRINT_LOCK; 
 		DISPLAY(strs[task_no]);
 		PRINT_UNLOCK;
@@ -72,20 +72,20 @@ static void *task_code(int task_no)
 			DISPLAY("\n");
 			PRINT_UNLOCK;
 		}
-		sem_post_rt(&sems[(task_no + 1) % NUM_TASKS]);
+		sem_post(&sems[(task_no + 1) % NUM_TASKS]);
 	}
-	sem_post_rt(&sync_sem);
-	sem_wait_rt(&prio_sem);
+	sem_post(&sync_sem);
+	sem_wait(&prio_sem);
 	PRINT_LOCK; 
 	DISPLAY(strs[task_no]);
 	PRINT_UNLOCK;
 	rt_sleep(nano2count(1000000000LL));
 	nanos2timespec(rt_get_time_ns() + (task_no + 1)*1000000000LL, &t);
-	sem_timedwait_rt(&prio_sem, &t);
+	sem_timedwait(&prio_sem, &t);
 	PRINT_LOCK;
 	DISPLAY("sem timeout, task %d, %s\n", task_no, strs[task_no]);
 	PRINT_UNLOCK;
-	sem_post_rt(&sync_sem);
+	sem_post(&sync_sem);
 
 	/* message queue stuff */
 	mq_receive(mq_in, buf, sizeof(buf), &i);
@@ -96,7 +96,7 @@ static void *task_code(int task_no)
 	mq_send(mq_out, strs[task_no], strlen(strs[task_no]) + 1, 1);
 
 	/* test receive timeout */
-	sem_wait_rt(&sync_sem);
+	sem_wait(&sync_sem);
 	nanos2timespec(rt_get_time_ns() + (task_no + 1)*1000000000LL, &t);
 	if (mq_timedreceive(mq_in, buf, sizeof(buf), &i, &t) == -ETIMEDOUT) {
 		PRINT_LOCK;
@@ -108,7 +108,7 @@ static void *task_code(int task_no)
 	PRINT_LOCK;
 	DISPLAY("task %d complete\n", task_no);
 	PRINT_UNLOCK;
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
@@ -123,24 +123,24 @@ static void *start_task_code(void *arg)
 	mqd_t mq_in, mq_out;
 	char buf[MAX_MSG_SIZE];
 
-	pthread_mutex_init_rt(&print_mtx, NULL);
+	pthread_mutex_init(&print_mtx, NULL);
 	mq_in  = mq_open("mq_in", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	mq_out = mq_open("mq_out", O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	for (i = 0; i < NUM_TASKS; ++i) {
-		sem_init_rt(&sems[i], BIN_SEM, 0);
+		sem_init(&sems[i], BIN_SEM, 0);
 		attr.priority = NUM_TASKS - i;
-		pthread_create_rt(&thread[i], &attr, (void *)task_code, (void *)i);
+		pthread_create(&thread[i], &attr, (void *)task_code, (void *)i);
 	}	
 	/* create the sync semaphore */
-	sem_init_rt(&sync_sem, CNT_SEM, 0);
+	sem_init(&sync_sem, CNT_SEM, 0);
 	/* create the priority-test semaphore */
-	sem_init_rt(&prio_sem, BIN_SEM, 0);
-	pthread_barrier_wait_rt(&barrier);
+	sem_init(&prio_sem, BIN_SEM, 0);
+	pthread_barrier_wait(&barrier);
 	/* pass the semaphore to the first task */
-	sem_post_rt(&sems[0]);
+	sem_post(&sems[0]);
 	/* wait for each task to send the sync semaphore */
 	for (i = 0; i < NUM_TASKS; ++i) {
-		sem_wait_rt(&sync_sem);
+		sem_wait(&sync_sem);
 	}
 	PRINT_LOCK; 
 	DISPLAY(sync_str);
@@ -148,13 +148,13 @@ static void *start_task_code(void *arg)
 	/* post the priority-test semaphore -- the tasks should then run */
 	/* in priority order */
 	for (i = 0; i < NUM_TASKS; ++i) {
-		sem_post_rt(&prio_sem);
+		sem_post(&prio_sem);
 	}
 	PRINT_LOCK; 
 	DISPLAY("\n");
 	PRINT_UNLOCK;
 	for (i = 0; i < NUM_TASKS; ++i) {
-		sem_wait_rt(&sync_sem);
+		sem_wait(&sync_sem);
 	}
 	PRINT_LOCK; 
 	DISPLAY(sync_str);
@@ -172,7 +172,7 @@ static void *start_task_code(void *arg)
 		PRINT_UNLOCK;
 	}
 	for (i = 0; i < NUM_TASKS; ++i) {
-		sem_post_rt(&sync_sem);
+		sem_post(&sync_sem);
 	}
 	PRINT_LOCK; 
 	DISPLAY("\n");
@@ -180,18 +180,18 @@ static void *start_task_code(void *arg)
 
 	/* nothing more for this task to do */
 	for (i = 0; i < NUM_TASKS; ++i) {
-		pthread_join_rt(thread[i], NULL);
-		sem_destroy_rt(&sems[i]);
+		pthread_join(thread[i], NULL);
+		sem_destroy(&sems[i]);
 	}
 	mq_close(mq_in);
 	mq_close(mq_out);
 	mq_unlink("mq_in");
 	mq_unlink("mq_out");
-	sem_destroy_rt(&sync_sem);
-	pthread_mutex_destroy_rt(&print_mtx);
+	sem_destroy(&sync_sem);
+	pthread_mutex_destroy(&print_mtx);
 	DISPLAY("\ninitialization task complete\n");
 	cleanup = 1;
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
@@ -199,9 +199,9 @@ int init_module(void)
 {
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
-	pthread_barrier_init_rt(&barrier, 0, NUM_TASKS + 1);
+	pthread_barrier_init(&barrier, 0, NUM_TASKS + 1);
 	attr.priority = 10;
-	pthread_create_rt(&start_thread, &attr, start_task_code, NULL);
+	pthread_create(&start_thread, &attr, start_task_code, NULL);
 	return 0;
 }
 
@@ -211,7 +211,7 @@ void cleanup_module(void)
 		current->state = TASK_INTERRUPTIBLE;
 		schedule_timeout(HZ/10);
 	}
-	pthread_barrier_destroy_rt(&barrier);
+	pthread_barrier_destroy(&barrier);
 	stop_rt_timer();
-	pthread_exit_rt(0);
+	pthread_exit(0);
 }

@@ -14,5 +14,4 @@ else insmod ./condtest.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-rmmod condtest
 ./rem

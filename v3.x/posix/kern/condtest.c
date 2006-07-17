@@ -40,29 +40,29 @@ static int cond_data;
 static void *task_func1(void *dummy)
 {
 	rt_printk("Starting task1, waiting on the conditional variable to be 1.\n");
-	pthread_barrier_wait_rt(&barrier);
-	pthread_mutex_lock_rt(&mtx);
+	pthread_barrier_wait(&barrier);
+	pthread_mutex_lock(&mtx);
 	while(cond_data < 1) {
-		pthread_cond_wait_rt(&cond, &mtx);
+		pthread_cond_wait(&cond, &mtx);
 	}
-	pthread_mutex_unlock_rt(&mtx);
+	pthread_mutex_unlock(&mtx);
 	if(cond_data == 1) {
 		rt_printk("task1, conditional variable signalled, value: %d.\n", cond_data);
 	}
 	rt_printk("task1 signals after setting data to 2.\n");
 	rt_printk("task1 waits for a broadcast.\n");
-	pthread_mutex_lock_rt(&mtx);
+	pthread_mutex_lock(&mtx);
 	cond_data = 2;
-	pthread_cond_signal_rt(&cond);
+	pthread_cond_signal(&cond);
 	while(cond_data < 3) {
-		pthread_cond_wait_rt(&cond, &mtx);
+		pthread_cond_wait(&cond, &mtx);
 	}
-	pthread_mutex_unlock_rt(&mtx);
+	pthread_mutex_unlock(&mtx);
 	if(cond_data == 3) {
 		rt_printk("task1, conditional variable broadcasted, value: %d.\n", cond_data);
 	}
 	rt_printk("Ending task1.\n");
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
@@ -70,73 +70,73 @@ static void *task_func1(void *dummy)
 static void *task_func2(void *dummy)
 {
 	rt_printk("Starting task2, waiting on the conditional variable to be 2.\n");
-	pthread_barrier_wait_rt(&barrier);
-	pthread_mutex_lock_rt(&mtx);
+	pthread_barrier_wait(&barrier);
+	pthread_mutex_lock(&mtx);
 	while(cond_data < 2) {
-		pthread_cond_wait_rt(&cond, &mtx);
+		pthread_cond_wait(&cond, &mtx);
 	}
-	pthread_mutex_unlock_rt(&mtx);
+	pthread_mutex_unlock(&mtx);
 	if(cond_data == 2) {
 		rt_printk("task2, conditional variable signalled, value: %d.\n", cond_data);
 	}
 	rt_printk("task2 waits for a broadcast.\n");
-	pthread_mutex_lock_rt(&mtx);
+	pthread_mutex_lock(&mtx);
 	while(cond_data < 3) {
-		pthread_cond_wait_rt(&cond, &mtx);
+		pthread_cond_wait(&cond, &mtx);
 	}
-	pthread_mutex_unlock_rt(&mtx);
+	pthread_mutex_unlock(&mtx);
 	if(cond_data == 3) {
 		rt_printk("task2, conditional variable broadcasted, value: %d.\n", cond_data);
 	}
 	rt_printk("Ending task2.\n");
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
 static void *task_func3(void *dummy)
 {
 	rt_printk("Starting task3, waiting on the conditional variable to be 3 with a 2 s timeout.\n");
-	pthread_barrier_wait_rt(&barrier);
-	pthread_mutex_lock_rt(&mtx);
+	pthread_barrier_wait(&barrier);
+	pthread_mutex_lock(&mtx);
 	while(cond_data < 3) {
 		struct timespec abstime;
 		nanos2timespec(rt_get_time_ns() + 2000000000LL, &abstime);
-		if (pthread_cond_timedwait_rt(&cond, &mtx, &abstime) < 0) {
+		if (pthread_cond_timedwait(&cond, &mtx, &abstime) < 0) {
 			break;
 		}
 	}
-	pthread_mutex_unlock_rt(&mtx);
+	pthread_mutex_unlock(&mtx);
 	if(cond_data < 3) {
 		rt_printk("task3, timed out, conditional variable value: %d.\n", cond_data);
 	}
-	pthread_mutex_lock_rt(&mtx);
+	pthread_mutex_lock(&mtx);
 	cond_data = 3;
-	pthread_mutex_unlock_rt(&mtx);
+	pthread_mutex_unlock(&mtx);
 	rt_printk("task3 broadcasts after setting data to 3.\n");
-	pthread_cond_broadcast_rt(&cond);
+	pthread_cond_broadcast(&cond);
 	rt_printk("Ending task3.\n");
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
 static void *task_func4(void *dummy)
 {
 	rt_printk("Starting task4, signalling after setting data to 1, then waits for a broadcast.\n");
-	pthread_barrier_wait_rt(&barrier);
-	pthread_mutex_lock_rt(&mtx);
+	pthread_barrier_wait(&barrier);
+	pthread_mutex_lock(&mtx);
 	cond_data = 1;
-  	pthread_mutex_unlock_rt(&mtx);
-	pthread_cond_signal_rt(&cond);
-	pthread_mutex_lock_rt(&mtx);
+  	pthread_mutex_unlock(&mtx);
+	pthread_cond_signal(&cond);
+	pthread_mutex_lock(&mtx);
 	while(cond_data < 3) {
-		pthread_cond_wait_rt(&cond, &mtx);
+		pthread_cond_wait(&cond, &mtx);
 	}
-	pthread_mutex_unlock_rt(&mtx);
+	pthread_mutex_unlock(&mtx);
 	if(cond_data == 3) {
 		rt_printk("task4, conditional variable broadcasted, value: %d.\n", cond_data);
 	}
 	rt_printk("Ending task4.\n");
-	pthread_exit_rt(0);
+	pthread_exit(0);
 	return 0;
 }
 
@@ -144,11 +144,11 @@ static int cleanup;
 
 static void *join_task(void *dummy)
 {
-	pthread_barrier_wait_rt(&barrier);
-	pthread_join_rt(task1, 0);
-	pthread_join_rt(task2, 0);
-	pthread_join_rt(task3, 0);
-	pthread_join_rt(task4, 0);
+	pthread_barrier_wait(&barrier);
+	pthread_join(task1, 0);
+	pthread_join(task2, 0);
+	pthread_join(task3, 0);
+	pthread_join(task4, 0);
 	cleanup = 1;
 	return 0;
 }
@@ -159,18 +159,18 @@ int init_module(void)
 	start_rt_timer(nano2count(TICK));
 	printk("Conditional semaphore test program.\n");
 	printk("Wait for all tasks to end, then type: ./rem.\n\n");
-	pthread_cond_init_rt(&cond, 0);
-	pthread_mutex_init_rt(&mtx, 0);
-	pthread_barrier_init_rt(&barrier, NULL, 5);
-	pthread_create_rt(&task1, &attr, task_func1, 0);
+	pthread_cond_init(&cond, 0);
+	pthread_mutex_init(&mtx, 0);
+	pthread_barrier_init(&barrier, NULL, 5);
+	pthread_create(&task1, &attr, task_func1, 0);
 	attr.priority = 1;
-	pthread_create_rt(&task2, &attr, task_func2, 0);
+	pthread_create(&task2, &attr, task_func2, 0);
 	attr.priority = 2;
-	pthread_create_rt(&task3, &attr, task_func3, 0);
+	pthread_create(&task3, &attr, task_func3, 0);
 	attr.priority = 3;
-	pthread_create_rt(&task4, &attr, task_func4, 0);
+	pthread_create(&task4, &attr, task_func4, 0);
 	attr.priority = 4;
-	pthread_create_rt(&jtask, &attr, join_task, 0);
+	pthread_create(&jtask, &attr, join_task, 0);
 	printk("Do not panic, wait 2 s, till task3 times out.\n\n");
 	return 0;
 }
@@ -181,15 +181,15 @@ void cleanup_module(void)
 		current->state = TASK_INTERRUPTIBLE;
 		schedule_timeout(HZ/10);
 	}
-	pthread_cond_destroy_rt(&cond);
-	pthread_mutex_destroy_rt(&mtx);
-	pthread_barrier_destroy_rt(&barrier);
+	pthread_cond_destroy(&cond);
+	pthread_mutex_destroy(&mtx);
+	pthread_barrier_destroy(&barrier);
 	stop_rt_timer();
-	pthread_cancel_rt(task1);
-	pthread_cancel_rt(task2);
-	pthread_cancel_rt(task3);
-	pthread_cancel_rt(task4);
-	pthread_cancel_rt(jtask);
+	pthread_cancel(task1);
+	pthread_cancel(task2);
+	pthread_cancel(task3);
+	pthread_cancel(task4);
+	pthread_cancel(jtask);
 	printk("Conditional semaphore test program removed.\n");
 
 }

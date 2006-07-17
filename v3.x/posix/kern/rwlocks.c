@@ -43,82 +43,82 @@ static void *fun(int idx)
 	while(loops--) {
 		rt_printk("TASK %d 1 COND/TIMED PREWLOCKED\n", idx);
 		if (idx%2) {
-			if (pthread_rwlock_trywrlock_rt(&rwl)) {
+			if (pthread_rwlock_trywrlock(&rwl)) {
 				rt_printk("TASK %d 1 COND PREWLOCKED FAILED GO UNCOND\n", idx);
-				pthread_rwlock_wrlock_rt(&rwl);
+				pthread_rwlock_wrlock(&rwl);
 			}
 		} else {
 			struct timespec abstime;
 			abstime.tv_sec = llimd(rt_get_cpu_time_ns(), 1, 1000000000);
 			abstime.tv_nsec = 20000;
-			if (pthread_rwlock_timedwrlock_rt(&rwl, &abstime) < 0) {
+			if (pthread_rwlock_timedwrlock(&rwl, &abstime) < 0) {
 				rt_printk("TASK %d 1 TIMED PREWLOCKED FAILED GO UNCOND\n", idx);
-				pthread_rwlock_wrlock_rt(&rwl);
+				pthread_rwlock_wrlock(&rwl);
 			}
 		}
 		rt_printk("TASK %d 1 WLOCKED\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 2 COND PREWLOCK\n", idx);
-		if (pthread_rwlock_trywrlock_rt(&rwl)) {
+		if (pthread_rwlock_trywrlock(&rwl)) {
 			rt_printk("TASK %d 2 COND PREWLOCK FAILED GO UNCOND\n", idx);
-			pthread_rwlock_wrlock_rt(&rwl);
+			pthread_rwlock_wrlock(&rwl);
 		}
 		rt_printk("TASK %d 2 WLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 3 PREWLOCK\n", idx);
-		pthread_rwlock_wrlock_rt(&rwl);
+		pthread_rwlock_wrlock(&rwl);
 		rt_printk("TASK %d 3 WLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 3 PREWUNLOCK\n", idx);
-		pthread_rwlock_unlock_rt(&rwl);
+		pthread_rwlock_unlock(&rwl);
 		rt_printk("TASK %d 3 WUNLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 2 PREWUNLOCK\n", idx);
-		pthread_rwlock_unlock_rt(&rwl);
+		pthread_rwlock_unlock(&rwl);
 		rt_printk("TASK %d 2 WUNLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 1 PREWUNLOCKED\n", idx);
-		pthread_rwlock_unlock_rt(&rwl);
+		pthread_rwlock_unlock(&rwl);
 		rt_printk("TASK %d 1 WUNLOCKED\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 1 COND/TIMED PRERDLOCKED\n", idx);
 		if (idx%2) {
-			if (pthread_rwlock_tryrdlock_rt(&rwl)) {
+			if (pthread_rwlock_tryrdlock(&rwl)) {
 				rt_printk("TASK %d 1 COND PRERDLOCKED FAILED GO UNCOND\n", idx);
-				pthread_rwlock_rdlock_rt(&rwl);
+				pthread_rwlock_rdlock(&rwl);
 			}
 		} else {
 			struct timespec abstime;
 			abstime.tv_sec = llimd(rt_get_cpu_time_ns(), 1, 1000000000);
 			abstime.tv_nsec = 20000;
-			if (pthread_rwlock_timedrdlock_rt(&rwl, &abstime) < 0) {
+			if (pthread_rwlock_timedrdlock(&rwl, &abstime) < 0) {
 				rt_printk("TASK %d 1 TIMED PRERDLOCKED FAILED GO UNCOND\n", idx);
-				pthread_rwlock_rdlock_rt(&rwl);
+				pthread_rwlock_rdlock(&rwl);
 			}
 		}
 		rt_printk("TASK %d 1 RDLOCKED\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 2 COND PRERDLOCK\n", idx);
-		if (pthread_rwlock_tryrdlock_rt(&rwl)) {
+		if (pthread_rwlock_tryrdlock(&rwl)) {
 			rt_printk("TASK %d 2 COND PRERDLOCK FAILED GO UNCOND\n", idx);
-			pthread_rwlock_rdlock_rt(&rwl);
+			pthread_rwlock_rdlock(&rwl);
 		}
 		rt_printk("TASK %d 2 RDLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 3 PRERDLOCK\n", idx);
-		pthread_rwlock_rdlock_rt(&rwl);
+		pthread_rwlock_rdlock(&rwl);
 		rt_printk("TASK %d 3 RDLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 3 PRERDUNLOCK\n", idx);
-		pthread_rwlock_unlock_rt(&rwl);
+		pthread_rwlock_unlock(&rwl);
 		rt_printk("TASK %d 3 RDUNLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 2 PRERDUNLOCK\n", idx);
-		pthread_rwlock_unlock_rt(&rwl);
+		pthread_rwlock_unlock(&rwl);
 		rt_printk("TASK %d 2 RDUNLOCK\n", idx);
 		rt_busy_sleep(100000);
 		rt_printk("TASK %d 1 PRERDUNLOCK\n", idx);
-		pthread_rwlock_unlock_rt(&rwl);
+		pthread_rwlock_unlock(&rwl);
 		rt_printk("TASK %d 1 RDUNLOCK\n", idx);
 		rt_busy_sleep(100000);
 	}
@@ -136,13 +136,13 @@ int init_module(void)
 	pthread_attr_t attr = { STACK_SIZE, 0, 0, 0 };
 
 	thread = (pthread_t *)kmalloc(NTASKS*sizeof(pthread_t), GFP_KERNEL);
-	pthread_rwlock_init_rt(&rwl, 0);
+	pthread_rwlock_init(&rwl, 0);
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 	for (i = 0; i < NTASKS; i++) {
 		extcnt[i] = 999999;
 		attr.priority = NTASKS - i;
-		pthread_create_rt(&thread[i], &attr, (void *)fun, (void *)(i + 1));
+		pthread_create(&thread[i], &attr, (void *)fun, (void *)(i + 1));
 	}
 	while (!cleanup) {
 		current->state = TASK_INTERRUPTIBLE;
@@ -157,10 +157,10 @@ void cleanup_module(void)
 	int i;
 
 	stop_rt_timer();
-	pthread_rwlock_destroy_rt(&rwl);
+	pthread_rwlock_destroy(&rwl);
 	for (i = 0; i < NTASKS; i++) {
 		printk("TASK %d LOOPS COUNT AT EXIT %d\n", i + 1, extcnt[i]);
-		pthread_cancel_rt(thread[i]);
+		pthread_cancel(thread[i]);
 	}
 	kfree(thread);
 }
