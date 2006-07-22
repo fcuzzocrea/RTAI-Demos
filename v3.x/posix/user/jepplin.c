@@ -65,8 +65,10 @@ static void *task_code(int task_no)
 	PRINT_LOCK; 
 	DISPLAY(strs[task_no]);
 	PRINT_UNLOCK;
-	rt_sleep(nano2count(1000000000LL));
-	nanos2timespec(rt_get_time_ns() + (task_no + 1)*1000000000LL, &t);
+	t = (struct timespec) { 1, 0 };
+	nanosleep(&t, NULL);
+	clock_gettime(0, &t);
+	t.tv_sec += (task_no + 1);
 	sem_timedwait(&prio_sem, &t);
 	PRINT_LOCK;
 	DISPLAY("sem timeout, task %d, %s\n", task_no, strs[task_no]);
@@ -83,7 +85,8 @@ static void *task_code(int task_no)
 
 	/* test receive timeout */
 	sem_wait(&sync_sem);
-	nanos2timespec(rt_get_time_ns() + (task_no + 1)*1000000000LL, &t);
+	clock_gettime(0, &t);
+	t.tv_sec += (task_no + 1);
 	if (mq_timedreceive(mq_in, buf, sizeof(buf), &i, &t) == -ETIMEDOUT) {
 		PRINT_LOCK;
 		DISPLAY("\nmbx timeout, task %d, %s\n", task_no, strs[task_no]);
@@ -193,6 +196,5 @@ int main(void)
 	pthread_barrier_destroy(&barrier);
 	stop_rt_timer();
 	printf("\n");
-	pthread_exit(0);
 	return 0;
 }
