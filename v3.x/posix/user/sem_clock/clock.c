@@ -343,6 +343,7 @@ int main(int argc, char* argv[])
 	rt_thread_join(Clock);
 	rt_thread_join(Read);
 	rt_thread_join(Write);
+	sem_destroy(&sync_sem);
 	rt_task_delete(mytask);
 	printf("\nEND MASTER TASK %p.\n", mytask);
 	return 0;
