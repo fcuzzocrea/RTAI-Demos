@@ -128,7 +128,8 @@ static void *task_func3(void *dummy)
 	DISPLAY("Starting task3, waiting on the conditional variable to be 3 with a 2 s timeout.\n");
 	pthread_mutex_lock(mtx);
 	while(cond_data < 3) {
-		nanos2timespec(rt_get_time_ns() + 2000000000LL, &abstime);
+		clock_gettime(0, &abstime);
+		abstime.tv_sec += 2;
 		if (pthread_cond_timedwait(cond, mtx, &abstime) < 0) {
 			break;
 		}
