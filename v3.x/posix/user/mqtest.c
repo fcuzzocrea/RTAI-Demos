@@ -85,7 +85,8 @@ void *child_func(void *arg)
 
 	//Now send parent a message on this queue
 	if (tx_q > 0) {
-		count2timespec(rt_get_time() + nano2count(100000000), &timeout);
+		clock_gettime(0, &timeout);
+		timeout.tv_sec++;
 		n = mq_timedsend(tx_q, myMsg[0].str, myMsg[0].str_size, myMsg[0].prio, &timeout); 
 //		n = mq_send(tx_q, myMsg[0].str, myMsg[0].str_size, myMsg[0].prio); 
 		DISPLAY("Child sent >%s< to parent on queue %d\n", myMsg[0].str, tx_q);
@@ -161,7 +162,8 @@ void *parent_func(void *arg)
 
 	//Now open the receive queue to read what kiddy has to say
 	rx_q = mq_open("my_queue2", my_oflags, 0, 0);
-	count2timespec(rt_get_time() + nano2count(100000000), &timeout);
+	clock_gettime(0, &timeout);
+	timeout.tv_sec++;
 	n = mq_timedreceive(rx_q, inBuf, sizeof(inBuf), &priority, &timeout);
 //	n = mq_receive(rx_q, inBuf, sizeof(inBuf), &priority);
 	if (n > 0) {

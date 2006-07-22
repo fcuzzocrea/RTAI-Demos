@@ -196,5 +196,6 @@ int main(void)
 	pthread_barrier_destroy(&barrier);
 	stop_rt_timer();
 	printf("\n");
+	pthread_exit(0);
 	return 0;
 }

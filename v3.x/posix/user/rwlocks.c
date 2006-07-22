@@ -64,7 +64,8 @@ static void *thread_fun(int idx)
 	RT_MAKE_HARD_REAL_TIME();
 	while(loops--) {
 		DISPLAY("TASK %d 1 COND/TIMED PREWLOCKED\n", idx);
-		nanos2timespec(rt_get_time_ns() + 2000000000LL, &abstime);
+		clock_gettime(0, &abstime);
+		abstime.tv_sec += 2;
 		if (idx%2) {
 			if (pthread_rwlock_trywrlock(rwl)) {
 				DISPLAY("TASK %d 1 COND PREWLOCKED FAILED GO UNCOND\n", idx);
@@ -100,7 +101,8 @@ static void *thread_fun(int idx)
 		DISPLAY("TASK %d 1 WUNLOCKED\n", idx);
 		rt_busy_sleep(100000);
 		DISPLAY("TASK %d 1 COND/TIMED PRERDLOCKED\n", idx);
-		nanos2timespec(rt_get_time_ns() + 2000000000LL, &abstime);
+		clock_gettime(0, &abstime);
+		abstime.tv_sec += 2;
 		if (idx%2) {
 			if (pthread_rwlock_tryrdlock(rwl)) {
 				DISPLAY("TASK %d 1 COND PRERDLOCKED FAILED GO UNCOND\n", idx);
