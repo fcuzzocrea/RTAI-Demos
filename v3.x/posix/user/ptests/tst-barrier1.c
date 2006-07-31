@@ -21,13 +21,15 @@
 #include <pthread.h>
 #include <stdio.h>
 
-int main (void)
+#include <rtai_posix.h>
+
+static int
+do_test (void)
 {
   pthread_barrier_t b;
   int e;
   int cnt;
 
-rt_task_init_schmod(11111, 0, 0, 0, SCHED_FIFO, 0x1);
   e = pthread_barrier_init (&b, NULL, 0);
   if (e == 0)
     {
@@ -64,4 +66,11 @@ rt_task_init_schmod(11111, 0, 0, 0, SCHED_FIFO, 0x1);
     }
 
   return 0;
+}
+
+int main(void)
+{
+        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+        do_test();
+        return 0;
 }
