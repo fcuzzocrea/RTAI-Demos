@@ -118,7 +118,7 @@ main (void)
       if (val != 0)
 	{
 	  printf ("child: value wrong: got %d, expect 0\n", val);
-	  printf ("RTAI says it is possible, depends on parent/child priorities and SMP/UP\n");
+	  printf ("RTAI says it is possible, depends on parent/child priorities and SMP/UP\n\n");
 //	  return 1;
 	}
 
