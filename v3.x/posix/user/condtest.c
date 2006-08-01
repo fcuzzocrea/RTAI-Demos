@@ -127,7 +127,7 @@ static void *task_func3(void *dummy)
 	while(cond_data < 3) {
 		clock_gettime(CLOCK_MONOTONIC, &abstime);
 		abstime.tv_sec += 2;
-		if (pthread_cond_timedwait(cond, mtx, &abstime) < 0) {
+		if (pthread_cond_timedwait(cond, mtx, &abstime) != 0) {
 			break;
 		}
 	}
