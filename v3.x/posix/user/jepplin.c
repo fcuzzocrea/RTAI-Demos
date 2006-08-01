@@ -67,7 +67,7 @@ static void *task_code(int task_no)
 	PRINT_UNLOCK;
 	t = (struct timespec) { 1, 0 };
 	nanosleep(&t, NULL);
-	clock_gettime(0, &t);
+	clock_gettime(CLOCK_MONOTONIC, &t);
 	t.tv_sec += (task_no + 1);
 	sem_timedwait(&prio_sem, &t);
 	PRINT_LOCK;
@@ -85,7 +85,7 @@ static void *task_code(int task_no)
 
 	/* test receive timeout */
 	sem_wait(&sync_sem);
-	clock_gettime(0, &t);
+	clock_gettime(CLOCK_MONOTONIC, &t);
 	t.tv_sec += (task_no + 1);
 	if (mq_timedreceive(mq_in, buf, sizeof(buf), &i, &t) == -ETIMEDOUT) {
 		PRINT_LOCK;

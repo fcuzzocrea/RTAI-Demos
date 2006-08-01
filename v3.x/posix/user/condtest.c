@@ -33,12 +33,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define DISPLAY  printf
 #endif
 
-#define USE_OPEN
-#ifndef USE_OPEN
 static pthread_cond_t    conds;
 static pthread_mutex_t   mtxs;
 static pthread_barrier_t barriers;
-#endif
 static pthread_cond_t    *cond;
 static pthread_mutex_t   *mtx;
 static pthread_barrier_t *barrier;
@@ -128,7 +125,7 @@ static void *task_func3(void *dummy)
 	DISPLAY("Starting task3, waiting on the conditional variable to be 3 with a 2 s timeout.\n");
 	pthread_mutex_lock(mtx);
 	while(cond_data < 3) {
-		clock_gettime(0, &abstime);
+		clock_gettime(CLOCK_MONOTONIC, &abstime);
 		abstime.tv_sec += 2;
 		if (pthread_cond_timedwait(cond, mtx, &abstime) < 0) {
 			break;
@@ -177,11 +174,7 @@ static void *task_func4(void *dummy)
 
 static void main_exit_handler(void *arg)
 {
-#ifdef USE_OPEN
-	pthread_barrier_close(barrier);
-#else
 	pthread_barrier_destroy(barrier);
-#endif
 	stop_rt_timer();
 }
 
@@ -196,18 +189,9 @@ int main(void)
 	pthread_cleanup_push(main_exit_handler, 0);
 	start_rt_timer(nano2count(TICK));
 	DISPLAY("User space POSIX test program.\n");
-#ifdef USE_OPEN
-	cond = pthread_cond_open("CONDVR");
-	mtx = pthread_mutex_open("MUTEX");
-	barrier = pthread_barrier_open("BARIER", 5);
-	cond = pthread_cond_open("CONDVR");
-	mtx = pthread_mutex_open("MUTEX");
-	barrier = pthread_barrier_open("BARIER", 5);
-#else
 	pthread_cond_init(cond = &conds, NULL);
 	pthread_mutex_init(mtx = &mtxs, NULL);
 	pthread_barrier_init(barrier = &barriers, NULL, 5);
-#endif
 	pthread_create(&thread1, NULL, task_func1, NULL);
 	pthread_create(&thread2, NULL, task_func2, NULL);
 	pthread_create(&thread3, NULL, task_func3, NULL);
@@ -219,16 +203,8 @@ int main(void)
 	pthread_join(thread2, NULL);
 	pthread_join(thread3, NULL);
 	pthread_join(thread4, NULL);
-#ifdef USE_OPEN
-	pthread_cond_close(cond);
-	pthread_mutex_close(mtx);
-	pthread_barrier_close(barrier);
-	pthread_cond_close(cond);
-	pthread_mutex_close(mtx);
-#else
 	pthread_cond_destroy(cond);
 	pthread_mutex_destroy(mtx);
-#endif
 	pthread_cleanup_pop(1);
 	DISPLAY("User space POSIX test program removed.\n");
 	pthread_exit(0);

@@ -44,10 +44,7 @@ static RT_TASK **task;
 
 static pthread_t *thread;
 
-#define USE_OPEN
-#ifndef USE_OPEN
 static pthread_rwlock_t rwls;
-#endif
 static pthread_rwlock_t *rwl;
 
 static pthread_barrier_t barrier;
@@ -153,12 +150,7 @@ int main(void)
 	thread = (void *)malloc(NTASKS*sizeof(pthread_t));
 	task = (void *)malloc(NTASKS*sizeof(RT_TASK *));
 	mytask = rt_task_init_schmod(nam2num("MAIN"), 2*NTASKS, 0, 0, SCHED_FIFO, 0x1);
-#ifdef USE_OPEN
-	rwl = pthread_rwlock_open("RWLOCK");
-	rwl = pthread_rwlock_open("RWLOCK");
-#else
 	pthread_rwlock_init(rwl = &rwls, 0);
-#endif
 	pthread_barrier_init(&barrier, NULL, NTASKS + 1);
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
@@ -166,12 +158,7 @@ int main(void)
 		pthread_create(&thread[i], NULL, (void *)thread_fun, (void *)(i + 1));
 	}
 	pthread_barrier_wait(&barrier);
-#ifdef USE_OPEN
-	pthread_rwlock_close(rwl);
-	pthread_rwlock_close(rwl);
-#else
 	pthread_rwlock_destroy(rwl);
-#endif
 	pthread_barrier_destroy(&barrier);
 	stop_rt_timer();
 	rt_task_delete(mytask);

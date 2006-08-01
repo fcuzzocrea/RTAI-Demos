@@ -85,7 +85,7 @@ void *child_func(void *arg)
 
 	//Now send parent a message on this queue
 	if (tx_q > 0) {
-		clock_gettime(0, &timeout);
+		clock_gettime(CLOCK_MONOTONIC, &timeout);
 		timeout.tv_sec++;
 		n = mq_timedsend(tx_q, myMsg[0].str, myMsg[0].str_size, myMsg[0].prio, &timeout); 
 //		n = mq_send(tx_q, myMsg[0].str, myMsg[0].str_size, myMsg[0].prio); 
@@ -162,7 +162,7 @@ void *parent_func(void *arg)
 
 	//Now open the receive queue to read what kiddy has to say
 	rx_q = mq_open("my_queue2", my_oflags, 0, 0);
-	clock_gettime(0, &timeout);
+	clock_gettime(CLOCK_MONOTONIC, &timeout);
 	timeout.tv_sec++;
 	n = mq_timedreceive(rx_q, inBuf, sizeof(inBuf), &priority, &timeout);
 //	n = mq_receive(rx_q, inBuf, sizeof(inBuf), &priority);
