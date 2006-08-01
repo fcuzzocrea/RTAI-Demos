@@ -26,7 +26,7 @@
 
 #include <rtai_posix.h>
 
-static pthread_mutex_t *m;
+static pthread_mutex_t mut, *m = &mut;
 static pthread_barrier_t b;
 static pthread_cond_t c;
 static bool done;

@@ -1,0 +1,51 @@
+SEMS
+// changes to RTAI originals: 
+// none
+tst-sem1.c: OK
+tst-sem2.c: OK
+tst-sem3.c: OK
+tst-sem4.c: OK 
+	- see RTAI specific counter message at execution;
+	- sem file remains, must be fixed.
+tst-sem5.c: OK
+tst-sem6.c: OK
+tst-sem7.c: OK
+tst-sem8.c: OK
+tst-sem9.c: OK
+BARRIERS
+// changes to RTAI original: 
+//	1 - return -1 for tasks blocked by the barrier.
+tst-barrier1.c: OK
+tst-barrier2.c: OK
+tst-barrier3.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.
+tst-barrier4.c: OK
+MUTEXES
+// changes to RTAI original: 
+//	1 - do not let only unlocking of RES_SEM, either by non owner or by 
+//	    owner if unlocked already.
+tst-mutex1.c: OK
+tst-mutex2.c: 
+	- not available because RTAI does not support ERRORCHECKing mutexes.
+tst-mutex3.c: OK
+tst-mutex4.c: OK
+tst-mutex5.c: OK
+tst-mutex6.c: OK
+tst-mutex7.c: OK
+tst-mutex8.c: 
+	- needs a more complete condvars specific testing.
+tst-mutex9.c: OK
+CONDVARS
+tst-cond1.c: OK
+tst-cond2.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.
+tst-cond3.c: to be done
+tst-cond4.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.
+tst-cond5.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.
+tst-cond6.c: OK
