@@ -6,3 +6,5 @@ sync
 ./jrun
 sync
 ./lrun
+sync
+./vrun

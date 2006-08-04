@@ -9,7 +9,7 @@ LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags) -D_GNU_SOURCE
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 RENAME = $(shell rtai-config --posix-wrap)
 
-all: condtest jepplin mqtest rwlocks
+all: condtest jepplin mqtest rwlocks latency
 
 condtest: condtest.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(RENAME) -llxrt $(LXRT_LDFLAGS)
@@ -23,7 +23,10 @@ mqtest: mqtest.c
 rwlocks: rwlocks.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(RENAME) -llxrt $(LXRT_LDFLAGS)
 
+latency: latency.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(RENAME) -llxrt $(LXRT_LDFLAGS)
+
 clean:
-	rm -f *.o condtest jepplin mqtest rwlocks
+	rm -f *.o condtest jepplin mqtest rwlocks latency
 
 .PHONY: clean

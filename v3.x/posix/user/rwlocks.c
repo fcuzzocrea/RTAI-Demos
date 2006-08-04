@@ -28,10 +28,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
-#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time_np(); } while (0)
+#define RT_SET_REAL_TIME_MODE() do { pthread_hard_real_time_np(); } while (0)
 #define DISPLAY  rt_printk
 #else
-#define RT_MAKE_HARD_REAL_TIME()
+#define RT_SET_REAL_TIME_MODE() do { pthread_soft_real_time_np(); } while (0)
 #define DISPLAY  printf
 #endif
 
@@ -57,7 +57,7 @@ static void *thread_fun(int idx)
 	sprintf(name, "TASK%d", idx);
 	pthread_setschedparam_np(NTASKS - idx + 1, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	while(loops--) {
 		DISPLAY("TASK %d 1 COND/TIMED PREWLOCKED\n", idx);
 		clock_gettime(0, &abstime);

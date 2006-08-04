@@ -26,10 +26,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
-#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time_np(); } while (0)
+#define RT_SET_REAL_TIME_MODE() do { pthread_hard_real_time_np(); } while (0)
 #define DISPLAY  rt_printk
 #else
-#define RT_MAKE_HARD_REAL_TIME()
+#define RT_SET_REAL_TIME_MODE() do { pthread_soft_real_time_np(); } while (0)
 #define DISPLAY  printf
 #endif
 
@@ -51,7 +51,7 @@ static void *task_func1(void *dummy)
 {
 	pthread_setschedparam_np(1, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	pthread_cleanup_push(task_exit_handler, 0);
 	pthread_barrier_wait(barrier);
 	DISPLAY("Starting task1, waiting on the conditional variable to be 1.\n");
@@ -85,7 +85,7 @@ static void *task_func2(void *dummy)
 {
 	pthread_setschedparam_np(2, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	pthread_cleanup_push(task_exit_handler, 0);
 	pthread_barrier_wait(barrier);
 	DISPLAY("Starting task2, waiting on the conditional variable to be 2.\n");
@@ -117,7 +117,7 @@ static void *task_func3(void *dummy)
 	struct timespec abstime;
 	pthread_setschedparam_np(3, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	pthread_cleanup_push(task_exit_handler, 0);
 	pthread_barrier_wait(barrier);
 	DISPLAY("Starting task3, waiting on the conditional variable to be 3 with a 2 s timeout.\n");
@@ -148,7 +148,7 @@ static void *task_func4(void *dummy)
 {
 	pthread_setschedparam_np(4, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	pthread_cleanup_push(task_exit_handler, 0);
 	pthread_barrier_wait(barrier);
 	DISPLAY("Starting task4, signalling after setting data to 1, then waits for a broadcast.\n");
@@ -182,7 +182,7 @@ int main(void)
 {
 	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	pthread_cleanup_push(main_exit_handler, 0);
 	start_rt_timer(nano2count(TICK));
 	DISPLAY("User space POSIX test program.\n");

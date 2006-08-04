@@ -6,10 +6,10 @@
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
-#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time_np(); } while (0)
+#define RT_SET_REAL_TIME_MODE() do { pthread_hard_real_time_np(); } while (0)
 #define DISPLAY  rt_printk
 #else
-#define RT_MAKE_HARD_REAL_TIME()
+#define RT_SET_REAL_TIME_MODE() do { pthread_soft_real_time_np(); } while (0)
 #define DISPLAY  printf
 #endif
 
@@ -46,7 +46,7 @@ static void *task_code(int task_no)
 	mq_in  = mq_open("mq_in", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	mq_out = mq_open("mq_out", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	pthread_barrier_wait(&barrier);
 	for (i = 0; i < 5; ++i) {
 		sem_wait(&sems[task_no]);
@@ -123,7 +123,7 @@ static void *start_task_code(void *arg)
 	/* create the priority-test semaphore */
 	sem_init(&prio_sem, 0, 0);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	RT_MAKE_HARD_REAL_TIME();
+	RT_SET_REAL_TIME_MODE();
 	pthread_barrier_wait(&barrier);
 	/* pass the semaphore to the first task */
 	sem_post(&sems[0]);
