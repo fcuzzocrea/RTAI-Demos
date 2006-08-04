@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <sys/mman.h>
 
 #include <rtai_posix.h>
 
@@ -70,7 +71,8 @@ do_test (void)
 
 int main(void)
 {
-        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
         do_test();
         return 0;
 }

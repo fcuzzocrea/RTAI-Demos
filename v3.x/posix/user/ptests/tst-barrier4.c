@@ -40,7 +40,7 @@ tf (void *arg)
   char name[8];
 
   sprintf(name, "TSK%d", nr);
-  pthread_init_real_time_np(name, 0, SCHED_FIFO, 0xF, PTHREAD_SOFT_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_SOFT_REAL_TIME_NP);
 
   while (round++ < 30)
     {
@@ -127,7 +127,7 @@ do_test (void)
 
 int main(void)
 {
-pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_SOFT_REAL_TIME);
+pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	do_test();
 	return 0;
 }

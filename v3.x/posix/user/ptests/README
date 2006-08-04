@@ -33,15 +33,12 @@ tst-mutex4.c: OK
 tst-mutex5.c: OK
 tst-mutex6.c: OK
 tst-mutex7.c: OK
-tst-mutex8.c: 
-	- needs a more complete condvars specific testing.
 tst-mutex9.c: OK
 CONDVARS
 tst-cond1.c: OK
 tst-cond2.c: OK
 	- needs specific calls to init, RTAI does not support static 
 	  initializations yet.
-tst-cond3.c: to be done
 tst-cond4.c: OK
 	- needs specific calls to init, RTAI does not support static 
 	  initializations yet.
@@ -49,3 +46,18 @@ tst-cond5.c: OK
 	- needs specific calls to init, RTAI does not support static 
 	  initializations yet.
 tst-cond6.c: OK
+tst-cond10.c: OK
+tst-cond11.c: OK
+	- modified to use just CLOCK_MONOTONIC and a recursive mutex.
+tst-cond14.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.
+tst-cond16.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.
+tst-cond19.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.
+tst-cond20.c: OK
+	- needs specific calls to init, RTAI does not support static 
+	  initializations yet.

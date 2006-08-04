@@ -1,3 +1,4 @@
+./rem
 #!/bin/sh
 
 libpath=`rtai-config --library-dir`
@@ -8,6 +9,9 @@ exit
 fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
+
+cp $1 test.c
+make
 
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
