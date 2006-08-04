@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
-#define RT_MAKE_HARD_REAL_TIME() do { rt_make_hard_real_time(); } while (0)
+#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time_np(); } while (0)
 #define DISPLAY  rt_printk
 #else
 #define RT_MAKE_HARD_REAL_TIME()
@@ -52,7 +52,7 @@ void *child_func(void *arg)
 	mqd_t rx_q = INVALID_PQUEUE, tx_q = INVALID_PQUEUE;
 	struct timespec timeout;
 
-	rt_task_init_schmod(nam2num("CHDTSK"), 2, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(2, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	pthread_barrier_wait(&barrier);
 	DISPLAY("Starting child task\n");
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -128,7 +128,7 @@ void *parent_func(void *arg)
 	mqd_t tx_q = INVALID_PQUEUE, rx_q = INVALID_PQUEUE;
 	struct timespec timeout;
 
-	rt_task_init_schmod(nam2num("PRNTSK"), 1, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(1, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	pthread_barrier_wait(&barrier);
 	DISPLAY("Starting parent task\n");
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -188,8 +188,7 @@ void *parent_func(void *arg)
 
 int main(void)
 {
-	RT_TASK *me;
-	me = rt_task_init_schmod(nam2num("MAIN"), 3, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(3, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	pthread_barrier_init(&barrier, NULL, 3);
 	sem_init(&sem1, 0, 0);
 	sem_init(&sem2, 0, 0);
@@ -205,7 +204,6 @@ int main(void)
 	sem_destroy(&sem1);
 	sem_destroy(&sem2);
 	stop_rt_timer();
-	rt_task_delete(me);
 	printf("\n==== Posix Queues test program removed====\n");
 	return 0;
 }

@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
-#define RT_MAKE_HARD_REAL_TIME() do { rt_make_hard_real_time(); } while (0)
+#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time_np(); } while (0)
 #define DISPLAY  rt_printk
 #else
 #define RT_MAKE_HARD_REAL_TIME()
@@ -40,8 +40,6 @@ static pthread_cond_t    *cond;
 static pthread_mutex_t   *mtx;
 static pthread_barrier_t *barrier;
 
-static RT_TASK *task1, *task2, *task3, *task4;
-
 static int cond_data;
 
 static void task_exit_handler(void *arg)
@@ -51,7 +49,7 @@ static void task_exit_handler(void *arg)
 
 static void *task_func1(void *dummy)
 {
- 	task1 = rt_task_init_schmod(nam2num("TASK1"), 1, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(1, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
 	pthread_cleanup_push(task_exit_handler, 0);
@@ -85,7 +83,7 @@ static void *task_func1(void *dummy)
 
 static void *task_func2(void *dummy)
 {
- 	task2 = rt_task_init_schmod(nam2num("TASK2"), 2, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(2, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
 	pthread_cleanup_push(task_exit_handler, 0);
@@ -117,7 +115,7 @@ static void *task_func2(void *dummy)
 static void *task_func3(void *dummy)
 {
 	struct timespec abstime;
- 	task3 = rt_task_init_schmod(nam2num("TASK3"), 3, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(3, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
 	pthread_cleanup_push(task_exit_handler, 0);
@@ -148,7 +146,7 @@ static void *task_func3(void *dummy)
 
 static void *task_func4(void *dummy)
 {
- 	task4 = rt_task_init_schmod(nam2num("TASK4"), 4, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(4, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
 	pthread_cleanup_push(task_exit_handler, 0);
@@ -182,8 +180,7 @@ static pthread_t thread1, thread2, thread3, thread4;
 
 int main(void)
 {
-	RT_TASK *task;
-	task = rt_task_init_schmod(nam2num("MAIN"), 0, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
 	pthread_cleanup_push(main_exit_handler, 0);

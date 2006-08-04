@@ -6,7 +6,7 @@
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
-#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time(); } while (0)
+#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time_np(); } while (0)
 #define DISPLAY  rt_printk
 #else
 #define RT_MAKE_HARD_REAL_TIME()

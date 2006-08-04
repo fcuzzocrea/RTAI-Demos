@@ -1,4 +1,3 @@
-
 /*
 COPYRIGHT (C) 2003  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
@@ -29,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
-#define RT_MAKE_HARD_REAL_TIME() do { rt_make_hard_real_time(); } while (0)
+#define RT_MAKE_HARD_REAL_TIME() do { pthread_hard_real_time_np(); } while (0)
 #define DISPLAY  rt_printk
 #else
 #define RT_MAKE_HARD_REAL_TIME()
@@ -56,7 +55,7 @@ static void *thread_fun(int idx)
 	char name[7];
 	
 	sprintf(name, "TASK%d", idx);
-	task[idx - 1] = rt_task_init_schmod(nam2num(name), NTASKS - idx + 1, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(NTASKS - idx + 1, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
 	while(loops--) {
@@ -137,7 +136,6 @@ static void *thread_fun(int idx)
 	}
 	rt_make_soft_real_time();
 	pthread_barrier_wait(&barrier);
-	rt_task_delete(task[idx - 1]);
 	DISPLAY("TASK %d EXITED\n", idx);
 	return NULL;
 }
@@ -145,11 +143,10 @@ static void *thread_fun(int idx)
 int main(void)
 {
 	int i;
-	RT_TASK *mytask;
 
 	thread = (void *)malloc(NTASKS*sizeof(pthread_t));
 	task = (void *)malloc(NTASKS*sizeof(RT_TASK *));
-	mytask = rt_task_init_schmod(nam2num("MAIN"), 2*NTASKS, 0, 0, SCHED_FIFO, 0x1);
+	pthread_setschedparam_np(2*NTASKS, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	pthread_rwlock_init(rwl = &rwls, 0);
 	pthread_barrier_init(&barrier, NULL, NTASKS + 1);
 	rt_set_oneshot_mode();
@@ -161,7 +158,6 @@ int main(void)
 	pthread_rwlock_destroy(rwl);
 	pthread_barrier_destroy(&barrier);
 	stop_rt_timer();
-	rt_task_delete(mytask);
 	free(thread);
 	free(task);
 	return 0;
