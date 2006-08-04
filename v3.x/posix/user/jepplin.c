@@ -42,7 +42,7 @@ static void *task_code(int task_no)
 	struct timespec t;
 	static mqd_t mq_in, mq_out;
 
-	rt_task_init_schmod(nam2num("TSKOD0") + task_no, NUM_TASKS - task_no, 0, 0, SCHED_FIFO, 0xF);
+	pthread_setschedparam_np(NUM_TASKS - task_no, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	mq_in  = mq_open("mq_in", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	mq_out = mq_open("mq_out", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -110,18 +110,18 @@ static void *start_task_code(void *arg)
 	mqd_t mq_in, mq_out;
 	char buf[MAX_MSG_SIZE];
 
-	rt_task_init_schmod(nam2num("STSKOD"), NUM_TASKS + 10, 0, 0, SCHED_FIFO, 0xF);
+	pthread_setschedparam_np(NUM_TASKS + 10, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	pthread_mutex_init(&print_mtx, NULL);
 	mq_in  = mq_open("mq_in", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	mq_out = mq_open("mq_out", O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
 	for (i = 0; i < NUM_TASKS; ++i) {
-		sem_init(&sems[i], SEM_BINARY, 0);
+		sem_init(&sems[i], 0, 0);
 		pthread_create(&thread[i], NULL, (void *)task_code, (void *)i);
 	}	
 	/* create the sync semaphore */
 	sem_init(&sync_sem, 0, 0);
 	/* create the priority-test semaphore */
-	sem_init(&prio_sem, SEM_BINARY, 0);
+	sem_init(&prio_sem, 0, 0);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	RT_MAKE_HARD_REAL_TIME();
 	pthread_barrier_wait(&barrier);
@@ -186,8 +186,7 @@ static void *start_task_code(void *arg)
 int main(void)
 {
 	printf("\n");
-	rt_task_init_schmod(nam2num("MAIN"), NUM_TASKS + 20, 0, 0, SCHED_FIFO, 0xF);
-	rt_set_oneshot_mode();
+	pthread_setschedparam_np(NUM_TASKS + 20, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	start_rt_timer(0);
 	pthread_barrier_init(&barrier, 0, NUM_TASKS + 2);
 	pthread_create(&start_thread, NULL, start_task_code, NULL);
