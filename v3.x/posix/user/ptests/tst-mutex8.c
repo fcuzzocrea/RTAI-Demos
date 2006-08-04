@@ -46,7 +46,8 @@ cl (void *arg)
 static void *
 tf (void *arg)
 {
- pthread_init_real_time_np("TSKTF", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+ pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+// pthread_init_real_time_np("TSKTF", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
   if (pthread_mutex_lock (m) != 0)
     {
       puts ("tf: mutex_lock failed");
@@ -344,6 +345,7 @@ do_test (void)
       return 1;
     }
 
+#if 0  //ERRORCHECK not supported yet
   if (pthread_mutexattr_init (&ma) != 0)
     {
       puts ("2nd mutexattr_init failed");
@@ -361,13 +363,15 @@ do_test (void)
       puts ("2nd mutexattr_destroy failed");
       return 1;
     }
+#endif
 
   return res;
 }
 
 int main(void)
 {
-        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+//        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
         start_rt_timer(0);
         do_test();
         return 0;

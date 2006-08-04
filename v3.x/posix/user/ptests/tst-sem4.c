@@ -41,7 +41,7 @@ main (void)
   pid_t pid;
   int val;
 
-  pthread_init_real_time_np("MAIN", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
   s = sem_open ("tstsm4", O_CREAT, 0600, 1);
   if (s == SEM_FAILED)
     {
@@ -106,7 +106,7 @@ main (void)
   if (pid == 0)
     {
 
-  pthread_init_real_time_np("CHLD", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
       /* Child.  */
 
       /* Check the value.  */

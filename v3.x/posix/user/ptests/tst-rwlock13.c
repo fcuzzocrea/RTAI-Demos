@@ -1,6 +1,5 @@
-/* Copyright (C) 2002 Free Software Foundation, Inc.
+/* Copyright (C) 2004 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -17,69 +16,52 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#include <errno.h>
-#include <semaphore.h>
+#include <pthread.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <string.h>
 
 #include <rtai_posix.h>
 
 static int
 do_test (void)
 {
-  sem_t s;
+  pthread_rwlock_t r;
+  int ret;
 
-  if (sem_init (&s, 0, 1) == -1)
+  memset (&r, 0xaa, sizeof (r));
+  if ((ret = pthread_rwlock_init (&r, NULL)) != 0)
     {
-      puts ("init failed");
+      printf ("rwlock_init failed: %d\n", ret);
       return 1;
     }
 
-  if (TEMP_FAILURE_RETRY (sem_wait (&s)) == -1)
+  if ((ret = pthread_rwlock_rdlock (&r)) != 0)
     {
-      puts ("1st wait failed");
+      printf ("rwlock_rdlock failed: %d\n", ret);
       return 1;
     }
 
-  if (sem_post (&s) == -1)
+  if ((ret = pthread_rwlock_unlock (&r)) != 0)
     {
-      puts ("1st post failed");
+      printf ("rwlock_unlock failed: %d\n", ret);
       return 1;
     }
 
-  if (TEMP_FAILURE_RETRY (sem_trywait (&s)) == -1)
+  if ((ret = pthread_rwlock_wrlock (&r)) != 0)
     {
-      puts ("1st trywait failed");
+      printf ("rwlock_wrlock failed: %d\n", ret);
       return 1;
     }
 
-  errno = 0;
-  if (TEMP_FAILURE_RETRY (sem_trywait (&s)) != -1)
+  if ((ret = pthread_rwlock_unlock (&r)) != 0)
     {
-      puts ("2nd trywait succeeded");
-      return 1;
-    }
-  else if (errno != EAGAIN)
-    {
-      puts ("2nd trywait did not set errno to EAGAIN");
+      printf ("second rwlock_unlock failed: %d\n", ret);
       return 1;
     }
 
-  if (sem_post (&s) == -1)
+  if ((ret = pthread_rwlock_destroy (&r)) != 0)
     {
-      puts ("2nd post failed");
-      return 1;
-    }
-
-  if (TEMP_FAILURE_RETRY (sem_wait (&s)) == -1)
-    {
-      puts ("2nd wait failed");
-      return 1;
-    }
-
-  if (sem_destroy (&s) == -1)
-    {
-      puts ("destroy failed");
+      printf ("second rwlock_destroy failed: %d\n", ret);
       return 1;
     }
 
@@ -88,7 +70,7 @@ do_test (void)
 
 int main(void)
 {
-	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
-	do_test();
-	return 0;
+        pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);        start_rt_timer(0);
+        do_test();
+        return 0;
 }

@@ -53,7 +53,7 @@ do_test (void)
 #define EXPECTED_SIGNAL SIGALRM
 int main(void)
 {
-	pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	do_test();
 	return 0;
 }

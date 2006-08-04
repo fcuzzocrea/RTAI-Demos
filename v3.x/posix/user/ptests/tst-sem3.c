@@ -41,7 +41,7 @@ main (void)
   pid_t pid;
   char *p;
 
-  pthread_init_real_time_np("MAIN", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 
   fd = mkstemp (tmpfname);
   if (fd == -1)
@@ -109,7 +109,7 @@ main (void)
     }
   else if (pid == 0)
     {
-  pthread_init_real_time_np("CHILD", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
       /* Play some lock ping-pong.  It's our turn to unlock first.  */
       if ((*p)++ != 0)
 	{

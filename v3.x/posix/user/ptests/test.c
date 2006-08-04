@@ -1,6 +1,6 @@
-/* Copyright (C) 2002, 2003, 2004 Free Software Foundation, Inc.
+/* Copyright (C) 2004 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
+   Contributed by Ulrich Drepper <drepper@redhat.com>, 2004.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -17,229 +17,117 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
+/* This is a test for behavior not guaranteed by POSIX.  */
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/time.h>
-#include <sys/wait.h>
 
 #include <rtai_posix.h>
 
-int *condition;
+static pthread_barrier_t b1;
+static pthread_barrier_t b2;
+
+
+#define N 20
+#define N1 (N - 1)
+
+static void *
+tf (void *arg)
+{
+  int round = 0;
+
+  int nr = (long int) arg;
+  char name[8];
+
+  sprintf(name, "TSK%d", nr);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_SOFT_REAL_TIME_NP);
+
+  while (round++ < 30)
+    {
+      if (pthread_barrier_wait (&b1) == PTHREAD_BARRIER_SERIAL_THREAD)
+	{
+	  pthread_barrier_destroy (&b1);
+	  if (pthread_barrier_init (&b1, NULL, N) != 0)
+	    {
+	      puts ("tf: 1st barrier_init failed");
+	      exit (1);
+	    }
+	}
+
+      if (pthread_barrier_wait (&b2) == PTHREAD_BARRIER_SERIAL_THREAD)
+	{
+	  pthread_barrier_destroy (&b2);
+	  if (pthread_barrier_init (&b2, NULL, N) != 0)
+	    {
+	      puts ("tf: 2nd barrier_init failed");
+	      exit (1);
+	    }
+	}
+    }
+
+  return NULL;
+}
+
 
 static int
 do_test (void)
 {
-  size_t ps = sysconf (_SC_PAGESIZE);
-  char tmpfname[] = "/tmp/tst-cond6.XXXXXX";
-  char data[ps];
-  void *mem;
-  int fd;
-  pthread_mutexattr_t ma;
-  pthread_mutex_t *mut1;
-  pthread_mutex_t *mut2;
-  pthread_condattr_t ca;
-  pthread_cond_t *cond;
-  pid_t pid;
-  int result = 0;
+  pthread_attr_t at;
+  int cnt;
 
-  fd = mkstemp (tmpfname);
-  if (fd == -1)
+  if (pthread_attr_init (&at) != 0)
     {
-      printf ("cannot open temporary file: %m\n");
-      exit (1);
+      puts ("attr_init failed");
+      return 1;
     }
 
-  /* Make sure it is always removed.  */
-  unlink (tmpfname);
-
-  /* Create one page of data.  */
-  memset (data, '\0', ps);
-
-  /* Write the data to the file.  */
-  if (write (fd, data, ps) != (ssize_t) ps)
+  if (pthread_attr_setstacksize (&at, 1 * 1024 * 1024) != 0)
     {
-      puts ("short write");
-      exit (1);
+      puts ("attr_setstacksize failed");
+      return 1;
     }
 
-  mem = mmap (NULL, ps, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (mem == MAP_FAILED)
+  if (pthread_barrier_init (&b1, NULL, N) != 0)
     {
-      printf ("mmap failed: %m\n");
-      exit (1);
+      puts ("1st barrier_init failed");
+      return 1;
     }
 
-  mut1 = (pthread_mutex_t *) (((uintptr_t) mem
-			       + __alignof (pthread_mutex_t))
-			      & ~(__alignof (pthread_mutex_t) - 1));
-  mut2 = mut1 + 1;
-
-  cond = (pthread_cond_t *) (((uintptr_t) (mut2 + 1)
-			      + __alignof (pthread_cond_t))
-			     & ~(__alignof (pthread_cond_t) - 1));
-
-  condition = (int *) (((uintptr_t) (cond + 1) + __alignof (int))
-		       & ~(__alignof (int) - 1));
-
-  if (pthread_mutexattr_init (&ma) != 0)
+  if (pthread_barrier_init (&b2, NULL, N) != 0)
     {
-      puts ("mutexattr_init failed");
-      exit (1);
+      puts ("2nd barrier_init failed");
+      return 1;
     }
 
-  if (pthread_mutexattr_setpshared (&ma, PTHREAD_PROCESS_SHARED) != 0)
+  pthread_t th[N1];
+  for (cnt = 0; cnt < N1; ++cnt)
+    if (pthread_create (&th[cnt], &at, tf, (void *)(cnt + 1)) != 0)
+      {
+	puts ("pthread_create failed");
+	return 1;
+      }
+
+  if (pthread_attr_destroy (&at) != 0)
     {
-      puts ("mutexattr_setpshared failed");
-      exit (1);
+      puts ("attr_destroy failed");
+      return 1;
     }
 
-  if (pthread_mutex_init (mut1, &ma) != 0)
-    {
-      puts ("1st mutex_init failed");
-      exit (1);
-    }
+  tf (NULL);
 
-  if (pthread_mutex_init (mut2, &ma) != 0)
-    {
-      puts ("2nd mutex_init failed");
-      exit (1);
-    }
+  for (cnt = 0; cnt < N1; ++cnt)
+    if (pthread_join (th[cnt], NULL) != 0)
+      {
+	puts ("pthread_join failed");
+	return 1;
+      }
 
-  if (pthread_condattr_init (&ca) != 0)
-    {
-      puts ("condattr_init failed");
-      exit (1);
-    }
-
-  if (pthread_condattr_setpshared (&ca, PTHREAD_PROCESS_SHARED) != 0)
-    {
-      puts ("condattr_setpshared failed");
-      exit (1);
-    }
-
-  if (pthread_cond_init (cond, &ca) != 0)
-    {
-      puts ("cond_init failed");
-      exit (1);
-    }
-
-  if (pthread_mutex_lock (mut1) != 0)
-    {
-      puts ("parent: 1st mutex_lock failed");
-      exit (1);
-    }
-
-  puts ("going to fork now");
-  pid = fork ();
-  if (pid == -1)
-    {
-      puts ("fork failed");
-      exit (1);
-    }
-  else if (pid == 0)
-    {
-      struct timespec ts;
-      struct timeval tv;
-
- pthread_init_real_time_np("CHILD", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
-      if (pthread_mutex_lock (mut2) != 0)
-	{
-	  puts ("child: mutex_lock failed");
-	  exit (1);
-	}
-
-      if (pthread_mutex_unlock (mut1) != 0)
-	{
-	  puts ("child: 1st mutex_unlock failed");
-	  exit (1);
-	}
-
-      if (gettimeofday (&tv, NULL) != 0)
-	{
-	  puts ("gettimeofday failed");
-	  exit (1);
-	}
-
-      TIMEVAL_TO_TIMESPEC (&tv, &ts);
-
-//RTAI
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-
-      ts.tv_nsec += 500000000;
-      if (ts.tv_nsec >= 1000000000)
-	{
-	  ts.tv_nsec -= 1000000000;
-	  ++ts.tv_sec;
-	}
-
-      do
-	if (pthread_cond_timedwait (cond, mut2, &ts) != 0)
-	  {
-	    puts ("child: cond_wait failed");
-	    exit (1);
-	  }
-      while (*condition == 0);
-
-      if (pthread_mutex_unlock (mut2) != 0)
-	{
-	  puts ("child: 2nd mutex_unlock failed");
-	  exit (1);
-	}
-
-      puts ("child done");
-    }
-  else
-    {
-      int status;
-
-      if (pthread_mutex_lock (mut1) != 0)
-	{
-	  puts ("parent: 2nd mutex_lock failed");
-	  exit (1);
-	}
-
-      if (pthread_mutex_lock (mut2) != 0)
-	{
-	  puts ("parent: 3rd mutex_lock failed");
-	  exit (1);
-	}
-
-      if (pthread_cond_signal (cond) != 0)
-	{
-	  puts ("parent: cond_signal failed");
-	  exit (1);
-	}
-
-      *condition = 1;
-
-      if (pthread_mutex_unlock (mut2) != 0)
-	{
-	  puts ("parent: mutex_unlock failed");
-	  exit (1);
-	}
-
-      puts ("waiting for child");
-
-      waitpid (pid, &status, 0);
-      result |= status;
-
-      puts ("parent done");
-    }
-
- return result;
+  return 0;
 }
 
 int main(void)
 {
-        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
-        start_rt_timer(0);
-        do_test();
-        return 0;
+pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+	do_test();
+	return 0;
 }

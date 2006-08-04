@@ -39,7 +39,7 @@ main (void)
   sem_t *s;
   int i;
 
-  pthread_init_real_time_np("MAIN", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
   on_exit (remove_sem, (void *) "tstsm8");
 
   for (i = 0; i < 3; ++i)

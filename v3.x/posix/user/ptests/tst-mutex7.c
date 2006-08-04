@@ -46,7 +46,7 @@ tf (void *arg)
   char name[8];
 
   sprintf(name, "TSK%d", nr);
-  pthread_init_real_time_np(name, 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_SOFT_REAL_TIME_NP);
 
   for (cnt = 0; cnt < ROUNDS; ++cnt)
     {
@@ -129,7 +129,7 @@ do_test (void)
 #define TIMEOUT 60
 int main(void)
 {
-        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	start_rt_timer(0);
         do_test();
         return 0;

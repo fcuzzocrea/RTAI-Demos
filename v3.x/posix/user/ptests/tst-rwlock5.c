@@ -1,6 +1,6 @@
-/* Copyright (C) 2003 Free Software Foundation, Inc.
+/* Copyright (C) 2002 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
-   Contributed by Ulrich Drepper <drepper@redhat.com>, 2003.
+   Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -17,72 +17,79 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#include <errno.h>
-#include <semaphore.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <rtai_posix.h>
 
-static void
-handler (int sig)
+static pthread_mutex_t m; // = PTHREAD_MUTEX_INITIALIZER;
+static pthread_rwlock_t r;
+
+
+static void *
+tf (void *arg)
 {
-  struct sigaction sa;
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+  if (pthread_rwlock_wrlock (&r) == 0)
+    {
+      puts ("child: rwlock_wrlock succeeded");
+      exit (1);
+    }
 
-  sa.sa_handler = SIG_DFL;
-  sa.sa_flags = 0;
-  sigemptyset (&sa.sa_mask);
+  puts ("child: rwlock_wrlock returned");
 
-  sigaction (SIGALRM, &sa, NULL);
-
-  /* Rearm the timer.  */
-  alarm (1);
+  exit (1);
 }
 
 
 static int
 do_test (void)
 {
-  sem_t s;
-  struct sigaction sa;
+  pthread_t th;
 
-  sa.sa_handler = handler;
-  sa.sa_flags = 0;
-  sigemptyset (&sa.sa_mask);
-
-  sigaction (SIGALRM, &sa, NULL);
-
-  if (sem_init (&s, 0, 0) == -1)
+  if (pthread_rwlock_init (&r, NULL) != 0)
     {
-      puts ("init failed");
+      puts ("rwlock_init failed");
+      return 1;
+    }
+
+  if (pthread_rwlock_wrlock (&r) != 0)
+    {
+      puts ("rwlock_wrlock failed");
+      return 1;
+    }
+
+  if (pthread_mutex_lock (&m) != 0)
+    {
+      puts ("mutex_lock failed");
       return 1;
     }
 
   /* Set an alarm for 1 second.  The wrapper will expect this.  */
   alarm (1);
 
-  int res = sem_wait (&s);
-  if (res == 0)
+  if (pthread_create (&th, NULL, tf, NULL) != 0)
     {
-      puts ("wait succeeded");
-      return 1;
-    }
-  if (res != -1 || errno != EINTR)
-    {
-      puts ("wait didn't fail with EINTR");
+      puts ("create failed");
       return 1;
     }
 
-  return 0;
+  /* This call should never return.  */
+  pthread_mutex_lock (&m);
+
+  puts ("2nd mutex_lock returned");
+  return 1;
 }
 
-#define TIMEOUT 3
+#define EXPECTED_SIGNAL SIGALRM
 int main(void)
 {
 	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
-//        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
         start_rt_timer(0);
+	pthread_mutex_init(&m, NULL);
         do_test();
         return 0;
 }

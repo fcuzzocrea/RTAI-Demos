@@ -40,7 +40,8 @@ main (void)
   sem_t *s2;
   sem_t *s3;
 
-  pthread_init_real_time_np("MAIN", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+//  pthread_init_real_time_np("MAIN", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
   s = sem_open ("tstsm7", O_CREAT, 0600, 1);
   if (s == SEM_FAILED)
     {
