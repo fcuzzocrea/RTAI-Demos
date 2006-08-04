@@ -57,6 +57,7 @@ tf (void *arg)
     }
 
   /* This call should never return.  */
+  pthread_make_soft_real_time_np();
   pthread_cond_wait (&cond, &mut);
 
   /* We should never get here.  */
@@ -104,7 +105,6 @@ do_test (void)
     }
 
   /* Set an alarm for 1 second.  The wrapper will expect this.  */
-  printf("/* Set an alarm for 1 second.  The wrapper will expect this.  */\n");
   alarm (1);
 
   /* This call should never return.  */
@@ -114,14 +114,12 @@ do_test (void)
   return 1;
 }
 
-
-#define EXPECTED_SIGNAL SIGALRM
 int main(void)
 {
         pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
         start_rt_timer(0);
-        pthread_mutex_init(&mut, NULL);
-        pthread_cond_init(&cond, NULL);
+	pthread_mutex_init(&mut, NULL);
+	pthread_cond_init(&cond, NULL);
         do_test();
         return 0;
 }

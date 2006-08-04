@@ -25,20 +25,6 @@
 
 #include <rtai_posix.h>
 
-static inline int pthread_condattr_setclock(pthread_condattr_t *condattr, clockid_t cl)
-{
-	return 0;
-}
-
-static inline int pthread_condattr_getclock(pthread_condattr_t *condattr, clockid_t *cl)
-{
-	if (cl) {
-		*cl = CLOCK_MONOTONIC;
-		return 0;
-	}
-	return EINVAL;
-}
-
 static int
 run_test (clockid_t cl)
 {
