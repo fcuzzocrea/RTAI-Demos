@@ -1,5 +1,5 @@
 SEMS
-// changes to RTAI originals: 
+// changes to RTAI parent APIs: 
 // none
 tst-sem1.c: OK
 tst-sem2.c: OK
@@ -13,7 +13,7 @@ tst-sem7.c: OK
 tst-sem8.c: OK
 tst-sem9.c: OK
 BARRIERS
-// changes to RTAI original: 
+// changes to RTAI parent APIs: 
 //	1 - return -1 for tasks blocked by the barrier.
 tst-barrier1.c: OK
 tst-barrier2.c: OK
@@ -22,7 +22,7 @@ tst-barrier3.c: OK
 	  initializations yet.
 tst-barrier4.c: OK
 MUTEXES
-// changes to RTAI original: 
+// changes to RTAI parent APIs: 
 //	1 - do not let only unlocking of RES_SEM, either by non owner or by 
 //	    owner if unlocked already.
 tst-mutex1.c: OK
@@ -35,6 +35,8 @@ tst-mutex6.c: OK
 tst-mutex7.c: OK
 tst-mutex9.c: OK
 CONDVARS
+// changes to RTAI parent APIs: 
+//	- none
 tst-cond1.c: OK
 tst-cond2.c: OK
 	- needs specific calls to init, RTAI does not support static 
@@ -61,3 +63,17 @@ tst-cond19.c: OK
 tst-cond20.c: OK
 	- needs specific calls to init, RTAI does not support static 
 	  initializations yet.
+RWLOCKS
+// changes to RTAI parent APIs: 
+//	- a fix of the returned value of rt_rwl_delete
+tst-rwlock1.c: OK
+tst-rwlock2.c: OK
+	- adapted to RTAI recursive rwlocking
+tst-rwlock3.c: OK
+	- adapted to RTAI recursive rwlocking
+tst-rwlock4.c: OK
+tst-rwlock5.c: OK
+tst-rwlock12.c: OK
+	- adapted to RTAI recursive rwlocking
+tst-rwlock13.c: OK
+tst-rwlock14.c: OK
