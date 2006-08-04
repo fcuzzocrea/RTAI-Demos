@@ -23,7 +23,7 @@ tst-barrier3.c: OK
 tst-barrier4.c: OK
 MUTEXES
 // changes to RTAI parent APIs: 
-//	1 - do not let only unlocking of RES_SEM, either by non owner or by 
+//	1 - do not let unlocking of RES_SEM, either by non owner or by 
 //	    owner if unlocked already.
 tst-mutex1.c: OK
 tst-mutex2.c: 
