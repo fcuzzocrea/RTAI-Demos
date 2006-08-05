@@ -44,7 +44,7 @@ do_test (void)
       exit (1);
     }
 
-  if (pthread_mutexattr_settype (&ma, PTHREAD_MUTEX_RECURSIVE/*ERRORCHECK*/) != 0)
+  if (pthread_mutexattr_settype (&ma, PTHREAD_MUTEX_ERRORCHECK) != 0)
     {
       puts ("mutexattr_settype failed");
       exit (1);

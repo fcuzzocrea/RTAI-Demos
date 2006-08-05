@@ -1,6 +1,8 @@
 sync
 ./run tst-mutex1.c
 sync
+./run tst-mutex2.c
+sync
 ./run tst-mutex3.c
 sync
 ./run tst-mutex4.c
