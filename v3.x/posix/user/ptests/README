@@ -24,15 +24,18 @@ tst-barrier4.c: OK
 MUTEXES
 // changes to RTAI parent APIs: 
 //	1 - do not let unlocking of RES_SEM, either by non owner or by 
-//	    owner if unlocked already.
+//	    owner if unlocked already. 
+//	2 - what needed to support error checking for non recursive RES_SEMs,
+//          RTAI had recursive RES_SEMs only.
 tst-mutex1.c: OK
-tst-mutex2.c: 
-	- not available because RTAI does not support ERRORCHECKing mutexes.
+tst-mutex2.c: OK
 tst-mutex3.c: OK
 tst-mutex4.c: OK
 tst-mutex5.c: OK
 tst-mutex6.c: OK
 tst-mutex7.c: OK
+tst-mutex8.c: OK
+//	- not completed yet
 tst-mutex9.c: OK
 CONDVARS
 // changes to RTAI parent APIs: 

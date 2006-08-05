@@ -13,6 +13,8 @@ sync
 sync
 #./run tst-cond7.c
 sync
+./run tst-cond9.c
+sync
 ./run tst-cond10.c
 sync
 ./run tst-cond11.c
