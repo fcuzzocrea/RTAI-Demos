@@ -68,7 +68,11 @@ tst-cond20.c: OK
 	  initializations yet.
 RWLOCKS
 // changes to RTAI parent APIs: 
-//	- a fix of the returned value of rt_rwl_delete
+//	1 - a fix of the returned value of rt_rwl_delete
+//	2 - RTAI rwl can now be typed so that wrlocks can be: recursive, 
+	    error checking, normal. This feature has served for testing
+	    and migh be ready for use in future Posix specs (as anticipated
+	    by NPTL).
 tst-rwlock1.c: OK
 tst-rwlock2.c: OK
 	- adapted to RTAI recursive rwlocking
