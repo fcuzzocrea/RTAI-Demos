@@ -30,7 +30,7 @@
 #define SEMB_NAME "/semB"
 
 static int sampling_period = 100;
-static int     disp_period = 500000;
+static int     disp_period = 100000;
 
 static sem_t semA;
 
