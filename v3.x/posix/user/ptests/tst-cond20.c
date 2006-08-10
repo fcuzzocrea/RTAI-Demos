@@ -53,7 +53,7 @@ tf (void *p)
       if (++count == N)
 	pthread_cond_signal (&cond2);
 
-#if 1 //def TIMED
+#ifdef TIMED
       struct timeval tv;
       gettimeofday (&tv, NULL);
       struct timespec ts;
