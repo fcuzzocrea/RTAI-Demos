@@ -44,15 +44,28 @@ do_test (void)
   /* Set an alarm for 1 second.  The wrapper will expect this.  */
   alarm (1);
 
+#ifdef ORIGINAL_TEST /* ORIGINAL */
   /* This call should never return.  */
   pthread_spin_lock (&s);
 
   puts ("2nd spin_lock returned");
+#else /* !ORIGINAL */
+  int r = pthread_spin_lock (&s);
+  if (!r) {
+    puts ("2nd spin_lock succeeded");
+  } else if (r != EDEADLOCK) {
+    puts ("2nd spin_lock failed but did not EDEADLOCKed");
+  }
+  while (pthread_spin_trylock (&s) == EBUSY);
+#endif /* ORIGINAL */
   return 1;
 }
 
 int main(void)
 {
+#ifdef ORIGINAL_TEST
+	printf("ORIGINAL_TEST\n");
+#endif
 	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
         do_test();
         return 0;

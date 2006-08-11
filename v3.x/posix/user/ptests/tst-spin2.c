@@ -134,22 +134,44 @@ do_test (void)
 	  return 1;
 	}
 
+#ifdef ORIGINAL_TEST /* ORIGINAL */
       if (pthread_spin_unlock (s) != 0)
 	{
 	  puts ("child: 1st spin_unlock failed");
 	  return 1;
 	}
+#else /* !ORIGINAL */
+      int r = pthread_spin_unlock (s);
+      if (!r)
+	{
+	  puts ("child: 1st spin_unlock succeeded");
+	  return 1;
+	} else if (r != EPERM) {
+	  puts ("child: 1st spin_unlock failed but did not EPERMed");
+	  return 1;
+        }
+#endif /* ORIGINAL */
 
       puts ("child done");
     }
   else
     {
 	pthread_barrier_wait(&b);
+#ifdef ORIGINAL_TEST /* ORIGINAL */
       if (pthread_spin_lock (s) != 0)
 	{
 	  puts ("parent: 2nd spin_lock failed");
 	  return 1;
 	}
+#else /* !ORIGINAL */
+  int r = pthread_spin_lock (s);
+  if (!r) {
+    puts ("2nd spin_lock succeeded");
+  } else if (r != EDEADLOCK) {
+    puts ("2nd spin_lock failed but did not EDEADLOCKed");
+  }
+#endif /* ORIGINAL */
+
 
       puts ("waiting for child");
 
@@ -163,6 +185,9 @@ do_test (void)
 
 int main(void)
 {
+#ifdef ORIGINAL_TEST
+        printf("ORIGINAL_TEST\n");
+#endif
 	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	pthread_barrier_init (&b, NULL, 2);
         do_test();
