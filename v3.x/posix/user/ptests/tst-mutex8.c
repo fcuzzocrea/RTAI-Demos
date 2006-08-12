@@ -345,7 +345,6 @@ do_test (void)
       return 1;
     }
 
-#if 0  //ERRORCHECK not supported yet
   if (pthread_mutexattr_init (&ma) != 0)
     {
       puts ("2nd mutexattr_init failed");
@@ -363,7 +362,6 @@ do_test (void)
       puts ("2nd mutexattr_destroy failed");
       return 1;
     }
-#endif
 
   return res;
 }

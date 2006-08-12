@@ -13,6 +13,6 @@ sync
 sync
 ./run tst-mutex7.c
 sync
-#./run tst-mutex8.c
+./run tst-mutex8.c
 sync
 ./run tst-mutex9.c

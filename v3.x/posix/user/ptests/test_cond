@@ -11,9 +11,9 @@ sync
 sync
 ./run tst-cond6.c
 sync
-#./run tst-cond7.c
+./run tst-cond7.c
 sync
-#./run tst-cond8.c
+./run tst-cond8.c
 sync
 ./run tst-cond9.c
 sync
