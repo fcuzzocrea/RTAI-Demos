@@ -9,6 +9,10 @@ sync
 sync
 ./run tst-rwlock5.c
 sync
+./run tst-rwlock8.c
+sync
+./run tst-rwlock9.c
+sync
 ./run tst-rwlock12.c
 sync
 ./run tst-rwlock13.c
