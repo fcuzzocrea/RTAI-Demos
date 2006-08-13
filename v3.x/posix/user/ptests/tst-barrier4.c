@@ -40,7 +40,7 @@ tf (void *arg)
   char name[8];
 
   sprintf(name, "TSK%d", nr);
-  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_SOFT_REAL_TIME_NP);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 
   while (round++ < 30)
     {
