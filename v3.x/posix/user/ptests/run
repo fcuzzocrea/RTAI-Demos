@@ -20,8 +20,8 @@ echo "Press <enter> to load LXRT modules:"
 read junk
 cd ../../; ./ldmod; cd -
 echo
-echo "Now start the realtime process <enter>:"
 echo $1
+echo "Now start the realtime process <enter>:"
 read junk
 $SUDO ./test
 echo
