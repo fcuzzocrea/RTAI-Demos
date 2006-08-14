@@ -92,7 +92,7 @@ do_test (void)
   if (count <= 0)
     count = 1;
   count *= 8;
-  pthread_barrier_init(&br, NULL, count);
+  pthread_barrier_init(&br, NULL, count + 1);
 
   pthread_t th[count + 1];
   int i, ret;
