@@ -26,23 +26,20 @@
 
 #include <rtai_posix.h>
 
+pthread_barrier_t br;
 pthread_cond_t cv; // = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t lock; // = PTHREAD_MUTEX_INITIALIZER;
 bool n, exiting;
 FILE *f;
 int count;
-static atomic_t nr;
 
 void *
 tf (void *dummy)
 {
   bool loop = true;
 
-  char name[8];
-
-  atomic_inc(&nr);
-  sprintf(name, "TSK%d", nr);
-  pthread_init_real_time_np(name, 0, SCHED_FIFO, 0xF, PTHREAD_SOFT_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_barrier_wait(&br);
 
   while (loop)
     {
@@ -84,6 +81,7 @@ do_test (void)
   if (count <= 0)
     count = 1;
   count *= 4;
+  pthread_barrier_init(&br, NULL, count);
 
   pthread_t th[count];
   int i, ret;
@@ -112,7 +110,7 @@ do_test (void)
 #define TIMEOUT 40
 int main(void)
 {
-        pthread_init_real_time_np("TASKA", 0, SCHED_FIFO, 0xF, PTHREAD_HARD_REAL_TIME);
+        pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);
         start_rt_timer(0);
         pthread_cond_init(&cv, NULL);
         pthread_mutex_init(&lock, NULL);
