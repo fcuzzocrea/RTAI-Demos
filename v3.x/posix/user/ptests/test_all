@@ -1,0 +1,7 @@
+./test_barrier
+./test_basic
+./test_cond
+./test_mutex
+./test_rwlock
+./test_sem
+./test_spin
