@@ -3,6 +3,7 @@
 #include <rtai_sem.h>
 
 #define NTASKS        15
+#define RESEMT        RESEM_BINSEM // RESEM_BINSEM, RESEM_CHEKWT, RESEM_RECURS
 #define CPUS_ALLOWED  0x1 // MP can mix output, making it a difficult reading!
 
 RT_TASK *task[NTASKS];
@@ -42,7 +43,7 @@ int main(void)
 	rt_make_hard_real_time();
 
 	for (i = 0; i < NTASKS; i++) {
-		sem[i] = rt_typed_sem_init(0, RESEM_BINSEM, RES_SEM);
+		sem[i] = rt_typed_sem_init(0, RESEMT, RES_SEM);
 	}
 
 	rt_sem_wait(sem[0]);
