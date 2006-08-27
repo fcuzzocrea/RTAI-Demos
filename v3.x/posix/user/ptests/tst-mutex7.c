@@ -41,12 +41,12 @@ tf (void *arg)
 {
   int nr = (long int) arg;
   int cnt;
-  struct timespec ts = { .tv_sec = 0, .tv_nsec = 11000 };
+  struct timespec ts = { .tv_sec = 0, .tv_nsec = 10000 };
 
   char name[8];
 
   sprintf(name, "TSK%d", nr);
-  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 
   for (cnt = 0; cnt < ROUNDS; ++cnt)
     {
@@ -129,7 +129,7 @@ do_test (void)
 #define TIMEOUT 60
 int main(void)
 {
-	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	start_rt_timer(0);
         do_test();
         return 0;
