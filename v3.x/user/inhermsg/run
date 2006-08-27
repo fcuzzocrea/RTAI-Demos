@@ -15,6 +15,7 @@ echo "Press <enter> to load LXRT modules:"
 read junk
 cd ..; ./ldmod; cd -
 echo
+echo "*** PRIO INHERITHANCE FOR MSGs, AS AT RTAI-LAB BEGINNING (user) ***"
 echo "Now start the realtime process:"
 read junk
 $SUDO ./inhermsg $1 $2 $3
