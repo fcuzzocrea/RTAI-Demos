@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/mman.h>
 
 #include <rtai_posix.h>
 
@@ -32,6 +33,7 @@
 static pthread_mutex_t lock;
 
 
+#define STACK_SIZE (1 * 1024 *1024)
 #define ROUNDS 1000
 #define N 100
 
@@ -46,7 +48,8 @@ tf (void *arg)
   char name[8];
 
   sprintf(name, "TSK%d", nr);
-  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+  rt_grow_and_lock_stack(STACK_SIZE/2);
 
   for (cnt = 0; cnt < ROUNDS; ++cnt)
     {
@@ -82,7 +85,7 @@ do_test (void)
       return 1;
     }
 
-  if (pthread_attr_setstacksize (&at, 1 * 1024 * 1024) != 0)
+  if (pthread_attr_setstacksize (&at, STACK_SIZE) != 0)
     {
       puts ("attr_setstacksize failed");
       return 1;
@@ -129,7 +132,8 @@ do_test (void)
 #define TIMEOUT 60
 int main(void)
 {
-	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+	rt_grow_and_lock_stack(STACK_SIZE/2);
 	start_rt_timer(0);
         do_test();
         return 0;
