@@ -22,6 +22,7 @@ void *tskfun(void *tasknr)
 	rt_send(task[0], 0);
 	rt_sem_wait(sem[tsknr - 1]);
 	rt_sem_signal(sem[tsknr]);
+	rt_sem_signal(sem[tsknr - 1]);
 
 	rt_printk("AT TSKNR EXIT %d > (TSKNR-PRI):\n", tsknr);
 	for (k = 0; k < tsknr; k++) {
