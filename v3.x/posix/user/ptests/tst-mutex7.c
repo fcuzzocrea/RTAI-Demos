@@ -48,7 +48,7 @@ tf (void *arg)
   char name[8];
 
   sprintf(name, "TSK%d", nr);
-  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+  pthread_setschedparam_np(nr, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
   rt_grow_and_lock_stack(STACK_SIZE/2);
 
   for (cnt = 0; cnt < ROUNDS; ++cnt)
