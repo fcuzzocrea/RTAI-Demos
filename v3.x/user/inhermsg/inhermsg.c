@@ -44,6 +44,10 @@ void *thread_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
+	if (!SNDBRCV) {
+		rt_sleep(nano2count(100000000));
+	}
+
 	if (USE_RPC) {
 		unsigned long msg;
 		rt_printk("FUN RPC\n");
@@ -76,10 +80,10 @@ int main(int argc, char *argv[])
 		rt_printk("CANNOT INIT MAIN\n");
 		exit(1);
 	}
+	start_rt_timer(0);
 	rt_printk("MAIN INIT\n");
 
 	pthread_create(&thread, NULL, thread_fun, NULL);
-	start_rt_timer(0);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	if (HARDMAIN) {
@@ -90,7 +94,7 @@ int main(int argc, char *argv[])
 	rt_printk("TEST: %s, %s, %d\n", USE_RPC ? "WITH RPC" : "WITH SUSP/RESM", SNDBRCV ? "SEND BEFORE RECEIVE" : "RECEIVE BEFORE SEND", prio);
 
 	if (SNDBRCV) {
-		poll(NULL, 0, 1);
+		rt_sleep(nano2count(100000000));
 	}
 
 	rt_get_priorities(maintask, &prio, &bprio);
