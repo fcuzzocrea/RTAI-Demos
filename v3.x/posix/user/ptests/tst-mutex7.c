@@ -33,7 +33,7 @@
 static pthread_mutex_t lock;
 
 
-#define STACK_SIZE (1 * 1024 *1024)
+#define STACK_SIZE (1 * 1024 * 1024)
 #define ROUNDS 1000
 #define N 100
 
@@ -100,12 +100,14 @@ do_test (void)
       return 1;
     }
 
-  for (cnt = 0; cnt < N; ++cnt)
+  for (cnt = 0; cnt < N; ++cnt) {
     if (pthread_create (&th[cnt], &at, tf, (void *) (long int) cnt) != 0)
       {
 	printf ("creating thread %d failed\n", cnt);
 	return 1;
       }
+      nanosleep (&(struct timespec){ 0, 1000000000/N }, NULL);
+  }
 
   if (pthread_attr_destroy (&at) != 0)
     {
