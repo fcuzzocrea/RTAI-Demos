@@ -9,12 +9,12 @@ LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags) -D_GNU_SOURCE
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 RENAME = $(shell rtai-config --posix-wrap)
 
-all: test
+all: tst
 
-test: test.c
+tst: tst.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(RENAME) -llxrt $(LXRT_LDFLAGS)
 
 clean:
-	rm -f *.o test
+	rm -f *.o tst
 
 .PHONY: clean
