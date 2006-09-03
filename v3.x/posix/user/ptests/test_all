@@ -1,5 +1,6 @@
 ./test_barrier
 ./test_basic
+./test_cancel
 ./test_cond
 ./test_join
 ./test_kill
