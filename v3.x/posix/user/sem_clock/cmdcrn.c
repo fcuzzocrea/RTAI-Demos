@@ -69,7 +69,7 @@ void CommandChrono_Get(char *command)
 			}
 			break;
 		case stoppedFinal:
-			clock_gettime(0, &fiveSeconds);
+			clock_gettime(CLOCK_MONOTONIC, &fiveSeconds);
 			fiveSeconds.tv_sec += FIVE_SECONDS;
 			if (!sem_timedwait(&notEmpty, &fiveSeconds)) {
 				buffered = TRUE;
