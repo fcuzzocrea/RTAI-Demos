@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 
-#include <rtai_mq.h>
+#include <rtai_pmq.h>
 
 static void menu(void)
 {
@@ -66,7 +66,7 @@ static char get_key(void)
 
 int main(void)
 {
-	int pid, started = 0;
+	int pid;
 	char ch;
 	char k = 'k';
 	RT_TASK *mytask;
@@ -96,9 +96,7 @@ int main(void)
 	}
 
 	do {
-		if ((ch = get_key()) == 'r' || ch == 'c') {
-			started++;
-		}
+		ch = get_key();
 	        if (ch == 'p' || ch == 'P') {
 			menu();
 		}
@@ -106,22 +104,17 @@ int main(void)
 			fprintf(stderr, "Can't send command to RT-task\n");
 		}
 	} while (ch != 'f');
-	if (started < 2) {
-	        ch = 'r';
-		mq_send(Keyboard, &ch, 1, 0);
-		sleep(1);
-        	ch = 'c';
-		mq_send(Keyboard, &ch, 1, 0);
-		sleep(1);
-	}
-	kill(pid, SIGTERM);
-	wait(NULL);
+        ch = 'r';
+	mq_send(Keyboard, &ch, 1, 0);
+       	ch = 'c';
+	mq_send(Keyboard, &ch, 1, 0);
         ch = 'f';
 	mq_send(Keyboard, &ch, 1, 0);
 	rt_task_resume(rt_get_adr(nam2num("MASTER")));
 	while (rt_get_adr(nam2num("MASTER"))) {
 		rt_sleep(nano2count(1000000));
 	}
+	kill(pid, SIGINT);
 	mq_close(Keyboard);
 	rt_task_delete(mytask);
 	stop_rt_timer();

@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/ioctl.h>
 
-#include <rtai_mq.h>
+#include <rtai_pmq.h>
 
 static volatile int end;
 static RT_TASK *mytask;
@@ -49,7 +49,7 @@ int main(void)
 	struct mq_attr kb_attrs = { MAX_MSGS, 1, 0, 0};
 	struct mq_attr sc_attrs = { MAX_MSGS, 12, 0, 0};
 	
-	signal(SIGTERM, endme);
+	signal(SIGINT, endme);
  	if (!(mytask = rt_task_init(nam2num("SCRTSK"), 20, 0, 0))) {
 		printf("CANNOT INIT SCREEN TASK\n");
 		exit(1);

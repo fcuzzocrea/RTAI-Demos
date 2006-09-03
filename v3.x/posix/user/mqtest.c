@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/mman.h>
 
 #include <rtai_posix.h>
-#include <rtai_mq.h>
+#include <rtai_pmq.h>
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
