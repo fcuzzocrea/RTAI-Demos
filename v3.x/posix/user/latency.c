@@ -1,4 +1,8 @@
-/* Author/Copyright unknown, assumed either as GPL or free software anyhow */
+/* 
+Taken from a GPLed repository. Specific author/copyright unknown, assumed 
+either as GPL or free software anyhow.
+Modified to suite RTAI + added user definable periodic latencies echos.
+*/
 
 #include <stdio.h>
 #include <string.h>
