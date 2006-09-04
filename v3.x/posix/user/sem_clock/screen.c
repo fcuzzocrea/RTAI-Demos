@@ -71,7 +71,8 @@ int main(void)
 	}
 
 	while (!end) {
-		if (mq_receive(Screen, chain, 12, NULL) < 12 || end) {
+		mq_receive(Screen, chain, 12, NULL);
+		if (end) {
 			break;
 		}
 		if (chain[0] == 't') {
