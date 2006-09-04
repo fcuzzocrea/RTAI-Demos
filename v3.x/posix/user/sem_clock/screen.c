@@ -71,7 +71,7 @@ int main(void)
 	}
 
 	while (!end) {
-		if (mq_receive(Screen, chain, 12, NULL)) {
+		if (mq_receive(Screen, chain, 12, NULL) <= 0) {
 			continue;
 		}
 		if (end) {
