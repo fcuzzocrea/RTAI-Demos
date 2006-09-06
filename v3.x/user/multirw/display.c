@@ -45,15 +45,15 @@ int main(void)
 		exit(1);
 	}
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	rt_make_hard_real_time();
+//	rt_make_hard_real_time();
 	while (1) {
 		rt_mbx_receive(mbx, &samp, sizeof(samp));
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
 		printf("%p:%d - min: %lld/%lld, max: %lld/%lld average: %d (%d)\n", samp.task, samp.cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
-                if (poll(&ufds, 1, 1)) {
-                        break;
-                }
+		if (poll(&ufds, 1, 1)) {
+			break;
+		}
 	}
 
 	rt_task_delete(task);
