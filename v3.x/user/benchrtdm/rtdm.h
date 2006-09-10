@@ -36,6 +36,8 @@
 #ifndef _RTDM_H
 #define _RTDM_H
 
+//#define TRUE_LXRT_WAY
+
 #define RTDM_INDX  15
 
 #define __rtdm_fdcount          0
@@ -61,7 +63,7 @@ typedef struct task_struct          rtdm_user_info_t;
 #else  /* !__KERNEL__ */
 
 #include <fcntl.h>
-#include <inttypes.h>
+#include <stdint.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
@@ -70,6 +72,29 @@ typedef struct task_struct          rtdm_user_info_t;
 
 /** Maximum length of device names */
 #define RTDM_MAX_DEVNAME_LEN        31
+
+
+/** RTDM type for representing absolute dates. Its base type is a 64 bit
+ *  unsigned integer. The unit is 1 nanosecond. */
+typedef int64_t                     nanosecs_abs_t;
+
+/** RTDM type for representing relative intervals. Its base type is a 64 bit
+ *  signed integer. The unit is 1 nanosecond. Relative intervals can also
+ *  encode the special timeouts "infinite" and "non-blocking", see
+ *  @ref RTDM_TIMEOUT_xxx. */
+typedef int64_t                     nanosecs_rel_t;
+
+
+/*!
+ * @anchor RTDM_TIMEOUT_xxx @name RTDM_TIMEOUT_xxx
+ * Special timeout values
+ * @{ */
+/** Block forever. */
+#define RTDM_TIMEOUT_INFINITE       0
+
+/** Any negative timeout means non-blocking. */
+#define RTDM_TIMEOUT_NONE           (-1)
+/** @} */
 
 
 /*!
@@ -81,6 +106,7 @@ typedef struct task_struct          rtdm_user_info_t;
 #define RTDM_CLASS_CAN              3
 #define RTDM_CLASS_NETWORK          4
 #define RTDM_CLASS_RTMAC            5
+#define RTDM_CLASS_TESTING          6
 /*
 #define RTDM_CLASS_USB              ?
 #define RTDM_CLASS_FIREWIRE         ?
@@ -237,11 +263,77 @@ extern "C" {
 #include <sys/mman.h>
 #include <stdarg.h>
 
+//#include <rtai_lxrt.h>
+
 static inline int rt_dev_fdcount(void)
 {
         struct { long dummy; } arg = { 0 };
         return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_fdcount, &arg).i[LOW];
 }
+
+#ifdef TRUE_LXRT_WAY
+
+#define UINFO  1
+
+static inline int rt_dev_open(const char *path, int oflag, ...)
+{
+        struct { long uinfo; const char *path; long oflag; } arg = { UINFO, path, oflag };
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_open, &arg).i[LOW];
+}
+
+static inline int rt_dev_socket(int protocol_family, int socket_type, int protocol)
+{
+        struct { long uinfo; long protocol_family; long socket_type; long protocol; } arg = { UINFO, protocol_family, socket_type, protocol };
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_socket, &arg).i[LOW];
+}
+
+static inline int rt_dev_close(int fd)
+{
+        struct { long uinfo; long fd; long forced; } arg = { UINFO, fd, 0 };
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_close, &arg).i[LOW];
+}
+
+static inline int rt_dev_close_forced(int fd)
+{
+        struct { long uinfo; long fd; long forced; } arg = { UINFO, fd, 1 };
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_close, &arg).i[LOW];
+}
+
+static inline int rt_dev_ioctl(int fd, int request, ...)
+{
+        struct { long uinfo; long fd; long request; void *arg; } arg = { UINFO, fd, request };
+	va_list ap;
+	va_start(ap, request);
+	arg.arg = va_arg(ap, void *);
+	va_end(ap);
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_ioctl, &arg).i[LOW];
+}
+
+static inline ssize_t rt_dev_read(int fd, void *buf, size_t nbytes)
+{
+        struct { long uinfo; long fd; void *buf; long nbytes; } arg = { UINFO, fd, buf, nbytes };
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_read, &arg).i[LOW];
+}
+
+static inline ssize_t rt_dev_write(int fd, const void *buf, size_t nbytes)
+{
+        struct { long uinfo; long fd; const void *buf; long nbytes; } arg = { UINFO, fd, buf, nbytes };
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_write, &arg).i[LOW];
+}
+
+static inline ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags)
+{
+        struct { long uinfo; long fd; struct msghdr *msg; long flags; } arg = { UINFO, fd, msg, flags };
+        return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_recvmsg, &arg).i[LOW];
+}
+
+static inline ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags)
+{
+	struct { long uinfo; long fd; const struct msghdr *msg; long flags; } arg = { UINFO, fd, msg, flags };
+	return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_sendmsg, &arg).i[LOW];
+}
+
+#else /* !TRUE_LXRT_WAY */
 
 static inline int rt_dev_open(const char *path, int oflag, ...)
 {
@@ -269,7 +361,7 @@ static inline int rt_dev_close_forced(int fd)
 
 static inline int rt_dev_ioctl(int fd, int request, ...)
 {
-        struct { long fd; long request; void *arg; } arg = { fd, request };
+        struct { long fd; long request; void *arg; } arg = { fd, request, NULL };
 	va_list ap;
 	va_start(ap, request);
 	arg.arg = va_arg(ap, void *);
@@ -301,10 +393,12 @@ static inline ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags
 	return rtai_lxrt(RTDM_INDX, SIZARG, __rtdm_sendmsg, &arg).i[LOW];
 }
 
+#endif /* TRUE_LXRT_WAY */
+
 static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen)
 {
 	struct iovec iov = { buf, len };
-	struct msghdr msg = { from, from && fromlen ? *fromlen : 0, &iov, 1, NULL, 0 };
+	struct msghdr msg = { from, from && fromlen ? *fromlen : 0, &iov, 1, NULL, 0, 0 };
 	int ret;
 
 	if ((ret = rt_dev_recvmsg(fd, &msg, flags)) >= 0 && from && fromlen) {
@@ -335,7 +429,7 @@ static inline ssize_t rt_dev_sendto(int fd, const void *buf, size_t len,
 {
     struct iovec    iov = {(void *)buf, len};
     struct msghdr   msg =
-        {(struct sockaddr *)to, tolen, &iov, 1, NULL, 0};
+        {(struct sockaddr *)to, tolen, &iov, 1, NULL, 0, 0};
 
     return rt_dev_sendmsg(fd, &msg, flags);
 }
