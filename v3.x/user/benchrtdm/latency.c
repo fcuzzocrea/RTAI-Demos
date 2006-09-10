@@ -13,8 +13,16 @@
 #include <timer.h>
 #include <sem.h>
 
-#include "rtbenchmark.h"
-#include "xntimer.h"
+#include "rttesting.h"
+#define xntrace_user_freeze(x, y)
+#define rt_timer_set_mode(x) \
+	do { \
+		RT_TIMER_INFO timer_info; \
+		rt_timer_inquire(&timer_info); \
+		if (timer_info.period) { \
+			rt_timer_start(TM_ONESHOT); \
+		} \
+	} while (0)
 
 RT_TASK latency_task, display_task;
 
@@ -26,8 +34,8 @@ RT_SEM display_sem;
 long minjitter, maxjitter, avgjitter;
 long gminjitter = TEN_MILLION,
     gmaxjitter = -TEN_MILLION,
-    gavgjitter = 0,
     goverrun = 0;
+long long gavgjitter = 0;
 
 long long period_ns = 0;
 int test_duration = 0;  /* sec of testing, via -T <sec>, 0 is inf */
@@ -36,6 +44,7 @@ int quiet = 0;          /* suppress printing of RTH, RTD lines when -T given */
 int benchdev_no = 0;
 int benchdev = -1;
 int freeze_max = 0;
+int priority = T_HIPRIO;
 
 #define USER_TASK       0
 #define KERNEL_TASK     1
@@ -74,19 +83,34 @@ static inline void add_histogram (long *histogram, long addval)
 
 void latency (void *cookie)
 {
+#if 0
+{
+int count;
+RTIME expected_tsc;
+expected_tsc =  rt_timer_tsc();
+for (count = 0; count < 100000; count++)
+{
+//rt_task_yield();
+rt_sem_v(&display_sem);
+}
+printf("PER CALL TIME %lu (ns)\n", (unsigned long)(rt_timer_ns2tsc(rt_timer_tsc() - expected_tsc) + 49999)/100000);
+exit(0);
+}
+#endif
+
     int err, count, nsamples, warmup = 1;
     RTIME expected_tsc, period_tsc, start_ticks;
     RT_TIMER_INFO timer_info;
 
     err = rt_timer_inquire(&timer_info);
-    
+
     if (err)
         {
         fprintf(stderr,"latency: rt_timer_inquire, code %d\n",err);
         return;
         }
 
-    nsamples = ONE_BILLION / period_ns;
+    nsamples = ONE_BILLION / period_ns / 1;
     period_tsc = rt_timer_ns2tsc(period_ns);
     /* start time: one millisecond from now. */
     start_ticks = timer_info.date + rt_timer_ns2ticks(1000000);
@@ -102,35 +126,38 @@ void latency (void *cookie)
 
     for (;;)
         {
-        long minj = TEN_MILLION, maxj = -TEN_MILLION, dt, sumj;
+        long minj = TEN_MILLION, maxj = -TEN_MILLION, dt;
         long overrun = 0;
+        long long sumj;
         test_loops++;
 
         for (count = sumj = 0; count < nsamples; count++)
             {
+            unsigned long ov = 1;
+
             expected_tsc += period_tsc;
-            err = rt_task_wait_period();
-
-            if (err)
-                {
-                if (err != -ETIMEDOUT)
-		    {
-		    fprintf(stderr,"latency: wait period failed, code %d\n",err);
-                    rt_task_delete(NULL); /* Timer stopped. */
-		    }
-
-                overrun++;
-                }
+            err = rt_task_wait_period(); // rt_task_wait_period(&ov);
 
             dt = (long)(rt_timer_tsc() - expected_tsc);
             if (dt > maxj) maxj = dt;
             if (dt < minj) minj = dt;
             sumj += dt;
 
+            if (err)
+                {
+                if (err != -ETIMEDOUT)
+                    {
+                    fprintf(stderr,"latency: wait period failed, code %d\n",err);
+                    rt_task_delete(NULL); /* Timer stopped. */
+                    }
+
+                overrun += ov;
+//              expected_tsc += period_tsc * ov;
+                }
+
             if (freeze_max && (dt > gmaxjitter) && !(finished || warmup))
                 {
-                rt_dev_ioctl(benchdev, RTBNCH_RTIOC_REFREEZE_TRACE,
-                             rt_timer_tsc2ns(dt));
+                xntrace_user_freeze(rt_timer_tsc2ns(dt), 0);
                 gmaxjitter = dt;
                 }
 
@@ -172,9 +199,12 @@ void display (void *cookie)
 {
     int err, n = 0;
     time_t start;
+    char sem_name[16];
 
     if (test_mode == USER_TASK) {
-        err = rt_sem_create(&display_sem,"dispsem",0,S_FIFO);
+//      snprintf(sem_name, sizeof(sem_name), "dispsem-%d", getpid());
+        snprintf(sem_name, sizeof(sem_name), "s%d", getpid());
+        err = rt_sem_create(&display_sem,sem_name,0,S_FIFO);
 
         if (err)
             {
@@ -183,22 +213,26 @@ void display (void *cookie)
             }
 
     } else {
-        struct rtbnch_timerconfig   config;
+        struct rttst_tmbench_config config;
 
-	rt_make_soft_real_time();
+        rt_make_soft_real_time();
         if (test_mode == KERNEL_TASK)
-            config.mode = RTBNCH_TIMER_TASK;
+            config.mode = RTTST_TMBENCH_TASK;
         else
-            config.mode = RTBNCH_TIMER_HANDLER;
+            config.mode = RTTST_TMBENCH_HANDLER;
 
-        config.period               = (float)period_ns;
+        config.period               = period_ns;
+        config.priority             = priority - T_HIPRIO;
         config.warmup_loops         = WARMUP_TIME;
         config.histogram_size       = (do_histogram || do_stats) ? histogram_size : 0;
         config.histogram_bucketsize = bucketsize;
         config.freeze_max           = freeze_max;
 
-        err = rt_dev_ioctl(benchdev, RTBNCH_RTIOC_START_TMTEST, &config);
+	if (config.priority < 0) {
+		config.priority = 0;
+	}
 
+        err = rt_dev_ioctl(benchdev, RTTST_RTIOC_TMBENCH_START, &config);
         if (err)
             {
             fprintf(stderr,"latency: failed to start in-kernel timer benchmark, code %d\n",err);
@@ -221,6 +255,7 @@ void display (void *cookie)
 
         if (test_mode == USER_TASK) {
             err = rt_sem_p(&display_sem,TM_INFINITE);
+//rt_task_suspend(NULL);
 
             if (err)
                 {
@@ -238,14 +273,14 @@ void display (void *cookie)
             gmaxj = rt_timer_tsc2ns(gmaxjitter);
 
         } else {
-            struct rtbnch_interm_result result;
+            struct rttst_interm_bench_res result;
 
-            err = rt_dev_ioctl(benchdev, RTBNCH_RTIOC_INTERM_RESULT, &result);
+            err = rt_dev_ioctl(benchdev, RTTST_RTIOC_INTERM_BENCH_RES, &result);
 
             if (err)
                 {
                 if (err != -EIDRM)
-                    fprintf(stderr,"latency: failed to call RTBNCH_RTIOC_INTERM_RESULT, code %d\n",err);
+                    fprintf(stderr,"latency: failed to call RTTST_RTIOC_INTERM_BENCH_RES, code %d\n",err);
 
                 return;
                 }
@@ -265,9 +300,9 @@ void display (void *cookie)
                 time_t now, dt;
                 time(&now);
                 dt = now - start - WARMUP_TIME;
-                printf("RTT|  %.2ld:%.2ld:%.2ld  (%s, %Ld us period)\n",
-                       dt / 3600,(dt / 60) % 60,dt % 60,
-                       test_mode_names[test_mode],period_ns / 1000);
+                printf("RTT|  %.2ld:%.2ld:%.2ld  (%s, %Ld us period, "
+                       "priority %d)\n",dt / 3600,(dt / 60) % 60,dt % 60,
+                       test_mode_names[test_mode],period_ns / 1000,priority);
                 printf("RTH|%12s|%12s|%12s|%8s|%12s|%12s\n",
                        "-----lat min","-----lat avg","-----lat max","-overrun",
                        "----lat best","---lat worst");
@@ -290,7 +325,7 @@ double dump_histogram (long *histogram, char* kind)
     double avg = 0;             /* used to sum hits 1st */
 
     if (do_histogram)
-        fprintf(stderr,"---|--param|----range-|--samples\n");
+        printf("---|--param|----range-|--samples\n");
 
     for (n = 0; n < histogram_size; n++)
         {
@@ -301,12 +336,11 @@ double dump_histogram (long *histogram, char* kind)
             total_hits += hits;
             avg += n * hits;
             if (do_histogram)
-                fprintf(stderr,
-                        "HSD|    %s| %3d -%3d | %8ld\n",
-                        kind,
-                        n,
-                        n+1,
-                        hits);
+                printf("HSD|    %s| %3d -%3d | %8ld\n",
+                       kind,
+                       n,
+                       n+1,
+                       hits);
             }
         }
 
@@ -335,8 +369,8 @@ void dump_stats (long *histogram, char* kind, double avg)
     variance /= total_hits - 1;
     variance = sqrt(variance);
 
-    fprintf(stderr,"HSS|    %s| %9d| %10.3f| %10.3f\n",
-            kind, total_hits, avg, variance);
+    printf("HSS|    %s| %9d| %10.3f| %10.3f\n",
+           kind, total_hits, avg, variance);
 }
 
 void dump_hist_stats (void)
@@ -348,23 +382,17 @@ void dump_hist_stats (void)
     avgavg = dump_histogram (histogram_avg, "avg");
     maxavg = dump_histogram (histogram_max, "max");
 
-    fprintf(stderr,"HSH|--param|--samples-|--average--|---stddev--\n");
+    printf("HSH|--param|--samples-|--average--|---stddev--\n");
 
     dump_stats (histogram_min, "min", minavg);
     dump_stats (histogram_avg, "avg", avgavg);
     dump_stats (histogram_max, "max", maxavg);
 }
 
-void cleanup_upon_sig(int sig __attribute__((unused)))
+void cleanup(void)
 {
     time_t actual_duration;
     long gmaxj, gminj, gavgj;
-
-    if (finished)
-        return;
-
-    finished = 1;
-    rt_timer_stop();
 
     if (test_mode == USER_TASK) {
         rt_sem_delete(&display_sem);
@@ -375,13 +403,13 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
         gmaxj = rt_timer_tsc2ns(gmaxjitter);
         gavgj = rt_timer_tsc2ns(gavgjitter);
     } else {
-        struct rtbnch_overall_result overall;
+        struct rttst_overall_bench_res overall;
 
         overall.histogram_min = histogram_min;
         overall.histogram_max = histogram_max;
         overall.histogram_avg = histogram_avg;
 
-        rt_dev_ioctl(benchdev, RTBNCH_RTIOC_STOP_TMTEST, &overall);
+        rt_dev_ioctl(benchdev, RTTST_RTIOC_TMBENCH_STOP, &overall);
 
         gminj    = overall.result.min;
         gmaxj    = overall.result.max;
@@ -419,11 +447,18 @@ void cleanup_upon_sig(int sig __attribute__((unused)))
     exit(0);
 }
 
+void sighand(int sig __attribute__((unused)))
+{
+    finished = 1;
+}
+
 int main (int argc, char **argv)
 {
     int c, err;
+    char task_name[16];
+    int cpu = 0;
 
-    while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:f")) != EOF)
+    while ((c = getopt(argc,argv,"hp:l:T:qH:B:sD:t:fc:P:")) != EOF)
         switch (c)
             {
             case 'h':
@@ -482,6 +517,14 @@ int main (int argc, char **argv)
                 freeze_max = 1;
                 break;
 
+            case 'c':
+                cpu = T_CPU(atoi(optarg));
+                break;
+
+            case 'P':
+                priority = atoi(optarg);
+                break;
+
             default:
 
                 fprintf(stderr, "usage: latency [options]\n"
@@ -493,9 +536,11 @@ int main (int argc, char **argv)
                         "  [-l <data-lines per header>] # default=21, 0 to supress headers\n"
                         "  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
                         "  [-q]                         # supresses RTD, RTH lines if -T is used\n"
-                        "  [-D <benchmark_device_no>]   # number of benchmark device, default=0\n"
+                        "  [-D <testing_device_no>]     # number of testing device, default=0\n"
                         "  [-t <test_mode>]             # 0=user task (default), 1=kernel task, 2=timer IRQ\n"
-                        "  [-f]                         # freeze trace for each new max latency\n");
+                        "  [-f]                         # freeze trace for each new max latency\n"
+                        "  [-c <cpu>]                   # pin measuring task down to given CPU\n"
+                        "  [-P <priority>]              # task priority (test mode 0 and 1 only)\n");
                 exit(2);
             }
 
@@ -518,15 +563,20 @@ int main (int argc, char **argv)
     histogram_min = calloc(histogram_size, sizeof(long));
 
     if (!(histogram_avg && histogram_max && histogram_min)) 
-        cleanup_upon_sig(0);
+        cleanup();
 
     if (period_ns == 0)
         period_ns = 100000LL; /* ns */
 
-    signal(SIGINT, cleanup_upon_sig);
-    signal(SIGTERM, cleanup_upon_sig);
-    signal(SIGHUP, cleanup_upon_sig);
-    signal(SIGALRM, cleanup_upon_sig);
+    if (priority <= T_LOPRIO)
+        priority = T_LOPRIO + 1;
+    else if (priority > T_HIPRIO)
+        priority = T_HIPRIO;
+
+    signal(SIGINT, sighand);
+    signal(SIGTERM, sighand);
+    signal(SIGHUP, sighand);
+    signal(SIGALRM, sighand);
 
     setlinebuf(stdout);
 
@@ -538,30 +588,26 @@ int main (int argc, char **argv)
 
     mlockall(MCL_CURRENT|MCL_FUTURE);
 
-    err = rt_timer_start(TM_ONESHOT);
-
-    if (err)
-        {
-        fprintf(stderr,"latency: cannot start timer, code %d\n",err);
-        return 0;
-        }
-
-    if ((test_mode != USER_TASK) || freeze_max)
+    if (test_mode != USER_TASK)
         {
         char devname[RTDM_MAX_DEVNAME_LEN];
 
-        snprintf(devname, RTDM_MAX_DEVNAME_LEN, "rtbenchmark%d", benchdev_no);
+        snprintf(devname, RTDM_MAX_DEVNAME_LEN, "rttest%d", benchdev_no);
         benchdev = rt_dev_open(devname, O_RDWR);
 
         if (benchdev < 0)
             {
             fprintf(stderr,"latency: failed to open benchmark device, code %d\n"
-                    "(modprobe timerbench_rt?)\n",benchdev);
+                    "(modprobe xeno_timerbench?)\n",benchdev);
             return 0;
             }
         }
 
-    err = rt_task_create(&display_task,"display",0,98,0);
+    rt_timer_set_mode(TM_ONESHOT); /* Force aperiodic timing. */
+
+//  snprintf(task_name, sizeof(task_name), "display-%d", getpid());
+    snprintf(task_name, sizeof(task_name), "d%d", getpid());
+    err = rt_task_create(&display_task,task_name,0,0,T_FPU);
 
     if (err)
         {
@@ -578,7 +624,9 @@ int main (int argc, char **argv)
         }
 
     if (test_mode == USER_TASK) {
-        err = rt_task_create(&latency_task,"sampling",0,99,T_FPU);
+//      snprintf(task_name, sizeof(task_name), "sampling-%d", getpid());
+        snprintf(task_name, sizeof(task_name), "l%d", getpid());
+        err = rt_task_create(&latency_task,task_name,0,priority,T_FPU|cpu);
 
         if (err)
             {
@@ -595,7 +643,10 @@ int main (int argc, char **argv)
             }
     }
 
-    pause();
+    while (!finished)
+        pause();
+
+    cleanup();
 
     return 0;
 }

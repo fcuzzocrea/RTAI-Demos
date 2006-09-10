@@ -27,14 +27,17 @@ struct rt_task_struct;
 
 struct rt_tasklet_struct {
 	struct rt_tasklet_struct *next, *prev;
-	int priority, uses_fpu;
+	int priority, uses_fpu, cpuid;
 	RTIME firing_time, period;
 	void (*handler)(unsigned long);
 	unsigned long data, id;
 	int thread;
 	struct rt_task_struct *task;
 	struct rt_tasklet_struct *usptasklet;
-        struct { void *rb_parent; int rb_color; void *rb_right, *rb_left; } rbn;        struct { void *rb_node; } rbr;
+#ifdef  CONFIG_RTAI_LONG_TIMED_LIST
+        rb_root_t rbr;
+        rb_node_t rbn;
+#endif
 };
 
 RTIME rt_get_time(void);
@@ -59,22 +62,33 @@ void rt_remove_timer(struct rt_tasklet_struct *timer);
 typedef struct rt_tasklet_struct xntimer_t;
 typedef RTIME xnticks_t;
 
-static inline void xntimer_init(xntimer_t *timer, void (*handler)(void *cookie), void *cookie)
+static inline void xntimer_init(xntimer_t *timer, void (*handler)(xntimer_t *))
 {
 	memset(timer, 0, sizeof(struct rt_tasklet_struct));
 	timer->handler = (void *)handler;
-	timer->data    = (unsigned long)cookie;
+	timer->data    = (unsigned long)timer;
 }
 
 static inline void xntimer_start(xntimer_t *timer, xnticks_t value, xnticks_t interval)
 {
 	/* Waltzing Matilda zaniness here, they subtract we add again! */
-	rt_insert_timer(timer, 0, rt_get_time() + value, interval, timer->handler, timer->data, 0);
+	rt_insert_timer(timer, 0, rt_get_time() + value, interval, timer->handler, (unsigned long)timer, 0);
 }
 
 static inline void xntimer_destroy(xntimer_t *timer)
 {
 	rt_remove_timer(timer);
+}
+
+#include <asm/div64.h>  // for do_div below
+
+static inline unsigned long long xnarch_ulldiv(unsigned long long ull, unsigned long uld, unsigned long *r)
+{
+	unsigned long rem = do_div(ull, uld);
+	if (r) {
+	        *r = rem;
+	}
+	return ull;
 }
 
 #endif /* !_RTAI_XNTIMER_H */
