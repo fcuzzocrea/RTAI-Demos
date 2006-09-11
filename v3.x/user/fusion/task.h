@@ -32,8 +32,8 @@
 #define T_LOCK  1
 #define T_RRB   2
 
-#define T_LOPRIO  FUSION_LOW_PRIO
-#define T_HIPRIO  FUSION_HIGH_PRIO
+#define T_LOPRIO  1  //  FUSION_LOW_PRIO
+#define T_HIPRIO  99 // FUSION_HIGH_PRIO
 
 typedef struct rt_task_t {
 	void *task;
