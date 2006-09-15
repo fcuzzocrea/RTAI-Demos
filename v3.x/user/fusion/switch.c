@@ -8,13 +8,24 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
 #include <getopt.h>
+
 #include <task.h>
 #include <timer.h>
 #include <sem.h>
+
+#define rt_timer_set_mode(x) \
+        do { \
+                RT_TIMER_INFO timer_info; \
+                rt_timer_inquire(&timer_info); \
+                if (timer_info.period) { \
+                        rt_timer_start(TM_ONESHOT); \
+                } \
+        } while (0)
 
 RT_TASK event_task, worker_task;
 
@@ -38,30 +49,50 @@ int ignore = 5;
 
 static inline void add_histogram(long addval)
 {
-       long inabs = rt_timer_tsc2ns(addval >= 0 ? addval : -addval) / 1000;  /* usec steps */
-       histogram[inabs < HISTOGRAM_CELLS ? inabs : HISTOGRAM_CELLS - 1]++;
+	/* usec steps */
+	long inabs = rt_timer_tsc2ns(addval >= 0 ? addval : -addval) / 1000;
+	histogram[inabs < HISTOGRAM_CELLS ? inabs : HISTOGRAM_CELLS - 1]++;
+}
+
+void dump_stats(double sum, int total_hits)
+{
+	int n;
+	double avg, variance = 0;
+
+	avg = sum / total_hits;
+	for (n = 0; n < HISTOGRAM_CELLS; n++) {
+		long hits = histogram[n];
+		if (hits)
+			variance += hits * (n-avg) * (n-avg);
+	}
+
+	/* compute std-deviation (unbiased form) */
+	variance /= total_hits - 1;
+	variance = sqrt(variance);
+	
+	printf("HSS| %9d| %10.3f| %10.3f\n", total_hits, avg, variance);
 }
 
 void dump_histogram(void)
 {
-       int n;
-
-       for (n = 0; n < HISTOGRAM_CELLS; n++) {
-               long hits = histogram[n];
-               if (hits)
-                       fprintf(stderr, "%d - %d us: %ld\n", n, n + 1, hits);
-       }
+	int n, total_hits = 0;
+	double sum = 0;
+	fprintf(stderr, "---|---range-|---samples\n");
+	for (n = 0; n < HISTOGRAM_CELLS; n++) {
+		long hits = histogram[n];
+		if (hits) {
+			total_hits += hits;
+			sum += n * hits;
+			fprintf(stderr, "HSD| %d - %d | %10ld\n",
+				n, n + 1, hits);
+		}
+	}
+	dump_stats(sum, total_hits);
 }
 
 void event(void *cookie)
 {
        int err;
-
-       err = rt_timer_start(TM_ONESHOT);
-       if (err) {
-               fprintf(stderr,"switch: cannot start timer, code %d\n", err);
-               return;
-       }
 
        err = rt_task_set_periodic(NULL,
                                   TM_NOW,
@@ -72,7 +103,7 @@ void event(void *cookie)
        }
 
        for (;;) {
-               err = rt_task_wait_period();
+               err = rt_task_wait_period(NULL);
                if (err) {
                        if (err != -ETIMEDOUT) {
                                /* Timer stopped. */
@@ -131,7 +162,6 @@ void worker(void *cookie)
                        add_histogram(dt);
        }
 
-//       rt_timer_stop();
        rt_sem_delete(&switch_sem);
 
        minjitter = minj;
@@ -141,10 +171,10 @@ void worker(void *cookie)
        printf("RTH|%12s|%12s|%12s|%12s\n",
                       "lat min", "lat avg", "lat max", "lost");
 
-       printf("RTD|%12Ld|%12Ld|%12Ld|%12lld\n",
-                      rt_timer_tsc2ns(minjitter),
-                      rt_timer_tsc2ns(avgjitter),
-                      rt_timer_tsc2ns(maxjitter), lost);
+       printf("RTD|%12.3f|%12.3f|%12.3f|%12lld\n",
+                      rt_timer_tsc2ns(minjitter) / 1000.0,
+                      rt_timer_tsc2ns(avgjitter) / 1000.0,
+                      rt_timer_tsc2ns(maxjitter) / 1000.0, lost);
 
        if (do_histogram)
                dump_histogram();
@@ -186,7 +216,13 @@ int main(int argc, char **argv)
                }
 
        if (sampling_period == 0)
-               sampling_period = 100000;       /* ns */
+               sampling_period = 100000;	/* ns */
+
+       if (nsamples <= 0) {
+	       fprintf(stderr, "disregarding -n <%lld>, using -n <100000> "
+		       "samples\n", nsamples);
+               nsamples = 100000;
+       }
 
        signal(SIGINT, SIG_IGN);
        signal(SIGTERM, SIG_IGN);
@@ -197,6 +233,8 @@ int main(int argc, char **argv)
        
        printf("== Sampling period: %llu us\n", sampling_period / 1000);
        printf("== Do not interrupt this program\n");
+
+       rt_timer_set_mode(TM_ONESHOT); /* Force aperiodic timing. */
 
        err = rt_task_create(&worker_task, "worker", 0, 98, T_FPU);
        if (err) {

@@ -84,7 +84,7 @@ void latency (void *cookie)
         return;
         }
 
-    nsamples = ONE_BILLION / period_ns;
+    nsamples = ONE_BILLION / period_ns / 1;
     period_tsc = rt_timer_ns2tsc(period_ns);
     /* start time: one millisecond from now. */
     start_ticks = timer_info.date + rt_timer_ns2ticks(1000000);
@@ -107,7 +107,7 @@ void latency (void *cookie)
         for (count = sumj = 0; count < nsamples; count++)
             {
             expected_tsc += period_tsc;
-            err = rt_task_wait_period();
+            err = rt_task_wait_period(NULL);
 
             if (err)
                 {
@@ -150,11 +150,13 @@ void latency (void *cookie)
 
         struct smpl_t { long minjitter, avgjitter, maxjitter, overrun; } *smpl;
         smpl = rt_queue_alloc(&q, sizeof(struct smpl_t));
+#if 1
         smpl->minjitter = rt_timer_tsc2ns(minj);
         smpl->maxjitter = rt_timer_tsc2ns(maxj);
         smpl->avgjitter = rt_timer_tsc2ns(sumj / nsamples);
         smpl->overrun   = goverrun;
 	rt_queue_send(&q, smpl, sizeof(struct smpl_t), TM_NONBLOCK);
+#endif
 
             }
 
@@ -425,7 +427,7 @@ int main (int argc, char **argv)
         cleanup_upon_sig(0);
 
     if (period_ns == 0)
-        period_ns = 50000; /* ns */
+        period_ns = 25000; /* ns */
 
     signal(SIGINT, cleanup_upon_sig);
     signal(SIGTERM, cleanup_upon_sig);
