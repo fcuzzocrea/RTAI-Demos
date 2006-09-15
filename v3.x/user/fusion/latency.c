@@ -99,7 +99,7 @@ void latency (void *cookie)
         for (count = sumj = 0; count < nsamples; count++)
             {
             expected_tsc += period_tsc;
-            err = rt_task_wait_period();
+            err = rt_task_wait_period(NULL);
 
             if (err)
                 {

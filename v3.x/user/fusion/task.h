@@ -32,7 +32,7 @@
 #define T_LOCK  1
 #define T_RRB   2
 
-#define T_LOPRIO  1  //  FUSION_LOW_PRIO
+#define T_LOPRIO  1  // FUSION_LOW_PRIO
 #define T_HIPRIO  99 // FUSION_HIGH_PRIO
 
 typedef struct rt_task_t {
@@ -81,6 +81,7 @@ static inline void *rt_task_ext(int name, int prio, int cpus_allowed)
 {
         struct sched_param mysched;
         struct { int name, prio, stack_size, max_msg_size, cpus_allowed; } arg = { name, prio, 0, 0, cpus_allowed };
+	volatile float f;
 
         if (arg.prio < 0) {
         	arg.prio = 0;
@@ -91,7 +92,8 @@ static inline void *rt_task_ext(int name, int prio, int cpus_allowed)
         if (sched_setscheduler(0, SCHED_FIFO, &mysched) < 0) {
                 return 0;
         }
-        rtai_iopl();
+	rtai_iopl();
+	f = (float)name + (float)prio;
 
         return (void *)rtai_lxrt(BIDX, SIZARG, LXRT_TASK_INIT, &arg).v[LOW];
 }
@@ -127,10 +129,13 @@ static inline int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
        	return rtai_lxrt(BIDX, SIZARG, MAKE_PERIODIC, &arg).i[LOW];
 }
 
-static inline int rt_task_wait_period(void)
+static inline int rt_task_wait_period(unsigned long *ovrun)
 {
 	struct { unsigned long retval; } arg;
 	arg.retval = rtai_lxrt(BIDX, SIZARG, WAIT_PERIOD, &arg).i[LOW];
+	if (ovrun && arg.retval) {
+		*ovrun = 1;
+	}
 	return !arg.retval ? 0 : -ETIMEDOUT;
 }
 
