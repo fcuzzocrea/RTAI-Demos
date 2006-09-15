@@ -133,10 +133,10 @@ exit(0);
 
         for (count = sumj = 0; count < nsamples; count++)
             {
-            unsigned long ov = 1;
+            unsigned long ov;
 
             expected_tsc += period_tsc;
-            err = rt_task_wait_period(); // rt_task_wait_period(&ov);
+            err = rt_task_wait_period(&ov);
 
             dt = (long)(rt_timer_tsc() - expected_tsc);
             if (dt > maxj) maxj = dt;
