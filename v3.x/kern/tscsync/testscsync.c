@@ -118,7 +118,7 @@ void rtai_sync_tsc (unsigned int master)
 	delta = get_delta(&rt, &master_time_stamp);
 	spin_unlock_irqrestore(&tsc_sync_lock, flags);
 
-	printk(KERN_INFO "CPU %d: synchronized TSC with CPU %u (master time stamp %llu cycles, diff %lld cycles, max double tsc read span %llu cycles)\n", smp_processor_id(), master, master_time_stamp, delta, rt);
+	printk(KERN_INFO "CPU %d: synchronized TSC with CPU %u (master time stamp %llu cycles, difference %lld cycles, max double tsc read span %llu cycles)\n", smp_processor_id(), master, master_time_stamp, delta, rt);
 }
 
 #define MASTER_CPU  0
