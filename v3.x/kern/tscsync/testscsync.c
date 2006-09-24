@@ -98,7 +98,41 @@ static inline long long get_delta (long long *rt, long long *master)
 	return tcenter - best_tm;
 }
 
-void rtai_sync_tsc (unsigned int master)
+static inline long long get_delta_avrg (long long *rt, long long *master)
+{
+	unsigned long long tcenter, t0, t1, tm;
+	long deltavrg = 0, rtavrg = 0, masteravrg = 0;
+	long i, lflags;
+
+	for (i = 0; i < NUM_ITERS; ++i) {
+		t0 = readtsc();
+		go[MASTER] = 1;
+		spin_lock_irqsave(&tsclock, lflags);
+		while (!(tm = go[SLAVE])) {
+			spin_unlock_irqrestore(&tsclock, lflags);
+			cpu_relax();
+			spin_lock_irqsave(&tsclock, lflags);
+		}
+		spin_unlock_irqrestore(&tsclock, lflags);
+		go[SLAVE] = 0;
+		t1 = readtsc();
+
+		/* average best_t0 and best_t1 without overflow: */
+		tcenter = (t0/2 + t1/2);
+		if (t0 % 2 + t1 % 2 == 2) {
+			++tcenter;
+		}
+		rtavrg += t1 - t0;
+		masteravrg += tm - t0;
+		deltavrg += tcenter - tm;
+	}
+
+	*rt = rtavrg/NUM_ITERS;
+	*master = masteravrg/NUM_ITERS;
+	return deltavrg/NUM_ITERS;
+}
+
+void rtai_sync_tsc (unsigned int master, int type)
 {
 	unsigned long flags;
 	long long delta, rt, master_time_stamp;
@@ -115,10 +149,10 @@ void rtai_sync_tsc (unsigned int master)
 	}
 
 	spin_lock_irqsave(&tsc_sync_lock, flags);
-	delta = get_delta(&rt, &master_time_stamp);
+	delta = type ? get_delta(&rt, &master_time_stamp) : get_delta_avrg(&rt, &master_time_stamp);
 	spin_unlock_irqrestore(&tsc_sync_lock, flags);
 
-	printk(KERN_INFO "CPU %d: synchronized TSC with CPU %u (master time stamp %llu cycles, difference %lld cycles, max double tsc read span %llu cycles)\n", smp_processor_id(), master, master_time_stamp, delta, rt);
+	type ? printk(KERN_INFO "CPU %d: synchronized TSC with CPU %u (master time stamp %llu cycles, difference %lld cycles, max double tsc read span %llu cycles)\n", smp_processor_id(), master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %d: synchronized TSC with CPU %u (avrg master time stamp %llu cycles, avrg difference %lld cycles, avrg max double tsc read span %llu cycles)\n", smp_processor_id(), master, master_time_stamp, delta, rt);
 }
 
 #define MASTER_CPU  0
@@ -133,7 +167,8 @@ static void kthread_fun(void *null)
 		printk(KERN_INFO "Loop %d:\n", ++i);
 		for (k = 0; k < num_online_cpus(); k++) {
 			if (k != MASTER_CPU) {
-				rtai_sync_tsc(k);
+				rtai_sync_tsc(k, 0);
+				rtai_sync_tsc(k, 1);
 			}
 		}
 		msleep(SLEEP);
