@@ -30,6 +30,7 @@ MODULE_LICENSE("GPL");
 #define USE_AVRG 0
 
 static volatile int tune;
+static volatile long readofst;
 static volatile long ofst[NR_CPUS];
 
 static inline long long readtsc(void)
@@ -105,7 +106,7 @@ static inline long long get_delta (long long *rt, long long *master, unsigned in
 #if USE_AVRG
 	return tcenter - best_tm;
 #else
-	return ofst[slave] = tcenter - best_tm;
+	return ofst[slave] = tcenter - best_tm - readofst;
 #endif
 }
 
@@ -141,7 +142,7 @@ static inline long long get_delta_avrg (long long *rt, long long *master, unsign
 	*rt = rtavrg/NUM_ITERS;
 	*master = masteravrg/NUM_ITERS;
 #if USE_AVRG
-	return ofst[slave] = deltavrg/NUM_ITERS;
+	return ofst[slave] = deltavrg/NUM_ITERS - readofst;
 #else
 	return deltavrg/NUM_ITERS;
 #endif
@@ -167,7 +168,7 @@ void rtai_sync_tsc (unsigned int master, unsigned int slave, int type)
 	delta = type ? get_delta(&rt, &master_time_stamp, slave) : get_delta_avrg(&rt, &master_time_stamp, slave);
 	spin_unlock_irqrestore(&tsc_sync_lock, flags);
 
-	type ? printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (master time stamp %llu cycles, difference %lld cycles, max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (avrg master time stamp %llu cycles, avrg difference %lld cycles, avrg max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
+	type ? printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (master time stamp %llu cycles, - OFFSET %lld cycles - , max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (avrg master time stamp %llu cycles, - OFFSET %lld cycles - , avrg max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
 }
 
 #define MASTER_CPU  0
@@ -178,7 +179,7 @@ static void kthread_fun(void *null)
 {
 	int i = 0, k;
 	set_cpus_allowed(current, cpumask_of_cpu(MASTER_CPU));
-	printk("*** MASTER CPU %d ***\n", first_cpu(current->cpus_allowed));
+	printk("*** MASTER CPU %d (TIME TO READ TSC %ld) ***\n", first_cpu(current->cpus_allowed), readofst);
 	while (!end) {
 		printk(KERN_INFO "Loop %d:\n", ++i);
 		for (k = 0; k < num_online_cpus(); k++) {
@@ -196,8 +197,16 @@ static void kthread_fun(void *null)
 	}
 }
 
+#define NTERMS 100
 int init_module(void)
 {
+	long long t = 0, tt;
+	int i;
+	t = readtsc();
+	for (i = 0; i < NTERMS; i++) {
+		 tt = readtsc();
+	}
+	readofst = ((long)(readtsc() - t))/NTERMS;
 	kernel_thread((void *)kthread_fun, NULL, 0);
 	return 0;
 }
