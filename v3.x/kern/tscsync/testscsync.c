@@ -27,11 +27,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
+#define USE_AVRG 0
+
+static volatile int tune;
+static volatile long ofst[NR_CPUS];
+
 static inline long long readtsc(void)
 {
 	long long t;
 	__asm__ __volatile__("rdtsc" : "=A" (t));
-	return t;
+	return tune ? t + ofst[hard_smp_processor_id()] : t;
 }
 
 #define MASTER	(0)
@@ -65,7 +70,7 @@ void sync_master(void *arg)
 	local_irq_restore(flags);
 }
 
-static inline long long get_delta (long long *rt, long long *master)
+static inline long long get_delta (long long *rt, long long *master, unsigned int slave)
 {
 	unsigned long long best_t0 = 0, best_t1 = ~0ULL, best_tm = 0;
 	unsigned long long tcenter, t0, t1, tm;
@@ -97,10 +102,14 @@ static inline long long get_delta (long long *rt, long long *master)
 	if (best_t0 % 2 + best_t1 % 2 == 2) {
 		++tcenter;
 	}
+#if USE_AVRG
 	return tcenter - best_tm;
+#else
+	return ofst[slave] = tcenter - best_tm;
+#endif
 }
 
-static inline long long get_delta_avrg (long long *rt, long long *master)
+static inline long long get_delta_avrg (long long *rt, long long *master, unsigned int slave)
 {
 	unsigned long long tcenter, t0, t1, tm;
 	long deltavrg = 0, rtavrg = 0, masteravrg = 0;
@@ -131,7 +140,11 @@ static inline long long get_delta_avrg (long long *rt, long long *master)
 
 	*rt = rtavrg/NUM_ITERS;
 	*master = masteravrg/NUM_ITERS;
+#if USE_AVRG
+	return ofst[slave] = deltavrg/NUM_ITERS;
+#else
 	return deltavrg/NUM_ITERS;
+#endif
 }
 
 void rtai_sync_tsc (unsigned int master, unsigned int slave, int type)
@@ -151,14 +164,14 @@ void rtai_sync_tsc (unsigned int master, unsigned int slave, int type)
 	}
 
 	spin_lock_irqsave(&tsc_sync_lock, flags);
-	delta = type ? get_delta(&rt, &master_time_stamp) : get_delta_avrg(&rt, &master_time_stamp);
+	delta = type ? get_delta(&rt, &master_time_stamp, slave) : get_delta_avrg(&rt, &master_time_stamp, slave);
 	spin_unlock_irqrestore(&tsc_sync_lock, flags);
 
 	type ? printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (master time stamp %llu cycles, difference %lld cycles, max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (avrg master time stamp %llu cycles, avrg difference %lld cycles, avrg max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
 }
 
 #define MASTER_CPU  0
-#define SLEEP       1000
+#define SLEEP       2000
 static volatile int end;
 
 static void kthread_fun(void *null)
@@ -169,6 +182,11 @@ static void kthread_fun(void *null)
 	while (!end) {
 		printk(KERN_INFO "Loop %d:\n", ++i);
 		for (k = 0; k < num_online_cpus(); k++) {
+			tune = 1;
+			if (k != MASTER_CPU) {
+				rtai_sync_tsc(MASTER_CPU, k, 0);
+			}
+			tune = 0;
 			if (k != MASTER_CPU) {
 				rtai_sync_tsc(MASTER_CPU, k, 0);
 				rtai_sync_tsc(MASTER_CPU, k, 1);
