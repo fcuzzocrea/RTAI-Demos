@@ -17,7 +17,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 
-// hacked from arch/ia64/kernel/smpboot.c
+/*
+	Hacked from arch/ia64/kernel/smpboot.c.
+*/
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -35,7 +37,7 @@ static inline long long readtsc(void)
 #define MASTER	(0)
 #define SLAVE	(SMP_CACHE_BYTES/8)
 
-#define NUM_ITERS  5  /* likewise */
+#define NUM_ITERS  10
 
 static DEFINE_SPINLOCK(tsc_sync_lock);
 static DEFINE_SPINLOCK(tsclock);
@@ -132,14 +134,14 @@ static inline long long get_delta_avrg (long long *rt, long long *master)
 	return deltavrg/NUM_ITERS;
 }
 
-void rtai_sync_tsc (unsigned int master, int type)
+void rtai_sync_tsc (unsigned int master, unsigned int slave, int type)
 {
 	unsigned long flags;
 	long long delta, rt, master_time_stamp;
 
 	go[MASTER] = 1;
 
-	if (smp_call_function(sync_master, (void *)master, 1, 0) < 0) {
+	if (smp_call_function(sync_master, (void *)slave, 1, 0) < 0) {
 		printk(KERN_ERR "sync_tsc: failed to get attention of CPU %u!\n", master);
 		return;
 	}
@@ -152,7 +154,7 @@ void rtai_sync_tsc (unsigned int master, int type)
 	delta = type ? get_delta(&rt, &master_time_stamp) : get_delta_avrg(&rt, &master_time_stamp);
 	spin_unlock_irqrestore(&tsc_sync_lock, flags);
 
-	type ? printk(KERN_INFO "CPU %d: synchronized TSC with CPU %u (master time stamp %llu cycles, difference %lld cycles, max double tsc read span %llu cycles)\n", smp_processor_id(), master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %d: synchronized TSC with CPU %u (avrg master time stamp %llu cycles, avrg difference %lld cycles, avrg max double tsc read span %llu cycles)\n", smp_processor_id(), master, master_time_stamp, delta, rt);
+	type ? printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (master time stamp %llu cycles, difference %lld cycles, max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (avrg master time stamp %llu cycles, avrg difference %lld cycles, avrg max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
 }
 
 #define MASTER_CPU  0
@@ -163,12 +165,13 @@ static void kthread_fun(void *null)
 {
 	int i = 0, k;
 	set_cpus_allowed(current, cpumask_of_cpu(MASTER_CPU));
+	printk("*** MASTER CPU %d ***\n", first_cpu(current->cpus_allowed));
 	while (!end) {
 		printk(KERN_INFO "Loop %d:\n", ++i);
 		for (k = 0; k < num_online_cpus(); k++) {
 			if (k != MASTER_CPU) {
-				rtai_sync_tsc(k, 0);
-				rtai_sync_tsc(k, 1);
+				rtai_sync_tsc(MASTER_CPU, k, 0);
+				rtai_sync_tsc(MASTER_CPU, k, 1);
 			}
 		}
 		msleep(SLEEP);
