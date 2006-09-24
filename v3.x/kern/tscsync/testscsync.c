@@ -106,7 +106,7 @@ static inline long long get_delta (long long *rt, long long *master, unsigned in
 #if USE_AVRG
 	return tcenter - best_tm;
 #else
-	return ofst[slave] = tcenter - best_tm - readofst;
+	return ofst[slave] = tcenter - best_tm;
 #endif
 }
 
@@ -142,13 +142,13 @@ static inline long long get_delta_avrg (long long *rt, long long *master, unsign
 	*rt = rtavrg/NUM_ITERS;
 	*master = masteravrg/NUM_ITERS;
 #if USE_AVRG
-	return ofst[slave] = deltavrg/NUM_ITERS - readofst;
+	return ofst[slave] = deltavrg/NUM_ITERS;
 #else
 	return deltavrg/NUM_ITERS;
 #endif
 }
 
-void rtai_sync_tsc (unsigned int master, unsigned int slave, int type)
+void rtai_sync_tsc (unsigned int master, unsigned int slave, int mode)
 {
 	unsigned long flags;
 	long long delta, rt, master_time_stamp;
@@ -165,14 +165,14 @@ void rtai_sync_tsc (unsigned int master, unsigned int slave, int type)
 	}
 
 	spin_lock_irqsave(&tsc_sync_lock, flags);
-	delta = type ? get_delta(&rt, &master_time_stamp, slave) : get_delta_avrg(&rt, &master_time_stamp, slave);
+	delta = mode ? get_delta(&rt, &master_time_stamp, slave) : get_delta_avrg(&rt, &master_time_stamp, slave);
 	spin_unlock_irqrestore(&tsc_sync_lock, flags);
 
-	type ? printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (master time stamp %llu cycles, - OFFSET %lld cycles - , max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %u: synchronized TSC with CPU %u (avrg master time stamp %llu cycles, - OFFSET %lld cycles - , avrg max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
+	mode ? printk(KERN_INFO "CPU %u: synced its TSC with CPU %u (best) (master time stamp %llu cycles, < - OFFSET %lld cycles - > , max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %u: synced its TSC with CPU %u (avrg) (master time stamp %llu cycles, < - OFFSET %lld cycles - > , max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
 }
 
 #define MASTER_CPU  0
-#define SLEEP       2000
+#define SLEEP       1000 // ms
 static volatile int end;
 
 static void kthread_fun(void *null)
@@ -185,7 +185,7 @@ static void kthread_fun(void *null)
 		for (k = 0; k < num_online_cpus(); k++) {
 			tune = 1;
 			if (k != MASTER_CPU) {
-				rtai_sync_tsc(MASTER_CPU, k, 0);
+				rtai_sync_tsc(MASTER_CPU, k, 1);
 			}
 			tune = 0;
 			if (k != MASTER_CPU) {
