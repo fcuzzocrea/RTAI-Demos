@@ -27,8 +27,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define USE_AVRG 0
-
 static volatile int tune;
 static volatile long readofst;
 static volatile long ofst[NR_CPUS];
@@ -37,7 +35,7 @@ static inline long long readtsc(void)
 {
 	long long t;
 	__asm__ __volatile__("rdtsc" : "=A" (t));
-	return tune ? t + ofst[hard_smp_processor_id()] : t;
+	return tune ? t - ofst[hard_smp_processor_id()] : t;
 }
 
 #define MASTER	(0)
@@ -49,7 +47,7 @@ static DEFINE_SPINLOCK(tsc_sync_lock);
 static DEFINE_SPINLOCK(tsclock);
 static volatile long long go[SLAVE + 1];
 
-void sync_master(void *arg)
+static void sync_master(void *arg)
 {
 	unsigned long flags, lflags, i;
 
@@ -103,59 +101,21 @@ static inline long long get_delta (long long *rt, long long *master, unsigned in
 	if (best_t0 % 2 + best_t1 % 2 == 2) {
 		++tcenter;
 	}
-#if USE_AVRG
-	return tcenter - best_tm;
-#else
-	return ofst[slave] = tcenter - best_tm;
-#endif
-}
-
-static inline long long get_delta_avrg (long long *rt, long long *master, unsigned int slave)
-{
-	unsigned long long tcenter, t0, t1, tm;
-	long deltavrg = 0, rtavrg = 0, masteravrg = 0;
-	long i, lflags;
-
-	for (i = 0; i < NUM_ITERS; ++i) {
-		t0 = readtsc();
-		go[MASTER] = 1;
-		spin_lock_irqsave(&tsclock, lflags);
-		while (!(tm = go[SLAVE])) {
-			spin_unlock_irqrestore(&tsclock, lflags);
-			cpu_relax();
-			spin_lock_irqsave(&tsclock, lflags);
-		}
-		spin_unlock_irqrestore(&tsclock, lflags);
-		go[SLAVE] = 0;
-		t1 = readtsc();
-
-		/* average best_t0 and best_t1 without overflow: */
-		tcenter = (t0/2 + t1/2);
-		if (t0 % 2 + t1 % 2 == 2) {
-			++tcenter;
-		}
-		rtavrg += t1 - t0;
-		masteravrg += tm - t0;
-		deltavrg += tcenter - tm;
+	if (tune) {
+		return tcenter - best_tm;
+	} else {
+		return ofst[slave] = (8*ofst[slave] + 2*((long)(tcenter - best_tm)))/10;
 	}
-
-	*rt = rtavrg/NUM_ITERS;
-	*master = masteravrg/NUM_ITERS;
-#if USE_AVRG
-	return ofst[slave] = deltavrg/NUM_ITERS;
-#else
-	return deltavrg/NUM_ITERS;
-#endif
 }
 
-void rtai_sync_tsc (unsigned int master, unsigned int slave, int mode)
+void rtai_sync_tsc (unsigned int master, unsigned int slave)
 {
 	unsigned long flags;
 	long long delta, rt, master_time_stamp;
 
 	go[MASTER] = 1;
 
-	if (smp_call_function(sync_master, (void *)slave, 1, 0) < 0) {
+	if (smp_call_function(sync_master, (void *)master, 1, 0) < 0) {
 		printk(KERN_ERR "sync_tsc: failed to get attention of CPU %u!\n", master);
 		return;
 	}
@@ -165,10 +125,10 @@ void rtai_sync_tsc (unsigned int master, unsigned int slave, int mode)
 	}
 
 	spin_lock_irqsave(&tsc_sync_lock, flags);
-	delta = mode ? get_delta(&rt, &master_time_stamp, slave) : get_delta_avrg(&rt, &master_time_stamp, slave);
+	delta = get_delta(&rt, &master_time_stamp, slave);
 	spin_unlock_irqrestore(&tsc_sync_lock, flags);
 
-	mode ? printk(KERN_INFO "CPU %u: synced its TSC with CPU %u (best) (master time stamp %llu cycles, < - OFFSET %lld cycles - > , max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt) : printk(KERN_INFO "CPU %u: synced its TSC with CPU %u (avrg) (master time stamp %llu cycles, < - OFFSET %lld cycles - > , max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
+	printk(KERN_INFO "CPU %u: synced its TSC with CPU %u (master time stamp %llu cycles, < - OFFSET %lld cycles - > , max double tsc read span %llu cycles)\n", slave, master, master_time_stamp, delta, rt);
 }
 
 #define MASTER_CPU  0
@@ -178,19 +138,18 @@ static volatile int end;
 static void kthread_fun(void *null)
 {
 	int i = 0, k;
-	set_cpus_allowed(current, cpumask_of_cpu(MASTER_CPU));
 	printk("*** MASTER CPU %d (TIME TO READ TSC %ld) ***\n", first_cpu(current->cpus_allowed), readofst);
 	while (!end) {
 		printk(KERN_INFO "Loop %d:\n", ++i);
 		for (k = 0; k < num_online_cpus(); k++) {
 			tune = 1;
 			if (k != MASTER_CPU) {
-				rtai_sync_tsc(MASTER_CPU, k, 1);
+				set_cpus_allowed(current, cpumask_of_cpu(k));
+				rtai_sync_tsc(MASTER_CPU, k);
 			}
 			tune = 0;
 			if (k != MASTER_CPU) {
-				rtai_sync_tsc(MASTER_CPU, k, 0);
-				rtai_sync_tsc(MASTER_CPU, k, 1);
+				rtai_sync_tsc(MASTER_CPU, k);
 			}
 		}
 		msleep(SLEEP);
