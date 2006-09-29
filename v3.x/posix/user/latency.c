@@ -40,6 +40,7 @@ static sem_t semA;
 
 suseconds_t t0, t1, t2, tschedmin = 99999999, tschedmax = -99999999,
     tsleepmin = 99999999, tsleepmax = -99999999;
+suseconds_t tschedavr, tsleepavr;
 
 time_t start_time;
 
@@ -102,6 +103,7 @@ void *threadB(void *arg)
 	suseconds_t dt;
 	sem_t *semB;
 	struct timespec ti, te, tc;
+	int i;
 
 	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
 	RT_SET_REAL_TIME_MODE();
@@ -119,7 +121,7 @@ void *threadB(void *arg)
 
 	start_time = time(NULL);
 
-	for (;;) {
+	for (i = 1; i < 0x3FFFFFFF; i++) {
 		int err;
 		sem_post(&semA);
 
@@ -142,6 +144,8 @@ void *threadB(void *arg)
 		if (tschedmax < dt)
 			tschedmax = dt;
 
+		tschedavr += dt;
+
 		dt = t1 - t0;
 
 		if (tsleepmin > dt)
@@ -150,16 +154,19 @@ void *threadB(void *arg)
 		if (tsleepmax < dt)
 			tsleepmax = dt;
 
+		tsleepavr += dt;
+
 		clock_gettime(CLOCK_MONOTONIC, &tc);
 		if (timespec2nanos(&tc) >= (timespec2nanos(&te) + disp_period*1000)) {
 			printf("   test duration: %ld,\n", tc.tv_sec - ti.tv_sec);
 			te = tc;
-			printf("   nanosleep accuracy: jitter min = %ld us, jitter max = %ld us\n", tsleepmin-sampling_period,tsleepmax-sampling_period);
-			printf("   semaphore wakeup: switch min = %ld us, switch max = %ld us\n", tschedmin,tschedmax);
+			printf("   nanosleep accuracy: jitter min = %ld us, jitter max = %ld us (avrg = %ld)\n", tsleepmin-sampling_period,tsleepmax-sampling_period, tsleepavr/i - sampling_period);
+			printf("   semaphore wakeup: switch min = %ld us, switch max = %ld us (avrg = %ld)\n", tschedmin,tschedmax, tschedavr/i);
 		}
 	}
 
 	pthread_cleanup_pop(1);
+	return 0;
 }
 
 void cleanup(void)
