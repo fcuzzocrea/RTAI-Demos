@@ -64,7 +64,7 @@ void *threadA(void *arg)
 	struct timespec ts;
 	sem_t *semB;
 
-	pthread_setschedparam_np(1, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
+	pthread_setschedparam_np(1, SCHED_FIFO, 0, 0x2, PTHREAD_HARD_REAL_TIME_NP);
 	RT_SET_REAL_TIME_MODE();
 
 	if ((semB = sem_open(SEMB_NAME, O_CREAT, 0, 0)) == SEM_FAILED) {
@@ -105,7 +105,7 @@ void *threadB(void *arg)
 	struct timespec ti, te, tc;
 	int i;
 
-	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x2, PTHREAD_HARD_REAL_TIME_NP);
 	RT_SET_REAL_TIME_MODE();
 
 	clock_gettime(CLOCK_MONOTONIC,&ti);
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
 	time_t now;
 	int err, c;
 
-	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x1, PTHREAD_HARD_REAL_TIME_NP);
+	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x2, PTHREAD_HARD_REAL_TIME_NP);
 	RT_SET_REAL_TIME_MODE();
 	start_rt_timer(0);
 
