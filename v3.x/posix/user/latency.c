@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 	pthread_attr_setinheritsched(&thattrA, PTHREAD_EXPLICIT_SCHED);
 	pthread_attr_setschedpolicy(&thattrA, SCHED_FIFO);
 	pthread_attr_setschedparam(&thattrA, &paramA);
-	pthread_attr_setstacksize(&thattrA, 3*PTHREAD_STACK_MIN);
+	pthread_attr_setstacksize(&thattrA, 5*PTHREAD_STACK_MIN);
 	err = pthread_create(&thidA, &thattrA, &threadA, NULL);
 
 	if (err)
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 	pthread_attr_setinheritsched(&thattrB, PTHREAD_EXPLICIT_SCHED);
 	pthread_attr_setschedpolicy(&thattrB, SCHED_FIFO);
 	pthread_attr_setschedparam(&thattrB, &paramB);
-	pthread_attr_setstacksize(&thattrB, 3*PTHREAD_STACK_MIN);
+	pthread_attr_setstacksize(&thattrB, 5*PTHREAD_STACK_MIN);
 	err = pthread_create(&thidB, &thattrB, &threadB, NULL);
 
 	if (err)
