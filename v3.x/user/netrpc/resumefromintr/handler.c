@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include "period.h"
 
 static char *TaskNode = "127.0.0.1";
-MODULE_PARM(TaskNode, "s");
+RTAI_MODULE_PARM(TaskNode, charp);
 
 static int tasknode, taskport;
 static RT_TASK *rmt_task;
