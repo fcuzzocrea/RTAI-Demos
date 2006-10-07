@@ -45,56 +45,60 @@ void rt_schedule_soft(RT_TASK *);
 
 static inline int soft_rt_fun_call(RT_TASK *task, void *fun, void *arg)
 {
-        task->fun_args[0] = (long)arg;
-        ((struct fun_args *)task->fun_args)->fun = fun;
-        rt_schedule_soft(task);
-        return (int)task->retval;
+	task->fun_args[0] = (long)arg;
+	((struct fun_args *)task->fun_args)->fun = fun;
+	rt_schedule_soft(task);
+	return task->retval;
 }
 
 static inline long long soft_rt_genfun_call(RT_TASK *task, void *fun, void *args, int argsize)
 {
-        memcpy(task->fun_args, args, argsize);
-        ((struct fun_args *)task->fun_args)->fun = fun;
+	memcpy(task->fun_args, args, argsize);
+	((struct fun_args *)task->fun_args)->fun = fun;
 	task->retval = 0;
-        rt_schedule_soft(task);
-        return task->retval;
+	rt_schedule_soft(task);
+	return task->retval;
 }
 
 static void thread_fun(RT_TASK *task)
 {
-        if (!set_rtext(task, task->fun_args[3], 0, 0, get_min_tasks_cpuid(), 0)) {
-                sigfillset(&current->blocked);
-                rtai_set_linux_task_priority(current, SCHED_FIFO, MIN_LINUX_RTPRIO);
-                soft_rt_fun_call(task, rt_task_suspend, task);
-                ((void (*)(long))task->fun_args[1])(task->fun_args[2]);
-        }
+	if (!set_rtext(task, task->fun_args[3], 0, 0, get_min_tasks_cpuid(), 0)) {
+		int lnxprio;
+		if ((lnxprio = 99 - task->fun_args[3])) {
+			lnxprio = 1;
+		}
+		sigfillset(&current->blocked);
+		rtai_set_linux_task_priority(current, SCHED_FIFO, lnxprio);
+		soft_rt_fun_call(task, rt_task_suspend, task);
+		((void (*)(long))task->fun_args[1])(task->fun_args[2]);
+	}
 }
 static int soft_kthread_init(RT_TASK *task, long fun, long arg, int priority)
 {
-        task->magic = task->state = 0;
-        (task->fun_args = (long *)(task + 1))[1] = fun;
-        task->fun_args[2] = arg;
-        task->fun_args[3] = priority;
-        if (kernel_thread((void *)thread_fun, task, 0) > 0) {
-                while (task->state != (RT_SCHED_READY | RT_SCHED_SUSPENDED)) {
-                        current->state = TASK_INTERRUPTIBLE;
-                        schedule_timeout(HZ/10);
-                }
-                return 0;
-        }
-        return -ENOEXEC;
+	task->magic = task->state = 0;
+	(task->fun_args = (long *)(task + 1))[1] = fun;
+	task->fun_args[2] = arg;
+	task->fun_args[3] = priority;
+	if (kernel_thread((void *)thread_fun, task, 0) > 0) {
+		while (task->state != (RT_SCHED_READY | RT_SCHED_SUSPENDED)) {
+			current->state = TASK_INTERRUPTIBLE;
+			schedule_timeout(HZ/10);
+		}
+		return 0;
+	}
+	return -ENOEXEC;
 }
 
 static int soft_kthread_delete(RT_TASK *task)
 {
-        if (clr_rtext(task)) {
-                return -EFAULT;
-        } else {
-                struct task_struct *lnxtsk = task->lnxtsk;
-                lnxtsk->state = TASK_INTERRUPTIBLE;
-                kill_proc(lnxtsk->pid, SIGTERM, 0);
-        }
-        return 0;
+	if (clr_rtext(task)) {
+		return -EFAULT;
+	} else {
+		struct task_struct *lnxtsk = task->lnxtsk;
+		lnxtsk->state = TASK_INTERRUPTIBLE;
+		kill_proc(lnxtsk->pid, SIGTERM, 0);
+	}
+	return 0;
 }
 
 /* END OF RTAI FROM LINUX SOFT KERNEL THREAD */
