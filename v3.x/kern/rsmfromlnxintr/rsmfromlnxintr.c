@@ -99,7 +99,7 @@ static int soft_kthread_delete(RT_TASK *task)
 
 /* END OF RTAI FROM LINUX SOFT KERNEL THREAD */
 
-#define LINUX_FIRST 0 // 0/1 toggle this to see RTAI magics
+#define LINUX_FIRST 1 // 0/1 toggle this to see RTAI magics
 
 struct msg_s { char test[8]; int cnt; };
 
@@ -190,7 +190,7 @@ int init_module(void)
 	rt_mbx_init(&mbx, BUFSIZ);
 	rt_task_init(&rtai_task, rtai_fun, 0, 8000, 0, 0, 0);
 	rt_task_resume(&rtai_task);
-	linux_task = kmalloc(sizeof(RT_TASK) + 3*sizeof(struct fun_args), GFP_KERNEL);
+	linux_task = kmalloc(sizeof(RT_TASK) + 2*sizeof(struct fun_args), GFP_KERNEL);
 	soft_kthread_init(linux_task, (long)linux_fun, 0, 0);
 	rt_task_resume(linux_task);
 	rt_request_linux_irq(RTAI_TIMER_8254_IRQ, handler, "rtaih", handler);
