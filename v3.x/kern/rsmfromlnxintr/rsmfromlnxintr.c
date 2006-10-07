@@ -163,7 +163,6 @@ static void rtai_fun(long t)
 	struct msg_s tstfifo = { "TSTCNT:", 0 };
 	while (1) {
 		rt_sem_wait(&rtai_sem);
-		rt_sem_signal(&linux_sem);
 		tstfifo.cnt++;
 		if (!rt_mbx_send(&mbx, &tstfifo, sizeof(tstfifo))) {
 			rt_printk("RTAI  > %s %d\n", tstfifo.test, tstfifo.cnt);
@@ -178,7 +177,6 @@ static void linux_fun(long t)
 
 	linux_kthread = current;
 	while (1) {
-		soft_rt_fun_call(linux_task, rt_sem_wait, &linux_sem);
 		if (!(int)soft_rt_genfun_call(linux_task, rt_mbx_receive, &mbxrcv, sizeof(mbxrcv))) {
 			printk("LINUX > %s %d\n", tstfifo.test, tstfifo.cnt);
 		}
