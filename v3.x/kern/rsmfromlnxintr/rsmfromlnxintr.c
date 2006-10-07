@@ -107,6 +107,7 @@ static int soft_kthread_delete(RT_TASK *task)
 
 struct msg_s { char test[8]; int cnt; };
 
+// try playing the game even with BUFSIZ < sizeof(struct msg_s), it's fun
 #define BUFSIZ (10*sizeof(struct msg_s))
 
 static RT_TASK rtai_task, *linux_task;
