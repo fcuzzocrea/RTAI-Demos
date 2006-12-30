@@ -36,6 +36,7 @@ MODULE_LICENSE("GPL");
 
 #define STACK_SIZE  2000
 
+static volatile int PREMATURE = 1;
 static volatile int cpu_used[NR_RT_CPUS];
 static volatile int premature;
 
@@ -86,7 +87,7 @@ static void mfun(long t)
 	}
 
 prem: 
-	premature = 1;
+	premature = PREMATURE;
 	rt_printk("TASK # %d ENDS PREMATURELY\n", t);
 }
 
@@ -116,7 +117,7 @@ static void bfun(long t)
 		rt_mbx_send(&rmbx[t], &name, sizeof(name));
 	}
 prem:
-	premature = 1;
+	premature = PREMATURE;
 	rt_printk("SERVER TASK ENDS PREMATURELY.\n");
 }
 
@@ -140,13 +141,14 @@ void cleanup_module(void)
 {
 	int cpuid;
 
-	rt_task_delete(&mtask[0]);
-	rt_task_delete(&mtask[1]);
-	rt_task_delete(&btask);
-	stop_rt_timer();
+	PREMATURE = 0;
 	rt_mbx_delete(&smbx);
 	rt_mbx_delete(&rmbx[0]);
 	rt_mbx_delete(&rmbx[1]);
+	stop_rt_timer();
+	rt_task_delete(&mtask[0]);
+	rt_task_delete(&mtask[1]);
+	rt_task_delete(&btask);
 	printk("\n\nCPU USE SUMMARY (AVRG WAIT TIME):\n");
 	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
 		printk("# %d -> %d (%d)\n", cpuid, cpu_used[cpuid], meant[cpuid]);
