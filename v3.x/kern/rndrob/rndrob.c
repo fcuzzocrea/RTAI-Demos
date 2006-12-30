@@ -26,21 +26,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define ONE_SHOT
+#define STACK_SIZE 8000
 
-//#define FORCE_CPU 0    // meaningfull just for the MPschedulers
+#define NTASKS 8
 
-//#define FORCE_TIMER 0  // meaningfull just for the SMPscheduler
+#define EXECTIME 500000000LL
 
-#define TICK_PERIOD 2000000
+#define RR_QUANTUM 0
 
-#define STACK_SIZE 2000
-
-#define EXECTIME 400000000LL
-
-#define RR_QUANTUM  0
-
-#define NTASKS 5
+int SchedPolicy = RT_SCHED_RR;
+RTAI_MODULE_PARM(SchedPolicy, int);
+MODULE_PARM_DESC(use_rr, "Sched Policy to use (default: RR)");
 
 static SEM sync;
 
@@ -48,58 +44,32 @@ static RT_TASK thread[NTASKS];
 
 static int nsw[NTASKS];
 
+static RTIME endtime;
+
 static void fun(long indx)
 {
-	RTIME startime;
-	rt_printk("RESUMED TASK #%d (%p) ON CPU %d.\n", indx, &thread[indx], hard_cpu_id());
+	rt_printk("TASK %d ENTERED.\n", indx + 1);
 	rt_sem_wait(&sync);
-	rt_printk("TASK #%d (%p) STARTS WORKING RR ON CPU %d.\n", indx, &thread[indx], hard_cpu_id());
-	startime = rt_get_cpu_time_ns();
-	while(rt_get_cpu_time_ns() < (startime + EXECTIME));
-	thread[indx].signal = 0;
-	rt_printk("TASK #%d (%p) SUICIDES.\n", indx, &thread[indx]);
-}
-
-static void signal(void)
-{
-	RT_TASK *task;
-	int i;
-	for (i = 0; i < NTASKS; i++) {
-		if ((task = rt_whoami()) == &thread[i]) {
-			nsw[i]++;
-			rt_printk("TASK #%d (%p) ON CPU %d.\n", i, task, hard_cpu_id());
-			break;
-		}
-	}
+	rt_printk("TASK %d STARTS WORKING %s.\n", indx + 1, SchedPolicy ? "RR" : "FIFO");
+	while(rt_get_cpu_time_ns() < endtime) nsw[indx]++;
+	rt_printk("TASK %d EXITS.\n", indx + 1);
 }
 
 int init_module(void)
 {
 	int i;
 
-	printk("INSMOD ON CPU %d.\n", hard_cpu_id());
 	rt_sem_init(&sync, 0);
-#ifdef ONE_SHOT
-	rt_set_oneshot_mode();
-#endif
-#ifdef FORCE_TIMER
-	start_rt_timer_cpuid(nano2count(TICK_PERIOD), 0);
-#else
-	start_rt_timer(nano2count(TICK_PERIOD));
-#endif
+	start_rt_timer(0);
 	for (i = 0; i < NTASKS; i++) {
-#ifdef FORCE_CPU
-		rt_task_init_cpuid(&thread[i], fun, i, STACK_SIZE, 0, 0, signal, FORCE_CPU);
-#else
-		rt_task_init(&thread[i], fun, i, STACK_SIZE, 0, 0, signal);
-#endif
-		rt_set_sched_policy(&thread[i], RT_SCHED_RR, RR_QUANTUM);
+		rt_task_init_cpuid(&thread[i], fun, i, STACK_SIZE, 0, 0, 0, 0);
+		rt_set_sched_policy(&thread[i], SchedPolicy, RR_QUANTUM);
 	}
 	for (i = 0; i < NTASKS; i++) {
 		rt_task_resume(&thread[i]);
-// to be sure they are all wait synchronized
-		while(!(rt_get_task_state(&thread[i]) & RT_SCHED_SEMAPHORE));
+		while(!(thread[i].state & RT_SCHED_SEMAPHORE));
 	}
+	endtime = rt_get_cpu_time_ns() + EXECTIME;
 	rt_sem_broadcast(&sync);
 	return 0;
 }
@@ -111,8 +81,9 @@ void cleanup_module(void)
 
 	stop_rt_timer();
 	rt_sem_delete(&sync);
+	rt_printk("EXECUTION COUNTERS:\n");
 	for (i = 0; i < NTASKS; i++) {
-		printk("# %d -> %d\n", i, nsw[i]);
+		printk("TASK %d -> %d\n", i + 1, nsw[i]);
 		rt_task_delete(&thread[i]);
 	}
 }
