@@ -26,7 +26,7 @@ MODULE_LICENSE("GPL");
 
 #define TICK 1000000
 
-#define RT_STACK 1000
+#define RT_STACK 4000
 
 static RT_TASK task1, task2, task3, task4;
 
@@ -136,18 +136,18 @@ int init_module(void)
 {
 	printk("Conditional semaphore test program.\n");
 	printk("Wait for all tasks to end, then type: ./rem.\n\n");
+	start_rt_timer(nano2count(TICK));
 	rt_cond_init(&cond);
 	rt_mutex_init(&mtx);
 	rt_task_init(&task1, task_func1, 0, RT_STACK, 0, 0, 0);
 	rt_task_init(&task2, task_func2, 0, RT_STACK, 1, 0, 0);
 	rt_task_init(&task3, task_func3, 0, RT_STACK, 2, 0, 0);
 	rt_task_init(&task4, task_func4, 0, RT_STACK, 3, 0, 0);
-	start_rt_timer(nano2count(TICK));
-	printk("Do not panic, wait 2 s, till task3 times out.\n\n");
 	rt_task_resume(&task1);
 	rt_task_resume(&task2);
 	rt_task_resume(&task3);
 	rt_task_resume(&task4);
+	printk("Do not panic, wait 2 s, till task3 times out.\n\n");
 	return 0;
 }
 
