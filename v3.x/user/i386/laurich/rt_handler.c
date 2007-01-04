@@ -13,23 +13,23 @@ static int timer_isr_count[NUM_TIMERS];
 
 static SEM tmr_sema[NUM_TIMERS];
 
-static void tmr_get_setup(int timer, int *period, int *freq)
+static RTAI_SYSCALL_MODE void tmr_get_setup(int timer, int *period, int *freq)
 {
 	*period = LATCH;
 	*freq   = CLOCK_TICK_RATE;
 }
 
-static void tmr_start(int timer)
+static RTAI_SYSCALL_MODE void tmr_start(int timer)
 {
 	set_bit(timer, &timer_on);
 }
 
-static void tmr_stop(int timer)
+static RTAI_SYSCALL_MODE void tmr_stop(int timer)
 {
 	clear_bit(timer, &timer_on);
 }
 
-static int tmr_get_isr_count(int timer)
+static RTAI_SYSCALL_MODE int tmr_get_isr_count(int timer)
 {
 	return timer_isr_count[timer];
 }
@@ -45,7 +45,7 @@ static inline int _timer_get_count(int timer)
 static RTIME tirq, thandler, t8254, t2task;
 static int cntirq, cnt8254, cnt2task;
 
-static int tmr_get_count(int timer, RTIME *cputime)
+static RTAI_SYSCALL_MODE int tmr_get_count(int timer, RTIME *cputime)
 {
 	RTIME t;
 	unsigned long flags;
@@ -61,7 +61,7 @@ static int tmr_get_count(int timer, RTIME *cputime)
 	return count;
 }
 
-static int wait_on_timer_ext(int timer, int *count, RTIME *cputime)
+static RTAI_SYSCALL_MODE int wait_on_timer_ext(int timer, int *count, RTIME *cputime)
 {
 	RTIME t;
 	unsigned long flags;
@@ -80,7 +80,7 @@ static int wait_on_timer_ext(int timer, int *count, RTIME *cputime)
 	return semcnt;
 }
 
-static int wait_on_timer(int timer)
+static RTAI_SYSCALL_MODE int wait_on_timer(int timer)
 {
 	int semcnt;
 	semcnt = rt_sem_wait(&tmr_sema[timer]);
