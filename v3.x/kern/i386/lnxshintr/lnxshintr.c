@@ -10,14 +10,15 @@ static void handler(int irq, void *something)
 {
 	static int cnt;
 	rt_pend_linux_irq(ETHIRQ);
-	rt_printk("RTAI  IRQ: %d %d %d\n", ++cnt, irq, ETHIRQ);
+	rt_printk("RTAI  IRQ: %d %d %d %d\n", ++cnt, irq, ETHIRQ, rtai_cpuid());
 }
 
-static void linux_post_handler(int irq, void *dev_id, struct pt_regs *regs)
+static int linux_post_handler(int irq, void *dev_id, struct pt_regs *regs)
 {
 	static int cnt;
 	rt_enable_irq(ETHIRQ);
-	rt_printk("LINUX IRQ: %d %d %d\n", ++cnt, irq, ETHIRQ);
+	rt_printk("LINUX IRQ: %d %d %d %d\n", ++cnt, irq, ETHIRQ, rtai_cpuid());
+	return 1;
 }
 
 int init_module(void)
