@@ -22,6 +22,9 @@ Modified to suite RTAI + added user definable periodic latencies echos.
 
 #include <rtai_posix.h>
 
+#define CLOCK_TYPE CLOCK_MONOTONIC
+//#define CLOCK_TYPE CLOCK_REALTIME
+
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
 #define RT_SET_REAL_TIME_MODE() do { pthread_hard_real_time_np(); } while (0)
@@ -49,7 +52,7 @@ pthread_t thidA, thidB;
 static inline void get_time_us(suseconds_t * tp)
 {
 	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
+	clock_gettime(CLOCK_TYPE, &ts);
 	*tp = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
 }
 
@@ -89,7 +92,7 @@ void *threadA(void *arg)
 		ts.tv_sec = 0;
 		ts.tv_nsec = sampling_period * 1000;
 		get_time_us(&t0);
-		clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, NULL);
+		clock_nanosleep(CLOCK_TYPE, 0, &ts, NULL);
 		get_time_us(&t1);
 		sem_post(semB);
 	}
@@ -108,7 +111,7 @@ void *threadB(void *arg)
 	pthread_setschedparam_np(0, SCHED_FIFO, 0, 0x2, PTHREAD_HARD_REAL_TIME_NP);
 	RT_SET_REAL_TIME_MODE();
 
-	clock_gettime(CLOCK_MONOTONIC,&ti);
+	clock_gettime(CLOCK_TYPE,&ti);
 	te = ti;
 
 	if ((semB = sem_open(SEMB_NAME, O_CREAT, 0, 0)) == SEM_FAILED) {
@@ -156,12 +159,15 @@ void *threadB(void *arg)
 
 		tsleepavr += dt;
 
-		clock_gettime(CLOCK_MONOTONIC, &tc);
+		clock_gettime(CLOCK_TYPE, &tc);
 		if (timespec2nanos(&tc) >= (timespec2nanos(&te) + disp_period*1000)) {
 			printf("   test duration: %ld,\n", tc.tv_sec - ti.tv_sec);
 			te = tc;
 			printf("   nanosleep accuracy: jitter min = %ld us, jitter max = %ld us (avrg = %ld)\n", tsleepmin-sampling_period,tsleepmax-sampling_period, tsleepavr/i - sampling_period);
 			printf("   semaphore wakeup: switch min = %ld us, switch max = %ld us (avrg = %ld)\n", tschedmin,tschedmax, tschedavr/i);
+		}
+		if (CLOCK_TYPE == CLOCK_REALTIME) {
+			clock_settime(CLOCK_REALTIME, NULL);
 		}
 	}
 
@@ -230,9 +236,10 @@ int main(int argc, char **argv)
 
 	time(&now);
 
-	clock_getres(CLOCK_MONOTONIC, &ts);
+	clock_getres(CLOCK_TYPE, &ts);
 	printf("Starting latency measurements at %s", ctime(&now));
 	printf("Sampling period = %d us\n", sampling_period);
+	printf("Clock type = %s\n", CLOCK_TYPE == CLOCK_MONOTONIC ? "CLOCK_MONOTONIC" : "CLOCK_REALTIME");
 	printf("Clock resolution = %ld ns\n",
 	       ts.tv_sec * 1000000000 + ts.tv_nsec);
 	printf("Hit ^C to get the results.\n");
