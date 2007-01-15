@@ -22,8 +22,8 @@ Modified to suite RTAI + added user definable periodic latencies echos.
 
 #include <rtai_posix.h>
 
-#define CLOCK_TYPE CLOCK_MONOTONIC
 //#define CLOCK_TYPE CLOCK_REALTIME
+#define CLOCK_TYPE CLOCK_MONOTONIC
 
 #define MAKE_IT_HARD
 #ifdef MAKE_IT_HARD
@@ -161,13 +161,13 @@ void *threadB(void *arg)
 
 		clock_gettime(CLOCK_TYPE, &tc);
 		if (timespec2nanos(&tc) >= (timespec2nanos(&te) + disp_period*1000)) {
-			printf("   test duration: %ld,\n", tc.tv_sec - ti.tv_sec);
+			printf("   test duration: %ld (s),\n", tc.tv_sec - ti.tv_sec);
 			te = tc;
 			printf("   nanosleep accuracy: jitter min = %ld us, jitter max = %ld us (avrg = %ld)\n", tsleepmin-sampling_period,tsleepmax-sampling_period, tsleepavr/i - sampling_period);
 			printf("   semaphore wakeup: switch min = %ld us, switch max = %ld us (avrg = %ld)\n", tschedmin,tschedmax, tschedavr/i);
-		}
-		if (CLOCK_TYPE == CLOCK_REALTIME) {
-			clock_settime(CLOCK_REALTIME, NULL);
+			if (CLOCK_TYPE == CLOCK_REALTIME) {
+				clock_settime(CLOCK_REALTIME, NULL);
+			}
 		}
 	}
 
