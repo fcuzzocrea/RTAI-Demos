@@ -60,7 +60,6 @@ void rt_remove_timer(struct rt_tasklet_struct *timer);
 #define xnpod_ns2ticks nano2count
 
 typedef struct rt_tasklet_struct xntimer_t;
-typedef RTIME xnticks_t;
 
 static inline void xntimer_init(xntimer_t *timer, void (*handler)(xntimer_t *))
 {

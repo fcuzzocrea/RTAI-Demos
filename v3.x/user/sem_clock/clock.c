@@ -281,8 +281,8 @@ int main(int argc, char* argv[])
 	hide = FALSE;
 	Pause = FALSE;
 	sync_sem = rt_sem_init(nam2num("SYNC"), 0);
-	Keyboard = rt_mbx_init(nam2num("KEYBRD"), 1000);
-	Screen = rt_mbx_init(nam2num("SCREEN"), 1000);
+	Keyboard = rt_mbx_init(nam2num("KEYBRD"), 100);
+	Screen = rt_mbx_init(nam2num("SCREEN"), 100);
 
 	rt_set_oneshot_mode();
 	init_cmdclk();
@@ -298,22 +298,22 @@ int main(int argc, char* argv[])
 	OneUnit = nano2count(ONE_UNIT);
 	start_rt_timer((int)nano2count(TICK_PERIOD));
 
-	if ((Read = rt_thread_create(ClockChrono_Read, NULL, 10000)) < 0) { 
+	if (!(Read = rt_thread_create(ClockChrono_Read, NULL, 10000))) { 
 		printf("ERROR IN CREATING ClockChrono_Read\n");
 		exit(1);
  	}       
 
-	if ((Chrono = rt_thread_create(ClockChrono_Chrono, NULL, 10000)) < 0) { 
+	if (!(Chrono = rt_thread_create(ClockChrono_Chrono, NULL, 10000))) { 
 		printf("ERROR IN CREATING ClockChrono_Chrono\n");
 		exit(1);
  	}       
 
-	if ((Clock = rt_thread_create(ClockChrono_Clock, NULL, 10000)) < 0) { 
+	if (!(Clock = rt_thread_create(ClockChrono_Clock, NULL, 10000))) { 
 		printf("ERROR IN CREATING ClockChrono_Clock\n");
 		exit(1);
  	}       
 
-	if ((Write = rt_thread_create(ClockChrono_Write, NULL, 10000)) < 0) {
+	if (!(Write = rt_thread_create(ClockChrono_Write, NULL, 10000))) {
 		printf("ERROR IN CREATING ClockChrono_Write\n");
 		exit(1);
  	}       

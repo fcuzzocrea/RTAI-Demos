@@ -126,7 +126,7 @@ int main(void)
 
 	for (i = 0; i < ntasks; i++) {
 		indx[i] = i;
-		if ((task[1] = rt_thread_create(thread_fun, &indx[i], 10000)) < 0) {
+		if (!(task[1] = rt_thread_create(thread_fun, &indx[i], 10000))) {
 			printf("ERROR IN CREATING THREAD %d\n", indx[i]);
 			exit(1);
  		}       
@@ -152,12 +152,12 @@ int main(void)
 		}
 	}
 
+	for (i = 0; i < ntasks; i++) {
+		rt_thread_join(task[i]);
+	}
 	rt_sem_delete(sem);
 	stop_rt_timer();
 	rt_task_delete(mytask);
 	printf("MASTER %lu %p ENDS\n", mytask_name, mytask);
-	for (i = 0; i < ntasks; i++) {
-		rt_thread_join(task[i]);
-	}
 	return 0;
 }
