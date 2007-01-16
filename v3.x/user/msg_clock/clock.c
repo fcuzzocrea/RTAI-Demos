@@ -292,38 +292,38 @@ int main(void)
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 
-	if ((Disp_task = rt_thread_create(Display_task, NULL, SZ)) < 0) { 
+	if (!(Disp_task = rt_thread_create(Display_task, NULL, SZ))) { 
 		printf("ERROR IN CREATING Display_task\n");
 		exit(1);
  	}       
 
-	if ((Chrono_task = rt_thread_create(CommandChrono_task, NULL, SZ)) < 0) { 
+	if (!(Chrono_task = rt_thread_create(CommandChrono_task, NULL, SZ))) { 
 		printf("ERROR IN CREATING CommandChrono_task\n");
 		exit(1);
  	}       
 
-	if ((Clock_task = rt_thread_create(CommandClock_task, NULL, SZ)) < 0) { 
+	if (!(Clock_task = rt_thread_create(CommandClock_task, NULL, SZ))) { 
 		printf("ERROR IN CREATING CommandClock_task\n");
 		exit(1);
  	}       
 
-	if ((Read = rt_thread_create(ClockChrono_Read, NULL, SZ)) < 0) { 
+	if (!(Read = rt_thread_create(ClockChrono_Read, NULL, SZ))) { 
 		printf("ERROR IN CREATING ClockChrono_Read\n");
 		exit(1);
  	}       
 
-	if ((Chrono = rt_thread_create(ClockChrono_Chrono, NULL, SZ)) < 0){ 
+	if (!(Chrono = rt_thread_create(ClockChrono_Chrono, NULL, SZ))){ 
 		printf("ERROR IN CREATING ClockChrono_Chrono\n");
 		exit(1);
  	}       
 
-	if ((Clock = rt_thread_create(ClockChrono_Clock, NULL, SZ)) < 0) { 
+	if (!(Clock = rt_thread_create(ClockChrono_Clock, NULL, SZ))) { 
 		printf("ERROR IN CREATING ClockChrono_Clock\n");
 		exit(1);
  	}       
 
 
-	if ((Write = rt_thread_create(ClockChrono_Write, NULL, SZ)) < 0) { 
+	if (!(Write = rt_thread_create(ClockChrono_Write, NULL, SZ))) { 
 		printf("ERROR IN CREATING ClockChrono_Write\n");
 		exit(1);
  	}       
