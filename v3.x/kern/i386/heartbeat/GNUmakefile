@@ -22,9 +22,12 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all: heartbeat.o
+all: heartbeat.o semtest.o
 
 heartbeat.o: heartbeat.c
+	$(CC) $(MODULE_CFLAGS) -c $<
+
+semtest.o: semtest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean:

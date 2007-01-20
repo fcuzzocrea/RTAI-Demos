@@ -13,3 +13,16 @@ make
 ./run
 
 Jan Kiszka - jan.kiszka@web.de
+
+*******************************************************************************
+
+Semtest
+-------
+
+Tests all RTDM sem operations.
+
+To use:
+make
+./runs
+
+Paolo
