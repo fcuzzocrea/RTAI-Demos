@@ -62,9 +62,9 @@ void task2(void *cookie)
 		}
 	}
 	if (i == LOOPS) {
-		rt_printk(" OK (%lu (ns)).\n", max);
+		rt_printk(" OK [%lu (ns)].\n", max);
 	} else {
-		rt_printk(" NOT OK (MAXLAT %lu (ns)).\n", max);
+		rt_printk(" NOT OK [MAXLAT %lu (ns)].\n", max);
 	}
 
 	rt_printk("TESTING FAILING TRY LOCK ...");
