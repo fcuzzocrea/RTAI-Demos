@@ -30,6 +30,9 @@ heartbeat.o: heartbeat.c
 semtest.o: semtest.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
+mutextest.o: mutextest.c
+	$(CC) $(MODULE_CFLAGS) -c $<
+
 clean:
 	rm -f *.o
 
