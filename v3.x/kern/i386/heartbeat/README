@@ -25,4 +25,13 @@ To use:
 make
 ./runs
 
+Mutextest
+-------
+
+Tests all RTDM mutex operations.
+
+To use:
+make
+./runm
+
 Paolo
