@@ -33,7 +33,7 @@ static volatile int end;
 
 #define MAKE_HARD()  rt_make_hard_real_time()
 
-void task1(void *nothing)
+void task1(void)
 {
 	rt_thread_init(nam2num("TASK1"), 1, 0, SCHED_FIFO, 0x1);
 	rt_grow_and_lock_stack(STACK_SIZE - 10000);
@@ -53,7 +53,7 @@ void task1(void *nothing)
 	return;
 }
 
-void task2(void *nothing)
+void task2(void)
 {
 	int i;
 
@@ -62,19 +62,15 @@ void task2(void *nothing)
 #ifdef MAKE_HARD
 	MAKE_HARD();
 #endif	
-	rt_printk("TASK2 TID = %d.\n", rt_gettid());
+	rt_printk("TASK2 TID = %d.\n\n", rt_gettid());
 
-	rt_printk("TESTING FAILING WAIT IF ...");
+	rt_printk("TESTING FAILING WAIT IF ......");
 	for (i = 0; i < LOOPS; i++) {
 		if (rt_sem_wait_if(sem2) > 0) {
 			break;
 		}
 	}
-	if (i == LOOPS) {
-		rt_printk(" OK.\n");
-	} else {
-		rt_printk(" NOT OK.\n");
-	}
+	rt_printk(" %s OK.\n", i == LOOPS ? "" : "NOT");
 
 	rt_printk("TESTING SUCCEEDING WAIT IF ...");
 	rt_sem_signal(sem2);
@@ -85,13 +81,9 @@ void task2(void *nothing)
 			break;
 		}
 	}
-	if (i == LOOPS) {
-		rt_printk(" OK.\n");
-	} else {
-		rt_printk(" NOT OK.\n");
-	}
+	rt_printk(" %s OK.\n", i == LOOPS ? "" : "NOT");
 
-	rt_printk("TESTING WAIT/SIGNAL ...");
+	rt_printk("TESTING WAIT/SIGNAL ..........");
 	rt_sem_wait(sem2);
 	for (i = 0; i < LOOPS; i++) {
 		rt_sem_signal(sem1);
@@ -99,14 +91,10 @@ void task2(void *nothing)
 			break;
 		}
 	}
-	if (i == LOOPS) {
-		rt_printk(" OK.\n");
-	} else {
-		rt_printk(" NOT OK.\n");
-	}
+	rt_printk(" %s OK.\n", i == LOOPS ? "" : "NOT");
 
         rt_task_delete(NULL);
-	rt_printk("TASK2 EXITING : ");
+	rt_printk("\nTASK2 EXITING : ");
 	return;
 }
 
@@ -117,15 +105,18 @@ int main(void)
 	rt_thread_init(nam2num("MNTSK"), 100, 0, SCHED_FIFO, 0x1);
 	rt_printk("\nTESTING THE SCHEDULER WITH SEMs [%d LOOPs].\n", LOOPS);
 
-	sem1 = rt_sem_init(0xcacca1, 0);    
-	sem2 = rt_sem_init(0xcacca2, 0);    
+	sem1 = rt_sem_init(nam2num("SEM1"), 0);    
+	sem2 = rt_sem_init(nam2num("SEM2"), 0);    
+
 	thread1 = rt_thread_create(task1, NULL, STACK_SIZE);
 	poll(NULL, 0, 100);
 	thread2 = rt_thread_create(task2, NULL, STACK_SIZE);
+
 	rt_thread_join(thread2);
 	end = 1;
 	rt_sem_signal(sem1);
 	rt_thread_join(thread1);
+
 	rt_sem_delete(sem1);    
 	rt_sem_delete(sem2);    
 
