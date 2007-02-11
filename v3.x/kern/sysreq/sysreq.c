@@ -58,15 +58,15 @@ static void rtai_srq_handler(void)
 
 static void rt_timer_tick(void)
 {
-	int cpuid = rtai_cpuid();
 
 #if 0 // diagnose to see if interrupts are coming in
 	static int cnt[NR_RT_CPUS];
+	int cpuid = rtai_cpuid();
 	printk("TIMER TICK: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
 #endif
 
-#ifdef CONFIG_SMP
-	if (!cpuid)
+#if USE_APIC && defined(CONFIG_SMP)
+	if (!rtai_cpuid())
 #endif
 	rt_pend_linux_srq(srq);
 

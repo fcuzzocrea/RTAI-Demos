@@ -23,9 +23,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <fcntl.h>
 #include <sched.h>
 #include <signal.h>
+
 #include <asm/rtai_srq.h>
 
-#define PRINT_REPEAT 100
+#define PRINT_FREQ 1
 
 static int end;
 
@@ -33,7 +34,7 @@ static void endme (int dummy) { end = 1; }
 
 int main(void)
 {
-	int srq, tick, count = 0, nextcount = 0;
+	int srq, tick, count = 0, nextcount = 0, repeat;
 	struct sched_param mysched;
 	long long time0, time, dt;
 
@@ -50,12 +51,13 @@ int main(void)
 	srq = rtai_open_srq(0xcacca);
 	rtai_srq(srq, (unsigned long)&time0);
 	tick = rtai_srq(srq, 1);
+	repeat = 1000000/(tick*PRINT_FREQ);
 	dt = time0;
 
 	while (!end) {
 		rtai_srq(srq, (unsigned long)&time);
 		if (++count > nextcount) {
-			nextcount += PRINT_REPEAT;
+			nextcount += repeat;
 			printf("# %d TICK: %d TIME: %lld DTOT: %lld\n", nextcount, tick, time - time0, time - dt);
 		dt = time;
 		}
