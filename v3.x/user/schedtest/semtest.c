@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_sem.h>
 
-#define LOOPS 50000
+#define LOOPS 5000
 
 #define STACK_SIZE 100000
 
@@ -35,13 +35,13 @@ static volatile int end;
 
 void task1(void *cookie)
 {
-	rt_task_init_schmod(nam2num("TASK1"), 0, 0, 0, SCHED_FIFO, 0xF);
+	rt_thread_init(nam2num("TASK1"), 1, 0, SCHED_FIFO, 0x1);
 	rt_grow_and_lock_stack(STACK_SIZE - 10000);
 #ifdef MAKE_HARD
 	MAKE_HARD();
 #endif	
 	rt_make_hard_real_time();
-	rt_printk("TASK1 TID = %d.\n", rt_gettid());
+	rt_printk("TASK1 TID = %d : ", rt_gettid());
 
 	while (!end) {
 		rt_sem_wait(sem1);
@@ -55,7 +55,7 @@ void task2(void *cookie)
 {
 	int i;
 
-	rt_task_init_schmod(nam2num("TASK2"), 0, 0, 0, SCHED_FIFO, 0xF);
+	rt_thread_init(nam2num("TASK2"), 2, 0, SCHED_FIFO, 0x1);
 	rt_grow_and_lock_stack(STACK_SIZE - 10000);
 #ifdef MAKE_HARD
 	MAKE_HARD();
@@ -74,10 +74,10 @@ void task2(void *cookie)
 		rt_printk(" NOT OK.\n");
 	}
 
-	rt_printk("TESTING SUCCEEDING TRY DOWN ...");
+	rt_printk("TESTING SUCCEEDING WAIT IF ...");
 	rt_sem_signal(sem2);
 	for (i = 0; i < LOOPS; i++) {
-		if (rt_sem_wait_if(sem2) > 0) {
+		if (rt_sem_wait_if(sem2) == 1) {
 			rt_sem_signal(sem2);
 		} else {
 			break;
@@ -89,11 +89,11 @@ void task2(void *cookie)
 		rt_printk(" NOT OK.\n");
 	}
 
-	rt_printk("TESTING DOWN/UP ...");
+	rt_printk("TESTING WAIT/SIGNAL ...");
 	rt_sem_wait(sem2);
 	for (i = 0; i < LOOPS; i++) {
 		rt_sem_signal(sem1);
-		if (rt_sem_wait(sem2) > 0) {
+		if (rt_sem_wait(sem2) == 0) {
 			break;
 		}
 	}
@@ -103,15 +103,15 @@ void task2(void *cookie)
 		rt_printk(" NOT OK.\n");
 	}
         rt_task_delete(NULL);
-	rt_printk("TASK2 EXITING.\n");
+	rt_printk("TASK2 EXITING : ");
 }
 
 static int thread1, thread2;
 
 int main(void)
 {
-	rt_task_init_schmod(nam2num("MNTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
-	rt_printk("TESTING THE SCHEDULER BY USING SEMs [LOOPs %d].\n", LOOPS);
+	rt_thread_init(nam2num("MNTSK"), 100, 0, SCHED_FIFO, 0x1);
+	rt_printk("\nTESTING THE SCHEDULER WITH SEMs [%d LOOPs].\n", LOOPS);
 
 	sem1 = rt_sem_init(0xcacca1, 0);    
 	sem2 = rt_sem_init(0xcacca2, 0);    
@@ -125,5 +125,6 @@ int main(void)
 	rt_sem_delete(sem1);    
 	rt_sem_delete(sem2);    
         rt_task_delete(NULL);
+	rt_printk("END SCHEDULER TEST WITH SEMs.\n\n");
 	return 0;
 }
