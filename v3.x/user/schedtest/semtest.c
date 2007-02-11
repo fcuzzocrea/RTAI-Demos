@@ -31,10 +31,15 @@ SEM *sem1, *sem2;
 
 static volatile int end;
 
+#define MAKE_HARD()  rt_make_hard_real_time()
+
 void task1(void *cookie)
 {
 	rt_task_init_schmod(nam2num("TASK1"), 0, 0, 0, SCHED_FIFO, 0xF);
 	rt_grow_and_lock_stack(STACK_SIZE - 10000);
+#ifdef MAKE_HARD
+	MAKE_HARD();
+#endif	
 	rt_make_hard_real_time();
 	rt_printk("TASK1 TID = %d.\n", rt_gettid());
 
@@ -52,7 +57,9 @@ void task2(void *cookie)
 
 	rt_task_init_schmod(nam2num("TASK2"), 0, 0, 0, SCHED_FIFO, 0xF);
 	rt_grow_and_lock_stack(STACK_SIZE - 10000);
-	rt_make_hard_real_time();
+#ifdef MAKE_HARD
+	MAKE_HARD();
+#endif	
 	rt_printk("TASK2 TID = %d.\n", rt_gettid());
 
 	rt_printk("TESTING FAILING WAIT IF ...");
@@ -104,7 +111,7 @@ static int thread1, thread2;
 int main(void)
 {
 	rt_task_init_schmod(nam2num("MNTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
-	rt_printk("TESTING RTDM SEMs [LOOPs %d].\n", LOOPS);
+	rt_printk("TESTING THE SCHEDULER BY USING SEMs [LOOPs %d].\n", LOOPS);
 
 	sem1 = rt_sem_init(0xcacca1, 0);    
 	sem2 = rt_sem_init(0xcacca2, 0);    

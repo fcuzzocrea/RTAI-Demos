@@ -17,20 +17,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 
-#define USE_APIC 0
-#define TICK 100000 //ns (!!! CAREFULL NEVER BELOW HZ IF USE_APIC == 0 !!!)
-
 #include <linux/kernel.h>
 #include <linux/module.h>
 
 #include <asm/semaphore.h>
 #include <asm/uaccess.h>
-#include <asm/io.h>
 
 #include <asm/rtai.h>
-#include <rtai_sched.h>
 
 MODULE_LICENSE("GPL");
+
+#define USE_APIC 0
+#define TICK 100000 //ns (!!! CAREFULL NEVER BELOW HZ IF USE_APIC == 0 !!!)
 
 static int srq;
 
@@ -65,7 +63,7 @@ static void rt_timer_tick(void)
 	printk("TIMER TICK: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
 #endif
 
-#if USE_APIC && defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) && USE_APIC
 	if (!rtai_cpuid())
 #endif
 	rt_pend_linux_srq(srq);
@@ -85,7 +83,7 @@ static void rt_timer_tick(void)
 int init_module(void)
 {
 	srq = rt_request_srq(0xcacca, rtai_srq_handler, user_srq_handler);
-#if USE_APIC && defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) && USE_APIC
 	do {
 		int cpuid;
 		struct apic_timer_setup_data setup_data[NR_RT_CPUS];
@@ -103,7 +101,7 @@ int init_module(void)
 
 void cleanup_module(void)
 {
-#if USE_APIC && defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) && USE_APIC
 	rt_free_apic_timers();
 #else
 	rt_free_timer();
