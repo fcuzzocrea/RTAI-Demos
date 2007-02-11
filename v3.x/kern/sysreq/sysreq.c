@@ -41,11 +41,13 @@ static long long user_srq_handler(unsigned long whatever)
 	if (whatever == 1) {
 		return (long long)(TICK/1000);
 	}
+
 	down_interruptible(&sem);
-	time = llimd(rtai_rdtsc(), 1000000, CPU_FREQ);
+
 // let's show how to communicate. Copy to and from user shall allow any kind of
 // data interchange and service.
-	copy_to_user((long long *)whatever, &time, 8);
+	time = llimd(rtai_rdtsc(), 1000000, CPU_FREQ);
+	copy_to_user((long long *)whatever, &time, sizeof(long long));
 	return time;
 }
 
@@ -54,7 +56,7 @@ static void rtai_srq_handler(void)
 	up(&sem);
 }
 
-static void rt_timer_tick(void)
+static void rt_timer_handler(void)
 {
 
 #if 0 // diagnose to see if interrupts are coming in
@@ -77,12 +79,14 @@ static void rt_timer_tick(void)
 		rt_pend_linux_irq(TIMER_8254_IRQ);
 	} 
 #endif
+
 	return;
 }
 
 int init_module(void)
 {
 	srq = rt_request_srq(0xcacca, rtai_srq_handler, user_srq_handler);
+
 #if defined(CONFIG_SMP) && USE_APIC
 	do {
 		int cpuid;
@@ -91,11 +95,12 @@ int init_module(void)
 			setup_data[cpuid].mode  = 1;
 			setup_data[cpuid].count = TICK;
 		}
-		rt_request_apic_timers(rt_timer_tick, setup_data);
+		rt_request_apic_timers(rt_timer_handler, setup_data);
 	} while (0);
 #else
-	rt_request_timer(rt_timer_tick, imuldiv(TICK, USE_APIC ? FREQ_APIC : FREQ_8254, 1000000000), USE_APIC); 
+	rt_request_timer(rt_timer_handler, imuldiv(TICK, USE_APIC ? FREQ_APIC : FREQ_8254, 1000000000), USE_APIC); 
 #endif
+
 	return 0;
 }
 
@@ -106,5 +111,6 @@ void cleanup_module(void)
 #else
 	rt_free_timer();
 #endif
+
 	rt_free_srq(srq);
 }

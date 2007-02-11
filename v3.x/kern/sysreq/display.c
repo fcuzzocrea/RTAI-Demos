@@ -58,7 +58,7 @@ int main(void)
 		rtai_srq(srq, (unsigned long)&time);
 		if (++count > nextcount) {
 			nextcount += repeat;
-			printf("# %d TICK: %d TIME: %lld DTOT: %lld\n", nextcount, tick, time - time0, time - dt);
+			printf("# %d > TICK: %d, TIME: %lld, DTOT: %lld;\n", nextcount, tick, time - time0, time - dt);
 		dt = time;
 		}
 	}
