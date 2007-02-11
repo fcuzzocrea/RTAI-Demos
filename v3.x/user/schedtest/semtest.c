@@ -33,7 +33,7 @@ static volatile int end;
 
 #define MAKE_HARD()  rt_make_hard_real_time()
 
-void task1(void *cookie)
+void task1(void *nothing)
 {
 	rt_thread_init(nam2num("TASK1"), 1, 0, SCHED_FIFO, 0x1);
 	rt_grow_and_lock_stack(STACK_SIZE - 10000);
@@ -47,11 +47,13 @@ void task1(void *cookie)
 		rt_sem_wait(sem1);
 		rt_sem_signal(sem2);
 	}
+
         rt_task_delete(NULL);
 	rt_printk("TASK1 EXITING.\n");
+	return;
 }
 
-void task2(void *cookie)
+void task2(void *nothing)
 {
 	int i;
 
@@ -102,8 +104,10 @@ void task2(void *cookie)
 	} else {
 		rt_printk(" NOT OK.\n");
 	}
+
         rt_task_delete(NULL);
 	rt_printk("TASK2 EXITING : ");
+	return;
 }
 
 static int thread1, thread2;
@@ -124,6 +128,7 @@ int main(void)
 	rt_thread_join(thread1);
 	rt_sem_delete(sem1);    
 	rt_sem_delete(sem2);    
+
         rt_task_delete(NULL);
 	rt_printk("END SCHEDULER TEST WITH SEMs.\n\n");
 	return 0;

@@ -14,6 +14,6 @@ semtest: semtest.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean:
-	rm -f *.o semtest
+	rm semtest
 
 .PHONY: clean
