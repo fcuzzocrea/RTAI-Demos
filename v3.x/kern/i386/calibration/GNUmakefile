@@ -37,11 +37,13 @@ clean::
 
 endif
 
+LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
+
 calproc: calproc.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $<
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 ucal: ucal.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $<
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 clean::
 	$(RM) calproc ucal

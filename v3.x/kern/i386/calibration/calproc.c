@@ -75,18 +75,18 @@ int main(void)
 	signal(SIGINT, endme);
 	srq = rtai_open_srq(CALSRQ);
 	if ((fifo = open("/dev/rtf0", O_RDONLY)) < 0) {
-		printf("Error opening FIFO0\n");
+		printf("Error opening FIF0\n");
 		exit(1);
 	}
 	polls[1].fd = fifo;
 	read(fifo, &params, sizeof(params));
 
 	while (1) {
-		printf("\n< IF YOU ARE USING THE RTAI_LXRT SCHEDULER NOTICE THAT RTAI KTASKS ARE NOTHING >\n<     BUT LINUX KTHREADS, SO YOU'LL CALIBRATE HARDENED LINUX KTHREADS ONLY     >\n");
+		printf("\n< IF YOU ARE USING THE RTAI_LXRT SCHEDULER NOTICE THAT RTAI OWN KERNEL KTASKS >\n<    ARE LINUX KTHREADS, SO YOU'LL CALIBRATE HARDENED LINUX KTHREADS ONLY     >\n");
 		printf("\n\n- 8254 programming time.\n");
 		printf("- Kernel space latency, rtai own kernel tasks.\n");
 		printf("- kernel space latency, hardened linuX kthreads.\n");
-		printf("- User space latency, requires LXRT.\n");
+		printf("- User space latency.\n");
 		printf("- Cpu frequency calibration.\n");
 		printf("- Apic frequency calibration.\n");
 		printf("- Both cpu and apic frequency calibration.\n");

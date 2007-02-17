@@ -26,7 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_fifos.h>
 #include "cal.h"
 
-#define COUNT               0xFFFFFFFFU
+MODULE_LICENSE("GPL");
+
+#define COUNT  0xFFFFFFFFU
 
 static struct params_t params = { 0, SETUP_TIME_8254, LATENCY_8254, 0, LATENCY_APIC, SETUP_TIME_APIC, CALIBRATED_APIC_FREQ, 0, CALIBRATED_CPU_FREQ, CLOCK_TICK_RATE, LATCH };
 
@@ -43,7 +45,7 @@ static void calibrate(void)
 	if (params.mp) {
 		times.apic_time = apic_read(APIC_TMCCT);
 	}
-#endif
+#endif /* CONFIG_X86_LOCAL_APIC */
 	if (times.intrs < 0) {
 		cpu_tbase  = times.cpu_time;
 		apic_tbase = times.apic_time;
@@ -58,11 +60,11 @@ static void calibrate(void)
 	rt_pend_linux_irq(TIMER_8254_IRQ);
 #ifdef CONFIG_X86_LOCAL_APIC
 	if (params.mp) {
-		int temp;
+		unsigned long temp;
 		temp = (apic_read(APIC_ICR) & (~0xCDFFF)) | (APIC_DM_FIXED | APIC_DEST_ALLINC | LOCAL_TIMER_VECTOR);
 		apic_write(APIC_ICR, temp);
 	}
-#endif
+#endif /* CONFIG_X86_LOCAL_APIC */
 }
 
 static void just_ret(void)
@@ -149,7 +151,7 @@ static long long user_srq(unsigned long whatever)
 	extern int calibrate_8254(void);
 	unsigned long args[MAXARGS];
 
-	copy_from_user(args, (unsigned int *)whatever, MAXARGS*sizeof(unsigned long));
+	copy_from_user(args, (unsigned long *)whatever, MAXARGS*sizeof(unsigned long));
 	switch (args[0]) {
 		case CAL_8254: {
 			return calibrate_8254(); //calibrate_apic()
@@ -161,11 +163,9 @@ static long long user_srq(unsigned long whatever)
 			rt_set_oneshot_mode();
 			period = start_rt_timer(nano2count(args[1]));
 			if (args[0] == KLATENCY) {
-//				rt_task_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, hard_cpu_id());
-				rt_task_init(&rtask, spv, args[2], STACKSIZE, 0, 0, 0);
+				rt_task_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, rtai_cpuid());
 			} else {
-//				rt_kthread_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, hard_cpu_id());
-				rt_kthread_init(&rtask, spv, args[2], STACKSIZE, 0, 0, 0);
+				rt_kthread_init_cpuid(&rtask, spv, args[2], STACKSIZE, 0, 0, 0, rtai_cpuid());
 			}
 			expected = rt_get_time() + 100*period;
 			rt_task_make_periodic(&rtask, expected, period);
@@ -185,6 +185,7 @@ static long long user_srq(unsigned long whatever)
 			rt_assign_irq_to_cpu(TIMER_8254_IRQ, 1 << hard_cpu_id());
 			rt_request_timer(just_ret, COUNT, 1);
 			rt_request_global_irq(TIMER_8254_IRQ, calibrate);
+			rt_set_irq_ack(TIMER_8254_IRQ, NULL);
 			break;
 		}
 
@@ -196,7 +197,7 @@ static long long user_srq(unsigned long whatever)
 		}
 
 		case BUS_CHECK: {
-			loops = 0;
+			loops = maxj = 0;
 			bus_period = imuldiv(args[1], CPU_FREQ, 1000000000);
 			bus_threshold = imuldiv(args[2], CPU_FREQ, 1000000000);
 			use_parport = args[3];
@@ -219,10 +220,9 @@ static int srq;
 
 int init_module(void)
 {
-	rt_mount_rtai();
 #ifdef CONFIG_X86_LOCAL_APIC
 	params.mp        = 1;
-#endif
+#endif /* CONFIG_X86_LOCAL_APIC */
 	params.freq_apic = FREQ_APIC;
 	params.cpu_freq  = CPU_FREQ;
 	rtf_create(0, FIFOBUFSIZE);
@@ -238,6 +238,5 @@ void cleanup_module(void)
 {
 	rt_free_srq(srq);
 	rtf_destroy(0);
-	rt_umount_rtai();
 	return;
 }
