@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_sem.h>
 
-#define LOOPS 5000
+#define LOOPS 50000
 
 #define STACK_SIZE 100000
 

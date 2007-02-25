@@ -1,19 +1,5 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += sysreq_rt.o
 
-CC = $(shell rtai-config --cc)
-LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
-LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
-
-all: semtest
-
-semtest: semtest.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
-
-clean:
-	rm semtest
-
-.PHONY: clean
+sysreq_rt-objs := sysreq.o

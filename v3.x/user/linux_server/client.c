@@ -31,10 +31,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_lxrt.h>
 
+#define USE_LINUX_SYSCALL
+
+#define SYNC_ASYNC ASYNC_LINUX_SYSCALL
+
 #define WAITIME  1     // seconds
 #define BUFSIZE  1000  // bytes
 #define HDRSIZE  50    // must be <= BUFSIZE
-#define NRECS    15000LL
+#define NRECS    100000
 
 int main(void)
 {
@@ -52,11 +56,12 @@ int main(void)
 		printf("CANNOT INIT TEST BUDDY TASK\n");
 		exit(1);
 	}
-	rt_linux_syscall_server_create(mytask);
+	rt_sync_async_linux_syscall_server_create(NULL, SYNC_LINUX_SYSCALL, NULL, NRECS + 1);
 	rt_grow_and_lock_stack(40000);
 	rt_make_hard_real_time();
 	rt_task_use_fpu(mytask, 1);
 
+#if 1
 	printf("(SCANF) Input a: string, integer, long long, float, double: ");
 	scanf("%s %i %lld %f %lf", s, &i, &ll, &f, &d);
 	printf("(SELECT) Got string, integer, long long, now we wait %d s using select.\n", WAITIME);
@@ -70,11 +75,20 @@ int main(void)
 	memset(s, 'B', HDRSIZE);
 	write(fd, s, HDRSIZE);
 	memset(s, 'A', BUFSIZE);
-	printf("(WRITE) Write %lu MB of 'A's to the opened file.\n", (unsigned long)(BUFSIZE*NRECS/1000000));
+	printf("(WRITE) Write %d records of %d 'A's to the opened file.\n", NRECS, BUFSIZE);
+
+#if SYNC_ASYNC == ASYNC_LINUX_SYSCALL
+	printf("!!!!! The writing will be executed asynchronously !!!!!\n");
+#else
+	printf("!!!!! The writing will be executed synchronously !!!!!\n");
+#endif
+	rt_set_linux_syscall_mode(SYNC_ASYNC, NULL);
 	t = rt_get_cpu_time_ns();
 	for (i = 0; i < NRECS; i++) {
 		write(fd, s, BUFSIZE);
 	}
+	rt_set_linux_syscall_mode(SYNC_LINUX_SYSCALL, NULL);
+
 	printf("(PRINTF) WRITE TIME: %lld (ms).\n", (rt_get_cpu_time_ns() - t + 500000)/1000000);
 	printf("(WRITE) Write a %d bytes trailer of 'E's.\n", HDRSIZE);
 	memset(s, 'E', HDRSIZE);
@@ -90,11 +104,20 @@ int main(void)
 	s[HDRSIZE + 1] = 0;
 	printf("(READ) Here is the header  %s.\n", s);
 	lseek(fd, -1, SEEK_CUR);
-	printf("(READ) Read the written %lu MB of 'A's back.\n", (unsigned long)(BUFSIZE*NRECS/1000000));
+	printf("(READ) Read the written %d MB of 'A's back.\n", BUFSIZE*NRECS);
+
+#if SYNC_ASYNC == ASYNC_LINUX_SYSCALL
+	printf("!!!!! The reading will be executed asynchronously !!!!!\n");
+#else
+	printf("!!!!! The reading will be executed asynchronously !!!!!\n");
+#endif
+	rt_set_linux_syscall_mode(ASYNC_LINUX_SYSCALL, NULL);
 	t = rt_get_cpu_time_ns();
 	for (i = 0; i < NRECS; i++) {
 		read(fd, s, BUFSIZE);
 	}
+	rt_set_linux_syscall_mode(SYNC_LINUX_SYSCALL, NULL);
+
 	printf("(PRINTF) READ TIME %lld (ms).\n", (rt_get_cpu_time_ns() - t + 500000)/1000000);
 	lseek(fd, -1, SEEK_CUR);
 	printf("(READ) Read the last %d bytes (last 'A' + trailer).\n", HDRSIZE + 1);
@@ -108,6 +131,7 @@ int main(void)
 	tns.tv_nsec = 0;
         nanosleep(&tns, NULL);
 	printf("(PRINTF) Test done, exiting.\n");
+#endif
 
 	rt_make_soft_real_time();
 	rt_task_delete(mytask);
