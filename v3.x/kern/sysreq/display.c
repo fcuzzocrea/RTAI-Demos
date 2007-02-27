@@ -34,7 +34,8 @@ static void endme (int dummy) { end = 1; }
 
 int main(void)
 {
-	int srq, tick, count = 0, nextcount = 0, repeat;
+	int srq, tick;
+	int tcount = 0, tnextcount = 0, trepeat, scount = 0;
 	struct sched_param mysched;
 	long long time0, time, dt;
 
@@ -51,15 +52,19 @@ int main(void)
 	srq = rtai_open_srq(0xcacca);
 	rtai_srq(srq, (unsigned long)&time0);
 	tick = rtai_srq(srq, 1);
-	repeat = 1000000/(tick*PRINT_FREQ);
+	trepeat = 1000000/(tick*PRINT_FREQ);
 	dt = time0;
 
 	while (!end) {
+		scount = rtai_srq(srq, 2);
 		rtai_srq(srq, (unsigned long)&time);
-		if (++count > nextcount) {
-			nextcount += repeat;
-			printf("# %d > TICK: %d, TIME: %lld, DTOT: %lld;\n", nextcount, tick, time - time0, time - dt);
-		dt = time;
+		if (++tcount > tnextcount) {
+			tnextcount += trepeat;
+			printf("# %d > TICK: %d, TIME: %lld, DTOT: %lld;\n", tnextcount, tick, time - time0, time - dt);
+			dt = time;
+			if (scount) {
+				printf("SCHED IPIs %d.\n", scount);
+			}
 		}
 	}
 	return 0;
