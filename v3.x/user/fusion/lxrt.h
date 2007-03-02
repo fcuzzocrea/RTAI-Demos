@@ -362,7 +362,7 @@
 
 static inline void *rt_malloc(int size)
 {
-	struct { int size; } arg = { size };
+	struct { long size; } arg = { size };
 	return rtai_lxrt(BIDX, SIZARG, MALLOC, &arg).v[LOW];
 }
 
@@ -421,7 +421,7 @@ static inline int rt_obj_bind(void *p, const char *name)
 	} else {
 		struct { void *sem; } sem;
 		if (!(sem.sem = rt_get_handle(~id))) {
-			struct { unsigned long name; int value, type; } arg = { id, 0, CNT_SEM };
+			struct { unsigned long name; long value, type; } arg = { id, 0, CNT_SEM };
 			if (!(sem.sem = rtai_lxrt(BIDX, SIZARG, NAMED_SEM_INIT, &arg).v[LOW])) {
 				return -EFAULT;
 			}

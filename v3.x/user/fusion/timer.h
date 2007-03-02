@@ -73,7 +73,7 @@ static inline void rt_timer_spin(RTIME ns)
 
 static inline int rt_timer_start(RTIME nstick)
 {
-        struct { int dummy; } arg;
+        struct { long dummy; } arg;
 	rtai_lxrt(BIDX, SIZARG, SET_ONESHOT_MODE, &arg);
 	rtai_lxrt(BIDX, SIZARG, START_TIMER, &arg);
 	return 0;

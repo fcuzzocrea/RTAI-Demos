@@ -99,7 +99,7 @@ static inline void rt_global_heap_close(void)
 
 static inline int rt_queue_create(RT_QUEUE *q, const char *name, size_t poolsize, size_t qlimit, int mode)
 {
-	struct { unsigned long msgq; int nmsg; int msg_size; } arg = { nam2id(name), qlimit != Q_UNLIMITED ? qlimit : 10000, sizeof(void *) };
+	struct { unsigned long msgq; long nmsg; long msg_size; } arg = { nam2id(name), qlimit != Q_UNLIMITED ? qlimit : 10000, sizeof(void *) };
         RT_TASK me;
         if (!(me.task = rtai_tskext())) {
                 me.task = rt_task_ext((unsigned long)name, 0, 0xF);
@@ -142,7 +142,7 @@ static inline int rt_queue_free(RT_QUEUE *q, void *buf)
 static inline int rt_queue_send(RT_QUEUE *q, void *buf, size_t size, int mode)
 {
 	void *bufp = buf - sizeof(void *) - (unsigned long)q->heap;
-	struct { void *msgq; void *msg; int msg_size; int msgprio; int space; } arg = { q->msgq, &bufp, sizeof(void *), mode & 1, 0 };
+	struct { void *msgq; void *msg; long msg_size; long msgprio; long space; } arg = { q->msgq, &bufp, sizeof(void *), mode & 1, 0 };
 	((int *)buf)[-1] = size;
 	if (mode & Q_BROADCAST) {
 	        return rtai_lxrt(BIDX, SIZARG, MSG_BROADCAST, &arg).i[LOW];
@@ -156,17 +156,17 @@ static inline ssize_t rt_queue_recv(RT_QUEUE *q, void **buf, RTIME timeout)
 {
 	int size;
 	if (timeout == TM_INFINITE) {
-        	struct { void *msgq; void *msg; int msg_size; int *msgprio; int space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, 0 };
+        	struct { void *msgq; void *msg; long msg_size; long *msgprio; long space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, 0 };
 		if ((size = rtai_lxrt(BIDX, SIZARG, MSG_RECEIVE, &arg).i[LOW])) {
 			size = -EINVAL;
 		}
 	} else if (timeout == TM_NONBLOCK) {
-        	struct { void *msgq; void *msg; int msg_size; int *msgprio; int space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, 0 };
+        	struct { void *msgq; void *msg; long msg_size; long *msgprio; long space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, 0 };
 		if ((size = rtai_lxrt(BIDX, SIZARG, MSG_RECEIVE_IF, &arg).i[LOW])) {
 			size = -EWOULDBLOCK;
 		}
 	} else {
-        	struct { void *msgq; void *msg; int msg_size; int *msgprio; RTIME until; int space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, timeout, 0 };
+        	struct { void *msgq; void *msg; long msg_size; long *msgprio; RTIME until; long space; } arg = { q->msgq, buf, sizeof(void *), &arg.space, timeout, 0 };
 		if ((size = rtai_lxrt(BIDX, SIZARG, MSG_RECEIVE_TIMED, &arg).i[LOW])) {
 			size = -ETIMEDOUT;
 		}

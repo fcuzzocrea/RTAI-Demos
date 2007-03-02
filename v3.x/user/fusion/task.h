@@ -80,7 +80,7 @@ static inline void rt_make_soft_real_time(void)
 static inline void *rt_task_ext(int name, int prio, int cpus_allowed)
 {
         struct sched_param mysched;
-        struct { int name, prio, stack_size, max_msg_size, cpus_allowed; } arg = { name, prio, 0, 0, cpus_allowed };
+        struct { long name, prio, stack_size, max_msg_size, cpus_allowed; } arg = { name, prio, 0, 0, cpus_allowed };
 	volatile float f;
 
         if (arg.prio < 0) {
@@ -92,7 +92,7 @@ static inline void *rt_task_ext(int name, int prio, int cpus_allowed)
         if (sched_setscheduler(0, SCHED_FIFO, &mysched) < 0) {
                 return 0;
         }
-	rtai_iopl();
+        rtai_iopl();
 	f = (float)name + (float)prio;
 
         return (void *)rtai_lxrt(BIDX, SIZARG, LXRT_TASK_INIT, &arg).v[LOW];
@@ -142,7 +142,7 @@ static inline int rt_task_wait_period(unsigned long *ovrun)
 static inline int rt_task_set_priority(RT_TASK *task, int prio)
 {
 	int retval;
-	struct { RT_TASK *task; int prio; } arg;
+	struct { RT_TASK *task; long prio; } arg;
 	arg.task = task ? task->task : 0;
 	if ((arg.prio = sched_get_priority_max(SCHED_FIFO) - prio) < 0) {
 		arg.prio = 0;
@@ -175,7 +175,7 @@ static inline RT_TASK *rt_task_self(void)
 
 static inline int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
-	struct { RT_TASK *task; int policy; int rr_quantum_ns; } arg = { task ? task->task : rtai_tskext(), 1, quantum };
+	struct { RT_TASK *task; long policy; long rr_quantum_ns; } arg = { task ? task->task : rtai_tskext(), 1, quantum };
 	rtai_lxrt(BIDX, SIZARG, SET_SCHED_POLICY, &arg);
 	return 0;
 }
@@ -277,13 +277,13 @@ static inline int rt_task_notify(RT_TASK *task, int signals)
 static inline int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 {
 	if (setmask & T_LOCK) {
-		struct { int dummy; } arg;
+		struct { long dummy; } arg;
 		rtai_lxrt(BIDX, SIZARG, SCHED_LOCK, &arg);
 	} else {
-		struct { int dummy; } arg;
+		struct { long dummy; } arg;
 		rtai_lxrt(BIDX, SIZARG, SCHED_UNLOCK, &arg);
 	}
-       	struct { void *task; int policy; int rr_quantum; } arg = { rtai_tskext(), setmask & T_RRB, 0 };
+       	struct { void *task; long policy; long rr_quantum; } arg = { rtai_tskext(), setmask & T_RRB, 0 };
        	rtai_lxrt(BIDX, SIZARG, SET_SCHED_POLICY, &arg);
 	return 0;
 }
