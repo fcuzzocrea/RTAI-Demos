@@ -35,7 +35,7 @@ static void write_fun(void *arg)
 	int written;
 	struct { int nr; RTIME write_time; } msg = { 0, };
 
-	rt_task_init_schmod(nam2num("WRTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
+	rt_task_init_schmod(nam2num("WRTSK"), 0, 0, 0, SCHED_FIFO, 0x1);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
@@ -72,7 +72,7 @@ static void read_fun(void *arg)
 	int read = 0, nr = 0, cnr = 0;
 	struct { int nr; RTIME write_time; } msg;
 
-	rt_task_init_schmod(nam2num("RDTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
+	rt_task_init_schmod(nam2num("RDTSK"), 0, 0, 0, SCHED_FIFO, 0x1);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
