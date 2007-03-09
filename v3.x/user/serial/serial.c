@@ -57,7 +57,7 @@ static void write_fun(void *arg)
 			goto exit_task;
 		}
 		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(100000000));
-		printf("recvd check # %d, sent at: %lld (us) from boot time\n", msg.nr, msg.write_time);
+		printf("recvd check # %d, sent at: %lld (us) from boot time\n", msg.nr, msg.write_time/1000);
 	}
 
 exit_task:
