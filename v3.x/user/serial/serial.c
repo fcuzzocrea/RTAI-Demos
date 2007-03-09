@@ -25,7 +25,7 @@
 #include <rtai_lxrt.h>
 #include <rtai_serial.h>
 
-#define WRITE_TASK_DELAY  2000000
+#define WRITE_TASK_DELAY  1000000
 
 #define WRITE_PORT  0
 #define READ_PORT   1
@@ -56,6 +56,8 @@ static void write_fun(void *arg)
 			}
 			goto exit_task;
 		}
+		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(100000000));
+		printf("recvd check # %d, sent at: %lld (us) from boot time\n", msg.nr, msg.write_time);
 	}
 
 exit_task:
@@ -67,7 +69,7 @@ exit_task:
 
 static void read_fun(void *arg)
 {
-	int read = 0, nr = 0;
+	int read = 0, nr = 0, cnr = 0;
 	struct { int nr; RTIME write_time; } msg;
 
 	rt_task_init_schmod(nam2num("RDTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
@@ -81,7 +83,7 @@ static void read_fun(void *arg)
 
 	while (1) {
 		if (!(read = rt_spread_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(100000000)))) {
-			printf("recvd as # %d, transm. time: %d (us), sent as # %d\n", ++nr, (int)(rt_get_time_ns() - msg.write_time)/1000, msg.nr);
+			printf("recvd as # %d, transm. time: %lld (us), sent as # %d\n", ++nr, (rt_get_time_ns() - msg.write_time)/1000, msg.nr);
 		} else {
 			if (read < 0) {
 				printf("rt_spread_timed error, code %d\n", read);
@@ -90,6 +92,9 @@ static void read_fun(void *arg)
 			}
 			goto exit_task;
 		}
+		msg.nr = ++cnr;
+		msg.write_time = rt_get_time_ns();
+		rt_spwrite_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(100000000));
 	}
 
 exit_task:
