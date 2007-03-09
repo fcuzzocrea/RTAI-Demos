@@ -25,7 +25,7 @@
 #include <rtai_lxrt.h>
 #include <rtai_serial.h>
 
-#define WRITE_TASK_DELAY  1000000
+#define WRITE_TASK_DELAY  5000000
 
 #define WRITE_PORT  0
 #define READ_PORT   1
@@ -57,7 +57,7 @@ static void write_fun(void *arg)
 			goto exit_task;
 		}
 		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(100000000));
-		printf("recvd check # %d, sent at: %lld (us) from boot time\n", msg.nr, msg.write_time/1000);
+		printf("   recvd check # %d, sent at: %lld (us) from boot time\n", msg.nr, msg.write_time/1000);
 	}
 
 exit_task:
@@ -119,7 +119,6 @@ int main(int argc, char* argv[])
 	signal(SIGKILL, catch_signal);
 
 	rt_task_init_schmod(nam2num("MAIN"), 1, 0, 0, SCHED_FIFO, 0xF);
-	rt_set_oneshot_mode();
 	start_rt_timer(0);
 
 	pthread_create(&read_thread,  NULL, (void *)read_fun, NULL);
