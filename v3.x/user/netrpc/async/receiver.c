@@ -51,7 +51,7 @@ static void *async_fun(void *args)
 if (SERVER) {
 		unsigned long long retval;
 		int i1, i2, l1, l2;
-		l1 = l2 = 4;
+		l1 = l2 = sizeof(int);
 		rt_get_net_rpc_ret(mbx, &retval, &i1, &l1, &i2, &l2, 0LL, MBX_RECEIVE);
 		printf("SERVER ASYNC MSG: RETVAL = %d, MSG = %d, LEN = %d.\n", (int)retval, i1, l1);
 		if (i1 < 0) {
@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
 	rt_make_hard_real_time();
 
 	while (!end) {	
-		r = RT_mbx_receive(sndnode, -sndport, sndmbx, &i, sizeof(int));
-		rt_printk("RECEIVE %d %d\n", r, i);
+		r = RT_mbx_receive(sndnode, -sndport, sndmbx, &i, sizeof(long));
+		rt_printk("RECEIVE %ld %ld\n", r, i);
 if (SERVER) {
 		rt_sleep(nano2count(100000000)); 
 } else {
@@ -119,7 +119,7 @@ if (SERVER) {
 			unsigned long long retval;
 			int i1, i2, l1, l2;
 			if (rt_sync_net_rpc(sndnode, -sndport)) {
-				l1 = l2 = 4;
+				l1 = l2 = sizeof(int);
 				rt_get_net_rpc_ret(mbx, &retval, &i1, &l1, &i2, &l2, 0LL, MBX_RECEIVE);
 				rt_printk("RECEIVER ASYNC MSG: RETVAL = %d, MSG = %d, LEN = %d.\n", (int)retval, i1, l1);
 				if (i1 < 0) {

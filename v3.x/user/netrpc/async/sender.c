@@ -45,14 +45,6 @@ static void *endme(void *args)
 	return 0;
 }
 
-void msleep(int ms)
-{
-        struct timeval timout;
-        timout.tv_sec = 0;
-        timout.tv_usec = ms*1000;
-        select(1, NULL, NULL, NULL, &timout);
-}
-
 static int thread;
 
 int main(int argc, char *argv[])
@@ -85,12 +77,12 @@ int main(int argc, char *argv[])
 	rt_make_hard_real_time();
 
 	for (i = 0; i < MAXLOOPS && !end; i++) {
-		rt_mbx_send(mbx, &i, sizeof(int));
-		rt_printk("SENT %d\n", i);
+		rt_mbx_send(mbx, &i, sizeof(long));
+		rt_printk("SENT %ld\n", i);
                 RT_sleep(rcvnode, rcvport, 200000000);
 	}
 	i = -1;
-	rt_mbx_send(mbx, &i, sizeof(int));
+	rt_mbx_send(mbx, &i, sizeof(long));
 	rt_make_soft_real_time();
 
 	while (!(rcvtsk = RT_get_adr(rcvnode, rcvport, "RCVTSK"))) {
