@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	unsigned long rcvnode;
 	RT_TASK *sndtsk, *rcvtsk;
 	MBX *mbx;
-	long i, rcvport;
+	long rcvport, i;
         struct sockaddr_in addr;
 
         thread = rt_thread_create(endme, NULL, 2000);
