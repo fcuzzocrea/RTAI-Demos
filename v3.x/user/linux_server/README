@@ -70,7 +70,7 @@ a zero return meaning success, non zero a failure in setting up the buddy;
 a NULL task means the current one; a NULL callback_fun is allowed. It will 
 operate according to mode setting, either SYNC_LINUX_SYSCALL or
 ASYNC_LINUX_SYSCALL. Beware of using an appropriate nr_bufd_async_calls, if
-async requests overrun the oldest one pending ones will be overwritte and
+async requests overrun the oldest one pending ones will be overwritten and
 not executed.
 
 - void rt_set_linux_syscall_mode(int mode, void (*callback_fun)(long, long);
