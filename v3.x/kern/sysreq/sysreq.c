@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define USE_APIC 1
+#define USE_APIC 0
 #define TICK 20000000 //ns (!!! CAREFULL NEVER BELOW HZ IF USE_APIC == 0 !!!)
 
 #if !defined(FREQ_APIC) || !defined(RTAI_FREQ_APIC)
