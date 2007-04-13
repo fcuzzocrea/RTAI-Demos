@@ -30,6 +30,10 @@ MODULE_LICENSE("GPL");
 #define USE_APIC 1
 #define TICK 20000000 //ns (!!! CAREFULL NEVER BELOW HZ IF USE_APIC == 0 !!!)
 
+#if !defined(FREQ_APIC) || !defined(RTAI_FREQ_APIC)
+#define FREQ_APIC FREQ_8254
+#endif
+
 static int srq, scount;
 
 static DECLARE_MUTEX_LOCKED(sem);
