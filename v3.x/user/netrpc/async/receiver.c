@@ -50,10 +50,11 @@ static void *async_fun(void *args)
 	while (!end) {	
 if (SERVER) {
 		unsigned long long retval;
-		int i1, i2, l1, l2;
-		l1 = l2 = sizeof(int);
+		long i1, i2;
+		int l1, l2;
+		l1 = l2 = sizeof(long);
 		rt_get_net_rpc_ret(mbx, &retval, &i1, &l1, &i2, &l2, 0LL, MBX_RECEIVE);
-		printf("SERVER ASYNC MSG: RETVAL = %d, MSG = %d, LEN = %d.\n", (int)retval, i1, l1);
+		printf("SERVER ASYNC MSG: RETVAL = %llu, MSG = %ld, LEN = %d.\n", retval, i1, l1);
 		if (i1 < 0) {
 			end = 1;
 			break;
@@ -117,11 +118,12 @@ if (SERVER) {
 		}
 		if (!end) {
 			unsigned long long retval;
-			int i1, i2, l1, l2;
+			long i1, i2;
+			int l1, l2;
 			if (rt_sync_net_rpc(sndnode, -sndport)) {
-				l1 = l2 = sizeof(int);
+				l1 = l2 = sizeof(long);
 				rt_get_net_rpc_ret(mbx, &retval, &i1, &l1, &i2, &l2, 0LL, MBX_RECEIVE);
-				rt_printk("RECEIVER ASYNC MSG: RETVAL = %d, MSG = %d, LEN = %d.\n", (int)retval, i1, l1);
+				rt_printk("RECEIVER ASYNC MSG: RETVAL = %d, MSG = %ld, LEN = %d.\n", (int)retval, i1, l1);
 				if (i1 < 0) {
 					end = 1;
 					break;
