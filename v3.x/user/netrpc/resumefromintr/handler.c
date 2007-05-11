@@ -32,7 +32,7 @@ RTAI_MODULE_PARM(TaskNode, charp);
 static int tasknode, taskport;
 static RT_TASK *rmt_task;
 static SEM *rmt_sem;
-static char run;
+static unsigned long run;
 
 static volatile int overuns;
 
@@ -70,9 +70,9 @@ static void sup_fun(long none)
         while ((taskport = rt_request_port(tasknode)) <= 0);
 	rt_mbx_receive(&mbx, &rmt_task, sizeof(rmt_task));
 	rt_mbx_receive(&mbx, &rmt_sem, sizeof(rmt_sem));
-	rt_mbx_receive(&mbx, &run, 1);
+	rt_mbx_receive(&mbx, &run, sizeof(run));
 
-	rt_mbx_receive(&mbx, &run, 1);
+	rt_mbx_receive(&mbx, &run, sizeof(run));
        	rt_release_port(tasknode, taskport);
 	rt_printk("ALL INTERRUPT MODULE FUNCTIONS TERMINATED\n");
 }

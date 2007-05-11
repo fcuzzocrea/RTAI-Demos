@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -41,7 +42,8 @@ int main(int argc, char *argv[])
 	RTIME t0, t;
 	int i, count, jit, maxj, test_time, hdlnode, hdlport;
 	struct sockaddr_in addr;
-	char run;
+	unsigned long run;
+	char c;
 
  	if (!(task = rt_task_init_schmod(nam2num("PRCTSK"), 1, 0, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT PROCESS TASK\n");
@@ -62,8 +64,8 @@ int main(int argc, char *argv[])
         sem = rt_sem_init(nam2num("PRCSEM"), 0);
 
 	printf("USE: SEM SEND/WAIT (s), TASK RESM/SUSP (r), INTERTASK MSG (m): [s|r|m]? ");
-	scanf("%c", &run);
-	switch (run) {
+	scanf("%c", &c);
+	switch (c) {
 		case 'r': printf("TESTING TASK SUSPEND/RESUME TIME (s): ");
 			  run = 2;
 			  break;
@@ -81,7 +83,7 @@ int main(int argc, char *argv[])
 
         RT_mbx_send(hdlnode, hdlport, mbx, &task, sizeof(task));
         RT_mbx_send(hdlnode, hdlport, mbx, &sem, sizeof(sem));
-        RT_mbx_send(hdlnode, hdlport, mbx, &run, 1);
+        RT_mbx_send(hdlnode, hdlport, mbx, &run, sizeof(run));
 
 	count = maxj = 0;
 	t0 = rt_get_cpu_time_ns();
@@ -100,14 +102,14 @@ int main(int argc, char *argv[])
 					break;
 				case 2: rt_task_suspend(task);
 					break;
-				case 3: rt_receive(0, (unsigned int *)&run);
+				case 3: rt_receive(0, &run);
 					break;
 			}
 		} 
 	}
 
 	run = 0;
-        RT_mbx_send(hdlnode, hdlport, mbx, &run, 1);
+        RT_mbx_send(hdlnode, hdlport, mbx, &run, sizeof(run));
 	rt_make_soft_real_time();
 	rt_release_port(hdlnode, hdlport);
 	rt_task_delete(task);
