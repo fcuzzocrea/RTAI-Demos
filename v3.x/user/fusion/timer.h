@@ -61,8 +61,37 @@ static inline RTIME rt_timer_read(void)
 
 static inline RTIME rt_timer_tsc(void)
 {
+#if 1
 	struct { unsigned long dummy; } arg;
 	return rtai_lxrt(BIDX, SIZARG, GET_TIME, &arg).rt;
+#else
+
+#if 0  // i386
+	unsigned long long t;
+	__asm__ __volatile__( "rdtsc" : "=A" (t));
+	return t;
+#endif
+
+#if 0  // x86_64
+	unsigned int __a,__d;
+	asm volatile("rdtsc" : "=a" (__a), "=d" (__d));
+	return ((unsigned long)__a) | (((unsigned long)__d)<<32);
+#endif
+
+#if 0  // PPC
+	unsigned long long ts;
+	unsigned long chk;
+	__asm__ __volatile__ ("1: mftbu %0\n"
+			      "   mftb %1\n"
+			      "   mftbu %2\n"
+			      "   cmpw %2,%0\n"
+			      "   bne 1b\n"
+			      : "=r" (((unsigned long *)((void *)&ts))[0]),
+			        "=r" (((unsigned long *)((void *)&ts))[1]),
+			        "=r" (chk));
+        return ts;
+#endif
+#endif
 }
 
 static inline void rt_timer_spin(RTIME ns)
