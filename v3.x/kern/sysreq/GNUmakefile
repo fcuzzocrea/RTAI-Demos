@@ -24,9 +24,9 @@ else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
 
-all:: resumefromintr_rt.o
+all:: sysreq.o
 
-sysreq%.o: %.c
+sysreq.o: sysreq.c
 	$(CC) $(MODULE_CFLAGS) -c $<
 
 clean::
