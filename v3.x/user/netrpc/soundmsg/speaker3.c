@@ -57,7 +57,8 @@ int main(int argc, char *argv[])
 	RTIME period;
 	struct sockaddr_in addr;
 	char buf[BUFSIZE], data, temp;
-	unsigned int msg, i, len;
+	unsigned int msg;
+	long i, len;
 
 	printf("\n\nSPECIFIC RECEIVE DIRECTLY ON REMOTE TASK\n");
 	ioperm(PORT_ADR, 1, 1);

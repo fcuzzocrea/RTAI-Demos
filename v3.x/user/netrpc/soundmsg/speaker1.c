@@ -55,7 +55,8 @@ int main(void)
 	RT_TASK *spktsk, *plrtsk;
 	RTIME period;
 	char buf[BUFSIZE], data, temp;
-	unsigned int msg, i, len;
+	unsigned int msg;
+	long i, len;
 
         printf("\n\nGENERIC RECEIVE\n");
 	ioperm(PORT_ADR, 1, 1);

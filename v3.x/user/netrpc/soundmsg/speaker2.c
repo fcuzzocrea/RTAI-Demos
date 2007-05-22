@@ -57,7 +57,8 @@ int main(int argc, char *argv[])
 	RTIME period;
 	struct sockaddr_in addr;
 	char buf[BUFSIZE], data, temp;
-	unsigned int msg, i, len;
+	unsigned int msg;
+	long i, len;
 
 	printf("\n\nSPECIFIC RECEIVE USING EXPLICITELY ASSIGNED LOCAL STUB\n");
 	ioperm(PORT_ADR, 1, 1);
