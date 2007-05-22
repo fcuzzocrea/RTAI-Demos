@@ -15,17 +15,9 @@ int main(int argc, char* argv[])
 	pid_t pid, my_pid, proxy;
 	RT_TASK *clt;
 	char msg[512], rep[512];
-	struct sched_param mysched;
-
-	mysched.sched_priority = 98;
-	if (sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		puts(" ERROR IN SETTING THE SCHEDULER UP");
-		perror("errno");
-		exit(1);
- 	}       
 
 	// Give a lower priority than SRV and proxy.	
- 	if (!(clt = rt_task_init(clt_name, 1, 0, 0))) {
+ 	if (!(clt = rt_task_init_schmod(clt_name, 1, 0, 0, SCHED_FIFO, 0x1))) {
 		PRINTF("CANNOT INIT CLIENT TASK\n");
 		exit(3);
 	}
@@ -47,6 +39,7 @@ int main(int argc, char* argv[])
 	}
 
 	len = rt_Send(pid, 0, &proxy, 0, sizeof(proxy));
+
 	if (len == sizeof(proxy)) {
 		PRINTF("CLT got the proxy %04X\n", proxy);
 		count = 10;

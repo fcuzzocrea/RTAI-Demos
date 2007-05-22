@@ -24,13 +24,14 @@ int main(int argc, char* argv[])
 {
 	unsigned long srv_name = nam2num("SRV");
 	RT_TASK *srv;
-	pid_t pid, my_pid, proxy ;
-	int count, msglen ;
+	pid_t pid, my_pid, proxy;
+	int count;
+	size_t msglen;
 	RTIME period;
 	char *pt;
 	
 
- 	if (!(srv = rt_task_init(srv_name, 0, 0, 0))) {
+ 	if (!(srv = rt_task_init_schmod(srv_name, 0, 0, 0, SCHED_FIFO, 0x1))) {
 		PRINTF("CANNOT INIT SRV TASK\n");
 		exit(-1);
 	}
