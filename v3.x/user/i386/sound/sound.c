@@ -57,7 +57,7 @@ static void *intr_handler(void *args)
 	MBX *mbx;
 	char data = 'G';
 	char temp;
-	unsigned int msg;
+	unsigned long msg;
 
 	rt_allow_nonroot_hrt();
 //	ioperm(PORT_ADR, 1, 1);
@@ -104,7 +104,8 @@ static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
-	unsigned int player, msg, cnt, thread;
+	unsigned int player, cnt, thread;
+	unsigned long msg;
 	RT_TASK *mytask;
 	MBX *mbx;
 	char data[BUFSIZE];
