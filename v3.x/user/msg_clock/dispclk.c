@@ -114,7 +114,7 @@ void Display_PutHour(MenageHmsh_tChain11 chain)
 	static MenageHmsh_tChain11 hours;
 	static RT_TASK *ackn = 0;
 	unsigned int put = 'p';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != rt_get_adr(nam2num("DSPTSK"))) {
 		ackn = rt_rpc(rt_get_adr(nam2num("DSPTSK")), put, &msg);
@@ -129,7 +129,7 @@ void Display_PutTimes(MenageHmsh_tChain11 chain)
 	static MenageHmsh_tChain11 times;
 	static RT_TASK *ackn = 0;
 	unsigned int put = 'P';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != rt_get_adr(nam2num("DSPTSK"))) {
 		ackn = rt_rpc(rt_get_adr(nam2num("DSPTSK")), put, &msg);
