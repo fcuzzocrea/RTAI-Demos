@@ -109,7 +109,7 @@ static int ClockChrono_Clock(void *args)
 	MenageHmsh_tChain11 hourChain;
 	char command;
 	BOOLEAN display;
-	unsigned int msg;
+	unsigned long msg;
 
  	if (!(mytask = rt_thread_init(nam2num("CLOCK"), 1, 0, SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT TASK ClockChronoClock\n");
@@ -174,7 +174,7 @@ static int ClockChrono_Chrono(void *args)
 	BOOLEAN display;
 	BOOLEAN hundredthes = FALSE;
 	char command;
-	unsigned int msg;
+	unsigned long msg;
 
  	if (!(mytask = rt_thread_init(nam2num("CHRONO"), 1, 0, SCHED_FIFO, 0x2))) {
 		printf("CANNOT INIT TASK ClockChronoChrono\n");

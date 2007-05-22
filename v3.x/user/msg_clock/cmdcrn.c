@@ -49,7 +49,7 @@ void CommandChrono_Get(char *command)
 {
 	static RT_TASK *ackn = 0;
 	unsigned int get = 'd';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != rt_get_adr(nam2num("CHRTSK"))) {
 		ackn = rt_rpc(rt_get_adr(nam2num("CHRTSK")), get, &msg);
@@ -62,7 +62,7 @@ void *CommandChrono_task(void *args)
 {
 	RT_TASK *mytask;
 	RTIME fiveSeconds = nano2count(FIVE_SECONDS);
-	unsigned int command;
+	unsigned long command;
 	unsigned int buffered = 0;
 	unsigned int C = 'C';
 	unsigned int R = 'R';

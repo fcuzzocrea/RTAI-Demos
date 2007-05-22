@@ -143,7 +143,7 @@ void Display_Get(MenageHmsh_tChain11 *chain, Display_tDest *receiver)
 {
 	static RT_TASK *ackn = 0;
 	unsigned int get = 'g';
-	unsigned int msg;
+	unsigned long msg;
 
 	if (ackn != rt_get_adr(nam2num("DSPTSK"))) {
 		ackn = rt_rpc(rt_get_adr(nam2num("DSPTSK")), get, &msg);
@@ -156,7 +156,7 @@ void Display_Get(MenageHmsh_tChain11 *chain, Display_tDest *receiver)
 void *Display_task(void *args)
 {
 	RT_TASK *mytask;
-	unsigned int command;
+	unsigned long command;
 	int ackn = 0;
 	RT_TASK *get = (RT_TASK *)0, *tput = (RT_TASK *)0, *hput = (RT_TASK *)0, *task;
 
