@@ -105,11 +105,17 @@ int main(void)
 		}
 	} while (ch != 'f');
         ch = 'r';
-	mq_send(Keyboard, &ch, 1, 0);
+	while (mq_send(Keyboard, &ch, 1, 0) < 0) {
+		rt_sleep(nano2count(1000000));
+	}
        	ch = 'c';
-	mq_send(Keyboard, &ch, 1, 0);
+	while (mq_send(Keyboard, &ch, 1, 0) < 0) {
+		rt_sleep(nano2count(1000000));
+	}
         ch = 'f';
-	mq_send(Keyboard, &ch, 1, 0);
+	while (mq_send(Keyboard, &ch, 1, 0) < 0) {
+		rt_sleep(nano2count(1000000));
+	}
 	rt_task_resume(rt_get_adr(nam2num("MASTER")));
 	while (rt_get_adr(nam2num("MASTER"))) {
 		rt_sleep(nano2count(1000000));
