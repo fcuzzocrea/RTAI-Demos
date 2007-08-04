@@ -77,6 +77,12 @@ static inline void rt_make_soft_real_time(void)
         rtai_lxrt(BIDX, SIZARG, MAKE_SOFT_RT, &arg);
 }
 
+static inline int rt_is_hard_real_time(RT_TASK *rt_task)
+{
+	struct { RT_TASK *task; } arg = { rt_task };
+	return rtai_lxrt(BIDX, SIZARG, IS_HARD, &arg).i[LOW];
+}
+
 static inline void *rt_task_ext(int name, int prio, int cpus_allowed)
 {
         struct sched_param mysched;
