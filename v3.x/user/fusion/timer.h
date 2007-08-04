@@ -94,6 +94,15 @@ static inline RTIME rt_timer_tsc(void)
 #endif
 }
 
+#define rt_timer_set_mode(x) \
+	do { \
+		RT_TIMER_INFO timer_info; \
+		rt_timer_inquire(&timer_info); \
+		if (timer_info.period) { \
+			rt_timer_start(TM_ONESHOT); \
+		} \
+	} while (0)
+
 static inline void rt_timer_spin(RTIME ns)
 {
 	struct { long ns; } arg = { ns };
