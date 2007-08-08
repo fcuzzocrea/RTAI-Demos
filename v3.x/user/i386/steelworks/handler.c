@@ -40,7 +40,9 @@ static void encoder_tick(void)
 	rt_times.tick_time = rt_times.intr_time;
 	rt_times.intr_time = rt_times.tick_time + rt_times.periodic_tick;
 	if (rt_times.tick_time >= rt_times.linux_time) {
-		rt_times.linux_time += rt_times.linux_tick;
+		if (rt_times.linux_tick > 0) {
+			rt_times.linux_time += rt_times.linux_tick;
+		}
 		rt_pend_linux_irq(0);
 	} 
 	rt_mbx_receive_if(&mbx, &start, 1);
