@@ -42,7 +42,9 @@ static void timer_tick(void)
 	rt_times.intr_time = rt_times.tick_time + rt_times.periodic_tick;
 	rt_set_timer_delay(0);
 	if (rt_times.tick_time >= rt_times.linux_time) {
-		rt_times.linux_time += rt_times.linux_tick;
+		if (rt_times.linux_tick) {
+			rt_times.linux_time += rt_times.linux_tick;
+		}
 		rt_pend_linux_irq(TIMER_8254_IRQ);
 	} 
 	if (run) {
@@ -67,7 +69,7 @@ static RT_TASK sup_task;
 
 static void sup_fun(long none)
 {
-        while ((taskport = rt_request_port(tasknode)) <= 0);
+        while (tasknode && (taskport = rt_request_hard_port(tasknode)) <= 0);
 	rt_mbx_receive(&mbx, &rmt_task, sizeof(rmt_task));
 	rt_mbx_receive(&mbx, &rmt_sem, sizeof(rmt_sem));
 	rt_mbx_receive(&mbx, &run, 1);
@@ -82,7 +84,7 @@ int init_module(void)
         tasknode = ddn2nl(TaskNode);
 	rt_mbx_init(&mbx, 1);
 	rt_register(nam2num("HDLMBX"), &mbx, IS_MBX, 0);
-        rt_task_init(&sup_task, sup_fun, 0, 2000, 0, 0, 0);
+        rt_task_init(&sup_task, sup_fun, 0, 2000, 1, 0, 0);
         rt_task_resume(&sup_task);
 	rt_request_timer(timer_tick, imuldiv(PERIOD, FREQ_8254, 1000000000), 0);
 	return 0;
