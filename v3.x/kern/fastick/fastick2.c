@@ -40,7 +40,9 @@ static void rt_timer_tick(void)
 	rt_times.intr_time = rt_times.tick_time + rt_times.periodic_tick;
 	rt_set_timer_delay(0);
 	if (rt_times.tick_time >= rt_times.linux_time) {
-		rt_times.linux_time += rt_times.linux_tick;
+		if (rt_times.linux_tick > 0) {
+			rt_times.linux_time += rt_times.linux_tick;
+		}
 		rt_pend_linux_irq(TIMER_8254_IRQ);
 	} 
 }
