@@ -18,15 +18,6 @@
 #include <timer.h>
 #include <sem.h>
 
-#define rt_timer_set_mode(x) \
-        do { \
-                RT_TIMER_INFO timer_info; \
-                rt_timer_inquire(&timer_info); \
-                if (timer_info.period) { \
-                        rt_timer_start(TM_ONESHOT); \
-                } \
-        } while (0)
-
 RT_TASK event_task, worker_task;
 
 RT_SEM switch_sem;
