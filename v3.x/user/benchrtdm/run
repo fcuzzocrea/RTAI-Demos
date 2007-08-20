@@ -19,13 +19,13 @@ echo "Now start your realtime test of choice <enter>,"
 echo "<ctrl-C> to end it:>"
 read junk
 sync
-if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod $MODULES/rtai_tasklets.ko;
-else insmod $MODULES/rtai_tasklets.o; fi
+#if (`rtai-config --linux-version | grep -q 2.6`);
+#then insmod $MODULES/rtai_tasklets.ko;
+#else insmod $MODULES/rtai_tasklets.o; fi
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod $MODULES/rtai_rtdm.ko; insmod ./timerbench_rt.ko
 else insmod $MODULES/rtai_rtdm.o; insmod ./timerbench.o; fi
-./latency -t $1
+./latency -p 22 -t $1
 sync
 echo
 echo "Done. Press <enter> to remove the modules."
