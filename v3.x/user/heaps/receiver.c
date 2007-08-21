@@ -43,11 +43,11 @@ int main(void)
 	unsigned int msg, chksum, count;
 
 	receiving_task = rt_task_init_schmod(nam2num("RTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-//	rt_make_hard_real_time();
 	heap = rt_heap_open(nam2num("HEAP"), 0, SUPRT);
 	rt_global_heap_open();
 	shm = rt_named_halloc(nam2num("MEM"), 0);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
+	rt_make_hard_real_time();
 	agentask = rt_get_adr(nam2num("ATSK"));
 	rt_malloc(87);
 	count = 0;
@@ -91,5 +91,7 @@ int main(void)
 	PRINTF("RECEIVER ENDS\n");
 	rt_heap_close(nam2num("HEAP"), heap);
 	PRINTF("RECEIVER ENDS %d\n", getpid());
+	rt_make_soft_real_time();
+	rt_task_delete(receiving_task);
 	return 0;
 }

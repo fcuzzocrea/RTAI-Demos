@@ -45,13 +45,13 @@ int main(void)
 	unsigned long chksum;
 
 	sending_task = rt_task_init_schmod(nam2num("STSK"), 0, 0, 0, SCHED_FIFO, 0xF);
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-	rt_make_hard_real_time();
 	heap = rt_heap_open(nam2num("HEAP"), 0, SUPRT);
 	rt_global_heap_open();
+	shm = rt_named_halloc(nam2num("MEM"), 0);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
+	rt_make_hard_real_time();
 	rt_halloc(9);
 	rt_halloc(13);
-	shm = rt_named_halloc(nam2num("MEM"), 0);
 	shm_size = shm[0];
 printf("SHMSIZE %d\n", shm_size);
 	shmsem   = rt_get_adr(nam2num("SHSM"));

@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define TICK_PERIOD 100000
 
-#define STACK_SIZE 2000
+#define STACK_SIZE 4000
 
 #define SHMSIZE 4000
 
@@ -150,7 +150,7 @@ int init_module(void)
 	rt_register(nam2num("SHSM"), &shmsem, IS_SEM, current);
 	rt_register(nam2num("AGSM"), &agentsem, IS_SEM, 0);
 	rt_register(nam2num("ATSK"), &agentask, IS_TASK, 0);
-//	rt_set_oneshot_mode();
+	rt_set_oneshot_mode();
 	period = start_rt_timer(nano2count(TICK_PERIOD));
 	rt_task_make_periodic(&agentask, rt_get_time() + period, period);
 	return 0;
