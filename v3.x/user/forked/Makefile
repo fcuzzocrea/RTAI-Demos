@@ -10,7 +10,7 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
 all: forked
 
-forked: forked.c
+forked: forked.c period.h
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 clean:

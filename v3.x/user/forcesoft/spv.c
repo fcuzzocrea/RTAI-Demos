@@ -62,6 +62,6 @@ int main(void)
 	}
 	stop_rt_timer();
 	rt_task_delete(mytask);
-	printf("SUPERVISOR ENDED, NOW WAIT ITS END OR DO KILL BACKGROUND TASK BY HANDS.\n");
+	printf("SUPERVISOR ENDED, NOW WAIT ITS END.\n");
 	return 0;
 }
