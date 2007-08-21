@@ -95,13 +95,16 @@ static inline RTIME rt_timer_tsc(void)
 }
 
 #define rt_timer_set_mode(x) \
-	do { \
+do { \
+        struct { unsigned long dummy; } arg; \
+	if (!rtai_lxrt(BIDX, SIZARG, HARD_TIMER_RUNNING, &arg).i[LOW]) { \
 		RT_TIMER_INFO timer_info; \
 		rt_timer_inquire(&timer_info); \
 		if (timer_info.period) { \
 			rt_timer_start(TM_ONESHOT); \
 		} \
-	} while (0)
+	} \
+} while (0)
 
 static inline void rt_timer_spin(RTIME ns)
 {
