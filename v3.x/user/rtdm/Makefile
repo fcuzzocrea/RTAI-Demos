@@ -14,7 +14,7 @@ test: test.c
 	$(CC) $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 ftest: ftest.c
-	$(CC) $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt
+	$(CC) -I../fusion $(LXRT_CFLAGS) -g -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean:
 	rm -f test ftest

@@ -64,11 +64,12 @@ static const struct rtser_config read_config = {
     RTSER_EVENT_RXPEND          /* event mask */
 };
 
-static int sfd, rfd;
+static int sfd, rfd, end;
 
 static void endme(int dummy) 
 { 
-//	stop_rt_timer();
+	end = 1;
+	stop_rt_timer();
 	rt_dev_close(sfd);
 	rt_dev_close(rfd);
 }
@@ -114,7 +115,7 @@ int main(void)
 		rt_dev_ioctl(rfd, RTSER_RTIOC_SET_CONFIG, &read_config);
 		PRINT("\nhello_world_lxrt: rtser0 test started (fd_count = %d)\n", rt_dev_fdcount());
 		te = rt_get_cpu_time_ns();
-		for (i = 1; i <= LOOPS; i++) {
+		for (i = 1; i <= LOOPS && !end; i++) {
 			strcpy(hello, "Hello World\n\r");
 			ts = rt_get_time_ns();
 			rt_dev_write(sfd, hello, sizeof(hello) - 1);
@@ -145,7 +146,7 @@ struct rtser_event rx_event;
 		PRINT("hello_world_lxrt: rtser0 and rtser1 test finished\n");
 	}    
 
-//	stop_rt_timer();
+	stop_rt_timer();
 	rt_make_soft_real_time();
 	rt_task_delete(testcomtsk);
 	return 0;
