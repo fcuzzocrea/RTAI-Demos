@@ -1,0 +1,3 @@
+rmmod tut01_skeleton_drv_rt
+rmmod tut02_skeleton_drv_rt
+../remod
