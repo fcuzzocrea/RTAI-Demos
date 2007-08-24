@@ -83,7 +83,7 @@ static inline int rt_is_hard_real_time(RT_TASK *rt_task)
 	return rtai_lxrt(BIDX, SIZARG, IS_HARD, &arg).i[LOW];
 }
 
-static inline void *rt_task_ext(int name, int prio, int cpus_allowed)
+static inline void *rt_task_ext(long name, int prio, int cpus_allowed)
 {
         struct sched_param mysched;
         struct { long name, prio, stack_size, max_msg_size, cpus_allowed; } arg = { name, prio, 0, 0, cpus_allowed };
@@ -212,7 +212,13 @@ static inline void support_task(RT_TASK *task)
 
 static inline int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
-	return 0;
+	if ((task->task = rt_task_ext((long)task, sched_get_priority_max(SCHED_FIFO) - prio, mode >> CPU_SHIFT))) {
+		task->id   = name ? nam2id(name) : (long)task;
+		task->prio = prio;
+		task->mode = mode;
+		rt_make_hard_real_time();
+	}
+	return task->task ? 0 : -ENOMEM;
 }
 
 static inline int rt_thread_create(void *fun, void *args, int stack_size)
