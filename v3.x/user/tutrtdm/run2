@@ -22,7 +22,7 @@ sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./tut02-skeleton-drv_rt.ko;
 else insmod ./tut02-skeleton-drv.o; fi
-$SUDO ./tut02-skeleton-app "0123456789-abcdefghilmnopqrstuvz"
+$SUDO ./tut02-skeleton-app "0123456789-abcdefghijklmnopqrstuvwxyz"
 $SUDO ./tut02-skeleton-app
 echo
 echo "Done. Press <enter> to remove the modules."
