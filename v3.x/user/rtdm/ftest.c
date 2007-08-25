@@ -1,7 +1,7 @@
 /*
  * cross-link.c
  *
- * Userspace test program (Xenomai native skin) for RTDM-based UART drivers
+ * Userspace test program for RTDM-based UART drivers
  * Copyright 2005 by Joerg Langenberg <joergel75@gmx.net>
  *
  * Updates by Jan Kiszka <jan.kiszka@web.de>
@@ -46,8 +46,8 @@ unsigned int read_state = 0;
 unsigned int write_state = 0;
 
 /*                           --s-ms-us-ns */
-//RTIME write_task_period_ns =    100000000llu;
-RTIME write_task_period_ns =    2500000llu;
+RTIME write_task_period_ns =    100000000llu;
+//RTIME write_task_period_ns =    2500000llu;
 RT_TASK write_task;
 RT_TASK read_task;
 
@@ -193,7 +193,7 @@ void read_task_proc(void *arg)
 
 	/*
 	 * We are in secondary mode now due to printf, the next
-	 * blocking Xenomai or driver call will switch us back
+	 * blocking RTAI or driver call will switch us back
 	 * (here: RTSER_RTIOC_WAIT_EVENT).
 	 */
 
