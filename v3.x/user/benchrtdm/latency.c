@@ -579,7 +579,7 @@ int main(int argc, char **argv)
 		if (benchdev < 0) {
 			fprintf(stderr,
 				"latency: failed to open benchmark device, code %d\n"
-				"(modprobe xeno_timerbench?)\n", benchdev);
+				"(modprobe RTAI_timerbench?)\n", benchdev);
 			return 0;
 		}
 	}
