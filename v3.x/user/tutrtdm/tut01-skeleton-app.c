@@ -37,7 +37,7 @@
  *
  * To test this application, you just need to:
  *
- * $ export LD_LIBRARY_PATH=<path of xenomai>/lib
+ * $ insmod the needed RTAI modules
  * $ insmod tut01-skeleton-drv.ko
  * $ ./tut01-skeleton-app
  *
