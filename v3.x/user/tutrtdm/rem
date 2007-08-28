@@ -1,3 +1,5 @@
 rmmod tut01_skeleton_drv_rt
 rmmod tut02_skeleton_drv_rt
+rmmod tut01_skeleton_drv
+rmmod tut02_skeleton_drv
 ../remod
