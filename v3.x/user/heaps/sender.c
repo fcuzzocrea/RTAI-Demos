@@ -42,7 +42,7 @@ int main(void)
 	SEM *shmsem, *agentsem;
 	int i, *shm, shm_size, count;
 	void *heap;
-	unsigned long chksum;
+	unsigned int chksum;
 
 	sending_task = rt_task_init_schmod(nam2num("STSK"), 0, 0, 0, SCHED_FIFO, 0xF);
 	heap = rt_heap_open(nam2num("HEAP"), 0, SUPRT);
@@ -77,7 +77,7 @@ printf("SHMSIZE %d\n", shm_size);
 				chksum += shm[i];
 			}
 			shm[shm[0] + 1] = chksum;
-			PRINTF("STSK: %d CHECKSUM = %lx\n", count, chksum);
+			PRINTF("STSK: %d CHECKSUM = %x\n", count, chksum);
 		PRINTF("SENDING TASK SIGNAL AGENTSEM\n");
 		rt_sem_signal(agentsem);
 		t = rt_get_cpu_time_ns();
