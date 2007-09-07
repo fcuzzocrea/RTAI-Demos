@@ -21,20 +21,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <stdlib.h>
 #include <rtai_lxrt.h>
 
-static RTIME wd_period_ns = 100000000; // period of WD = 1/10 sec. 
+#define TASK_PERIOD 1000000 // ns
 
 int main (void)
 { 
 	RT_TASK *rt_task;
-	RTIME task_period; 
 
 	mlockall(MCL_CURRENT|MCL_FUTURE); 
 	rt_allow_nonroot_hrt();
 	rt_task = rt_task_init_schmod(nam2num("RTRecv"), 1, 0, 0, SCHED_FIFO, 0xF);
-	task_period = nano2count(30*wd_period_ns); 
-
 	rt_make_hard_real_time();
-	rt_task_make_periodic(rt_task, rt_get_time(), task_period);
+	rt_task_make_periodic(rt_task, rt_get_time(), nano2count(TASK_PERIOD));
 	while (1);
 	rt_make_soft_real_time();
 
