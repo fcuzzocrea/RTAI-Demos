@@ -27,7 +27,7 @@ MODULE_LICENSE("GPL");
 
 static RT_TASK task;
 
-static RTIME wd_period_ns = 100000000; // period of WD = 1/10 sec. 
+#define TASK_PERIOD 1000000 // ns
 
 static void fun(long none)
 {
@@ -37,7 +37,7 @@ static void fun(long none)
 int init_module(void)
 {
 	rt_task_init(&task, fun, 0, 8000, 1, 0, 0);
-	rt_task_make_periodic(&task, rt_get_time(), nano2count(30*wd_period_ns));
+	rt_task_make_periodic(&task, rt_get_time(), nano2count(TASK_PERIOD));
 	return 0;
 }
 
