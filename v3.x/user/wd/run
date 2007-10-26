@@ -8,6 +8,7 @@ exit
 fi
 
 MODULES=$prefix/modules
+
 libpath=`rtai-config --library-dir`
 
 if [ "$libpath" == "" ]; then
