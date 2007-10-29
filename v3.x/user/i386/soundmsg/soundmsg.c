@@ -56,7 +56,7 @@ static void *speaker_handler(void *args)
 	RTIME period;
 	char data, buf[BUFSIZE];
 	char temp;
-	unsigned int i, len;
+	long i, len;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	ioperm(PORT_ADR, 1, 1);
@@ -110,7 +110,7 @@ static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
-	unsigned int i, player, msg;
+	long i, player, msg;
 	RT_TASK *mytask;
 	char data[BUFSIZE];
 
