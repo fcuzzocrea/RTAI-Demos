@@ -45,7 +45,7 @@ static void *endme(void *args)
 	return 0;
 }
 
-static int thread;
+static long thread;
 
 int main(int argc, char *argv[])
 {

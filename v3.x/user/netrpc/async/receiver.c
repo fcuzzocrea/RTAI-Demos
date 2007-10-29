@@ -68,7 +68,7 @@ if (SERVER) {
 	return (void *)0;
 }
 
-static int athread;
+static long athread;
 
 int main(int argc, char *argv[])
 {
