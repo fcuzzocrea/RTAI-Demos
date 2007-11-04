@@ -1,9 +1,9 @@
 sync
 ./crun
 sync
-./qrun
-sync
 ./jrun
+sync
+./qrun
 sync
 ./lrun
 sync
