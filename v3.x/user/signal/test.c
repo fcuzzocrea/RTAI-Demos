@@ -117,9 +117,9 @@ static void *master_fun(void *arg)
 
 int main (void)
 {
-	int masterthread, thread[NTASKS];
+	long masterthread, thread[NTASKS];
 	RT_TASK *task;
-	int i;
+	long i;
 	task = rt_thread_init(rt_get_name(0), 1, 0, SCHED_FIFO, CPUMAP);
 	barrier = rt_sem_init(rt_get_name(0), NTASKS + 1);
 	rt_set_oneshot_mode();
