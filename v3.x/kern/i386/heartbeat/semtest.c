@@ -37,7 +37,7 @@ void task1(void *cookie)
 
 void task2(void *cookie)
 {
-	unsigned long i, max;
+	long i, max;
 	nanosecs_abs_t t, dt;
 
 	rt_printk("TESTING TIMING OUT TIMEDDOWN ...");
@@ -53,9 +53,9 @@ void task2(void *cookie)
 		}
 	}
 	if (i == LOOPS) {
-		rt_printk(" OK (%lu (ns)).\n", max);
+		rt_printk(" OK [%lu (ns)].\n", max);
 	} else {
-		rt_printk(" NOT OK (MAXLAT %lu (ns)).\n", max);
+		rt_printk(" NOT OK [MAXLAT %lu (ns)].\n", max);
 	}
 
 	rt_printk("TESTING FAILING TRY DOWN ...");

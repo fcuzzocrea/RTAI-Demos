@@ -46,7 +46,7 @@ void task1(void *cookie)
 
 void task2(void *cookie)
 {
-	unsigned long i, max;
+	long i, max;
 	nanosecs_abs_t t, dt;
 
 	rt_printk("TESTING TIMING OUT TIMEDLOCK ...");
