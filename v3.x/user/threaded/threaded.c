@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_msg.h>
 #include "period.h"
 
-int task[NTASKS];
+long task[NTASKS];
 
 int ntasks = NTASKS;
 
@@ -61,7 +61,7 @@ void *thread_fun(void *arg)
  	if (!(mytask_indx%2)) {
 		rt_make_hard_real_time();
 	}
-	rt_receive(0, (unsigned int*)&sem);
+	rt_receive(0, (unsigned long *)((void *)&sem));
 
 	period = nano2count(PERIOD);
 	start_time = rt_get_time() + nano2count(10000000);
@@ -126,7 +126,7 @@ int main(void)
 
 	for (i = 0; i < ntasks; i++) {
 		indx[i] = i;
-		if (!(task[1] = rt_thread_create(thread_fun, &indx[i], 10000))) {
+		if (!(task[i] = rt_thread_create(thread_fun, &indx[i], 10000))) {
 			printf("ERROR IN CREATING THREAD %d\n", indx[i]);
 			exit(1);
  		}       
