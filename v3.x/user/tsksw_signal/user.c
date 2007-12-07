@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sched.h>
 #include <sys/mman.h>
 
-#include <rtai_lxrt.h>
 #include <rtai_signal.h>
 
 static volatile int end;

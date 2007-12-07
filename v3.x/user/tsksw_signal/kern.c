@@ -22,11 +22,7 @@
 
 MODULE_LICENSE("GPL");
 
-#include <rtai_sem.h>
-#include <rtai_msg.h>
-#include <rtai_malloc.h>
 #include "rtai_signal.h"
-
 
 #define PERIOD  10000000
 #define STKSZ   4000
@@ -68,7 +64,7 @@ int init_module(void)
 	start_rt_timer(0);
 	rt_task_init(&rtai_sig_task, rtai_sig_fun, 0, STKSZ, 0, 0, 0);
 	rt_task_resume(&rtai_sig_task);
-	rt_task_init(&sig_task, sig_fun, 0, STKSZ, 0, 1, 0);
+	rt_task_init(&sig_task, sig_fun, 0, STKSZ, 0, 0, 0);
 	rt_task_resume(&sig_task);
 	return 0;
 }
