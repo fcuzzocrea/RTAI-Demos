@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 static volatile int end;
 
-#define PERIOD 20000
+#define PERIOD 100000
 #define SWITCH_SIGNAL 1  // must be != 0
 
 void catch_signal(int sig)

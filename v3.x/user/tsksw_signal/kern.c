@@ -24,7 +24,7 @@ MODULE_LICENSE("GPL");
 
 #include "rtai_signal.h"
 
-#define PERIOD  10000
+#define PERIOD  100000
 #define STKSZ   4000
 #define SWITCH_SIGNAL  1
 
