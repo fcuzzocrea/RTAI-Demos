@@ -18,7 +18,7 @@
 
 
 /*
- * illustrating the modes available to use of
+ * illustrating the two modes available to use
  * a task switch signal from kernel space.
  */
 
