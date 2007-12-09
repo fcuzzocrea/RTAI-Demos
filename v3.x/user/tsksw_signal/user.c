@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 static volatile int end;
 
-#define PERIOD 100000
+#define PERIOD 20000
 #define SWITCH_SIGNAL 1  // must be != 0
 
 void catch_signal(int sig)
@@ -38,11 +38,10 @@ void catch_signal(int sig)
 
 static void switch_handler(long signal, RT_TASK *task)
 {
-	static int cnt;
-	static long long rpt;
-	if (++cnt > (1000000000/PERIOD)) {
-		cnt = 0;
-	        rt_printk("# sw: %lld, tsk: %p, sig: %ld.\n", ++rpt*(1000000000/PERIOD), task, signal);
+	static unsigned long cnt = 0, rpt = 1000000000/PERIOD;
+	if (++cnt > rpt) {
+	        rt_printk("# sw: %lu, tsk: %p, sig: %lu.\n", rpt, task, signal);
+		rpt += 1000000000/PERIOD;
 	}
 }
 

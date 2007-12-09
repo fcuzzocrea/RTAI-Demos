@@ -24,7 +24,7 @@ MODULE_LICENSE("GPL");
 
 #include "rtai_signal.h"
 
-#define PERIOD  100000
+#define PERIOD  10000
 #define STKSZ   4000
 #define SWITCH_SIGNAL  1
 
@@ -32,21 +32,19 @@ static RT_TASK rtai_sig_task, sig_task;
 
 static void tsk_sighdl(long signal, RT_TASK *task)
 {
-	static int cnt;
-	static long long rpt;
-	if (++cnt > (1000000000/PERIOD)) {
-		cnt = 0;
-	        rt_printk("TSK SIGHDL > # sw: %lld, tsk: %p, sig: %ld.\n", ++rpt*(1000000000/PERIOD), task, signal);
+	static unsigned long cnt = 0, rpt = 1000000000/PERIOD;
+	if (++cnt > rpt) {
+	        rt_printk("TSK SIGHDL > # sw: %lu, tsk: %p, sig: %lu.\n", rpt, task, signal);
+		rpt += 1000000000/PERIOD;
 	}
 }
 
 static void sighdl(void)
 {
-	static int cnt;
-	static long long rpt;
-	if (++cnt > (1000000000/PERIOD)) {
-		cnt = 0;
-	        rt_printk("FUN SIGHDL > # sw: %lld, tsk: %p.\n", ++rpt*(1000000000/PERIOD), rt_whoami());
+	static unsigned long cnt = 0, rpt = 1000000000/PERIOD;
+	if (++cnt > rpt) {
+	        rt_printk("FUN SIGHDL > # sw: %lu, tsk: %p.\n", rpt, rt_whoami());
+		rpt += 1000000000/PERIOD;
 	}
 }
 
