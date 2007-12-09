@@ -17,6 +17,12 @@
  */
 
 
+/*
+ * illustrating the modes available to use of
+ * a task switch signal from kernel space.
+ */
+
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 
