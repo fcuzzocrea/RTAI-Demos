@@ -69,7 +69,6 @@ static int sfd, rfd, end;
 static void endme(int dummy) 
 { 
 	end = 1;
-	stop_rt_timer();
 	rt_dev_close(sfd);
 	rt_dev_close(rfd);
 }
