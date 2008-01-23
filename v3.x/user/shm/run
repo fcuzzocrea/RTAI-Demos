@@ -13,11 +13,11 @@ if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** HARD USER SPACE CLIENT/SERVER THROUGH A KERNEL AGENT ***"
 echo "Press <enter> to load modules:"
-read junk
+#read junk
 cd ..; ./ldmod; cd -
 echo
 echo "Now start the realtime process <enter> and wait for its end."
-read junk
+#read junk
 sync
 if (`rtai-config --linux-version | grep -q 2.6`);
 then insmod ./shmod_rt.ko;
@@ -25,5 +25,5 @@ else insmod ./rt_shmod.o; fi
 $SUDO ./check
 echo
 echo "Done. Press <enter> to remove the modules."
-read junk
+#read junk
 ./rem

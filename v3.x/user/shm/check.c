@@ -35,7 +35,7 @@ int main(void)
 	kd = rt_shm_alloc(nam2num("KD"), 0, USE_GFP_DMA);
 	rt_global_heap_open();
 	gh = rt_named_malloc(nam2num("GH"), 0);
-	printf("SIZEs in USER: %d %d %d %d %d\n", vm[0], km[0], ka[0], kd[0], gh[0]);
+	printf("SIZEs in USER: VM = %d, KM = %d, KA = %d, KD = %d, GH = %d.\n", vm[0], km[0], ka[0], kd[0], gh[0]);
 	for (i = 1; i < vm[0]; i++) {
 		if ( vm[i] != km[i] || km[i] != ka[i] || ka[i] != kd[i] || kd[i] != gh[i]) {
 			printf("wrong at index %i\n", i);
