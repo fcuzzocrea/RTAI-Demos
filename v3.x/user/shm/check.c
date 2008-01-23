@@ -27,14 +27,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 int main(void)
 {
-	int *vm, *km, *ka, *kd, i;	
+	int *vm, *km, *ka, *kd, *gh, i;	
+	rt_thread_init(nam2num("MAIN"), 0, 0, SCHED_FIFO, 0xF);
 	vm = rt_shm_alloc(nam2num("VM"), 0, USE_VMALLOC);
 	km = rt_shm_alloc(nam2num("KM"), 0, USE_GFP_KERNEL);
 	ka = rt_shm_alloc(nam2num("KA"), 0, USE_GFP_ATOMIC);
 	kd = rt_shm_alloc(nam2num("KD"), 0, USE_GFP_DMA);
-	printf("SIZEs in USER: %d %d %d %d\n", vm[0], km[0], ka[0], kd[0]);
+	rt_global_heap_open();
+	gh = rt_named_malloc(nam2num("GH"), 0);
+	printf("SIZEs in USER: %d %d %d %d %d\n", vm[0], km[0], ka[0], kd[0], gh[0]);
 	for (i = 1; i < vm[0]; i++) {
-		if ( vm[i] != km[i] || km[i] != ka[i] || ka[i] != kd[i]) {
+		if ( vm[i] != km[i] || km[i] != ka[i] || ka[i] != kd[i] || kd[i] != gh[i]) {
 			printf("wrong at index %i\n", i);
 		}
 	}
@@ -42,5 +45,7 @@ int main(void)
 	rt_shm_free(nam2num("KM"));
 	rt_shm_free(nam2num("KA"));
 	rt_shm_free(nam2num("KD"));
+	rt_named_free(gh);
+	rt_global_heap_close();
 	return 0;
 }
