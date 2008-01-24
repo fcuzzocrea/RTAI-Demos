@@ -27,15 +27,16 @@ int *gh;
 int init_module(void)
 {
 	int *vm, *km, *ka, *kd, i;	
-	
+	unsigned long s;
 	vm = rt_shm_alloc(nam2num("VM"), SIZE*sizeof(int), USE_VMALLOC);
 	km = rt_shm_alloc(nam2num("KM"), SIZE*sizeof(int), USE_GFP_KERNEL);
 	ka = rt_shm_alloc(nam2num("KA"), SIZE*sizeof(int), USE_GFP_ATOMIC);
 	kd = rt_shm_alloc(nam2num("KD"), SIZE*sizeof(int), USE_GFP_DMA);
 	gh = rt_named_malloc(nam2num("GH"), SIZE*sizeof(int));
 	vm[0] = km[0] = ka[0] = kd[0] = gh[0] = SIZE;
+	s = 0;
 	for (i = 1; i < SIZE; i++) {
-		vm[i] = km[i] = ka[i] = kd[i] = gh[i] = i;
+		vm[i] = km[i] = ka[i] = kd[i] = gh[i] = s += i;
 	}
 	printk("SIZEs in KERNEL %d.\n", SIZE);
 	return 0;

@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 int main(void)
 {
 	int *vm, *km, *ka, *kd, *gh, i;	
+	unsigned long s;
 	rt_thread_init(nam2num("MAIN"), 0, 0, SCHED_FIFO, 0xF);
 	vm = rt_shm_alloc(nam2num("VM"), 0, USE_VMALLOC);
 	km = rt_shm_alloc(nam2num("KM"), 0, USE_GFP_KERNEL);
@@ -36,8 +37,9 @@ int main(void)
 	rt_global_heap_open();
 	gh = rt_named_malloc(nam2num("GH"), 0);
 	printf("SIZEs in USER: VM = %d, KM = %d, KA = %d, KD = %d, GH = %d.\n", vm[0], km[0], ka[0], kd[0], gh[0]);
+	s = 0;
 	for (i = 1; i < vm[0]; i++) {
-		if ( vm[i] != km[i] || km[i] != ka[i] || ka[i] != kd[i] || kd[i] != gh[i]) {
+		if ( vm[i] != km[i] || km[i] != ka[i] || ka[i] != kd[i] || kd[i] != gh[i] || gh[i] != (s += i)) {
 			printf("wrong at index %i\n", i);
 		}
 	}
