@@ -45,7 +45,7 @@ int main(void)
 		printf("CANNOT INIT TEST BUDDY TASK\n");
 		exit(1);
 	}
-	rt_linux_syscall_server_create(NULL);
+//	rt_linux_syscall_server_create(NULL);
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
 	rt_grow_and_lock_stack(40000);
