@@ -34,8 +34,9 @@ int main(void)
 	MBX *mbx;
 	long long max = -1000000000, min = 1000000000;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
+	struct rt_poll_s polld[2];
 
- 	if (!(task = rt_task_init(nam2num("LATCHK"), 20, 0, 0))) {
+ 	if (!(task = rt_task_init_schmod(nam2num("LATCHK"), 20, 0, 0, SCHED_OTHER, 0xf))) {
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
 	}
@@ -48,6 +49,12 @@ int main(void)
 	rt_make_hard_real_time();
 
 	while (1) {
+		polld[0] = (struct rt_poll_s){ mbx, RT_POLL_MBX_RECV };
+		polld[1] = (struct rt_poll_s){ mbx, RT_POLL_MBX_SEND };
+		while (polld[0].what) {
+			rt_poll(polld, 2, -250000000);
+			printf("POLLD %p %p\n", polld[0].what, polld[1].what);
+		}
 		rt_mbx_receive(mbx, &samp, sizeof(samp));
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
