@@ -1,2 +1,1 @@
-rmmod -f rtai_serial
 ../remod

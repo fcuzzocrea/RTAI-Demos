@@ -23,6 +23,8 @@ echo "Press <enter> to load modules:"
 read junk
 cd ..; ./ldmod; cd -
 echo
+echo "Now start the realtime process <enter>, imput an out of range index to end."
+read junk
 sync
 $SUDO ./poll
 echo
