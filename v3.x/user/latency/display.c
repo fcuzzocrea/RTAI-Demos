@@ -25,6 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
 
+//#define TEST_POLL
+
 static RT_TASK *task;
 
 int main(void)
@@ -34,7 +36,6 @@ int main(void)
 	MBX *mbx;
 	long long max = -1000000000, min = 1000000000;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
-	struct rt_poll_s polld[2];
 
  	if (!(task = rt_task_init_schmod(nam2num("LATCHK"), 20, 0, 0, SCHED_OTHER, 0xf))) {
 		printf("CANNOT INIT MASTER TASK\n");
@@ -49,12 +50,16 @@ int main(void)
 	rt_make_hard_real_time();
 
 	while (1) {
+#ifdef TEST_POLL
+		struct rt_poll_s polld[2];
+		int retval;
 		polld[0] = (struct rt_poll_s){ mbx, RT_POLL_MBX_RECV };
 		polld[1] = (struct rt_poll_s){ mbx, RT_POLL_MBX_SEND };
 		while (polld[0].what) {
-			rt_poll(polld, 2, -250000000);
-			printf("POLLD %p %p\n", polld[0].what, polld[1].what);
+			retval = rt_poll(polld, 2, -250000000);
+			printf("POLL: %x %p %p\n", retval, polld[0].what, polld[1].what);
 		}
+#endif
 		rt_mbx_receive(mbx, &samp, sizeof(samp));
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
