@@ -25,8 +25,9 @@
 
 #include <rtai_mbx.h>
 
-#define BFSZ 80
-#define NMBX 3
+#define NMBX  3
+#define BFSZ  80
+
 static MBX *mbx[NMBX + 1];
 
 static void poll_fun(void *arg)
