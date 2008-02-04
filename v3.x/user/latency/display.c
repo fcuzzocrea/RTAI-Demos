@@ -53,12 +53,12 @@ int main(void)
 #ifdef TEST_POLL
 		struct rt_poll_s polld[2];
 		int retval;
-		polld[0] = (struct rt_poll_s){ mbx, RT_POLL_MBX_RECV };
-		polld[1] = (struct rt_poll_s){ mbx, RT_POLL_MBX_SEND };
-		while (polld[0].what) {
-			retval = rt_poll(polld, 2, -250000000);
+		do {
+			polld[0] = (struct rt_poll_s){ mbx, RT_POLL_MBX_RECV };
+			polld[1] = (struct rt_poll_s){ mbx, RT_POLL_MBX_RECV };
+			retval = rt_poll(polld, 2, -200000000);
 			printf("POLL: %x %p %p\n", retval, polld[0].what, polld[1].what);
-		}
+		} while (polld[0].what);
 #endif
 		rt_mbx_receive(mbx, &samp, sizeof(samp));
 		if (max < samp.max) max = samp.max;
