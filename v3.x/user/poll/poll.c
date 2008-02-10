@@ -94,10 +94,11 @@ int main(void)
 		scanf("%s", buf);
 #else
 //		if (++i >= NMBX) i = 0;
+		i = (rand()*(NMBX - 1LL))/RAND_MAX;
 		rt_sleep(nano2count((rand()*RNDT)/RAND_MAX));
 		buf[0] = '0' + i;
 #endif
-		rt_mbx_send(mbx[(rand()*(NMBX - 1LL))/RAND_MAX], buf, sizeof(buf));
+		rt_mbx_send(mbx[i], buf, sizeof(buf));
 		polld[0] = (struct rt_poll_s){ mbx[NMBX], RT_POLL_MBX_RECV };
 		rt_poll(polld, 1, 0);
 		rt_mbx_receive(mbx[NMBX], buf, 1);
