@@ -30,6 +30,7 @@
 #define NTHR  10
 #define NMBX  20
 #define BFSZ  80
+#define RNDT  500000LL  // long long nanos
 
 static MBX *mbx[NMBX + 1];
 
@@ -47,7 +48,7 @@ static void poll_fun(void *arg)
 		for (i = 0; i < NMBX; i++) {
 			polld[i] = (struct rt_poll_s){ mbx[i], RT_POLL_MBX_RECV };
 		}
-		rt_poll(polld, NMBX, -nano2count(rand()*200000LL/RAND_MAX));
+		rt_poll(polld, NMBX, -(nano2count(rand()*RNDT)/RAND_MAX));
 		for (i = 0; i < NMBX; i++) {
 			if (!polld[i].what) {
 				if (!rt_mbx_receive_if(mbx[i], buf, sizeof(buf))) {
@@ -92,11 +93,11 @@ int main(void)
 		printf("msg: ");
 		scanf("%s", buf);
 #else
-		if (++i >= NMBX) i = 0;
-		rt_sleep(nano2count(rand()*200000LL/RAND_MAX));
+//		if (++i >= NMBX) i = 0;
+		rt_sleep(nano2count((rand()*RNDT)/RAND_MAX));
 		buf[0] = '0' + i;
 #endif
-		rt_mbx_send(mbx[i], buf, sizeof(buf));
+		rt_mbx_send(mbx[(rand()*(NMBX - 1LL))/RAND_MAX], buf, sizeof(buf));
 		polld[0] = (struct rt_poll_s){ mbx[NMBX], RT_POLL_MBX_RECV };
 		rt_poll(polld, 1, 0);
 		rt_mbx_receive(mbx[NMBX], buf, 1);
