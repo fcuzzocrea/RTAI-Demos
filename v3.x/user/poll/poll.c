@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <rtai_mbx.h>
 
@@ -46,7 +47,7 @@ static void poll_fun(void *arg)
 		for (i = 0; i < NMBX; i++) {
 			polld[i] = (struct rt_poll_s){ mbx[i], RT_POLL_MBX_RECV };
 		}
-		rt_poll(polld, NMBX, 0);
+		rt_poll(polld, NMBX, -nano2count(rand()*200000LL/RAND_MAX));
 		for (i = 0; i < NMBX; i++) {
 			if (!polld[i].what) {
 				if (!rt_mbx_receive_if(mbx[i], buf, sizeof(buf))) {
@@ -72,6 +73,7 @@ int main(void)
 
 	rt_thread_init(nam2num("MAIN"), 0, 0, SCHED_OTHER, 0xF);
 	start_rt_timer(0);
+	rt_make_hard_real_time();
 
 	for (i = 0; i < (NMBX + 1); i++) {
 		mbx[i] = rt_mbx_init(rt_get_name(NULL), BFSZ);
@@ -91,7 +93,7 @@ int main(void)
 		scanf("%s", buf);
 #else
 		if (++i >= NMBX) i = 0;
-		rt_sleep(nano2count(100000));
+		rt_sleep(nano2count(rand()*200000LL/RAND_MAX));
 		buf[0] = '0' + i;
 #endif
 		rt_mbx_send(mbx[i], buf, sizeof(buf));
