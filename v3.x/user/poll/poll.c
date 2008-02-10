@@ -25,7 +25,9 @@
 
 #include <rtai_mbx.h>
 
-#define NMBX  3
+//#define HAND
+#define NTHR  10
+#define NMBX  20
 #define BFSZ  80
 
 static MBX *mbx[NMBX + 1];
@@ -35,10 +37,10 @@ static void poll_fun(void *arg)
 	int i;
 	struct rt_poll_s polld[NMBX];
 	char buf[BFSZ];
+	unsigned long thread = (unsigned long)arg;
 
-	rt_thread_init(nam2num("POLL"), 0, 0, SCHED_FIFO, 0xF);
+	rt_thread_init(rt_get_name(0), 0, 0, SCHED_OTHER, 0xF);
 	rt_make_hard_real_time();
-	printf("\n");
 
 	while (1) {
 		for (i = 0; i < NMBX; i++) {
@@ -47,14 +49,14 @@ static void poll_fun(void *arg)
 		rt_poll(polld, NMBX, 0);
 		for (i = 0; i < NMBX; i++) {
 			if (!polld[i].what) {
-				rt_mbx_receive(mbx[i], buf, sizeof(buf));
-				printf("mbx: %d, received: %s.\n", i, buf);
+				if (!rt_mbx_receive_if(mbx[i], buf, sizeof(buf))) {
+				printf("thread: %lu, mbx: %d, received: %s.\n",thread, i, buf);
+				rt_mbx_send(mbx[NMBX], buf, 1);
+				if (!buf[0]) break;
+				}
 			}
 		}
-		rt_mbx_send(mbx[NMBX], buf, sizeof(buf));
-		if (!buf[0]) break;
 	}
-
 	rt_make_soft_real_time();
 	rt_task_delete(NULL);
 
@@ -65,8 +67,8 @@ int main(void)
 {
 	int i;
 	struct rt_poll_s polld[1];
-	char buf[BFSZ];
-	pthread_t poll_thread;
+	char buf[BFSZ] = " abcdefghilmnopqrstuvz";
+	pthread_t poll_thread[NTHR];
 
 	rt_thread_init(nam2num("MAIN"), 0, 0, SCHED_OTHER, 0xF);
 	start_rt_timer(0);
@@ -75,24 +77,33 @@ int main(void)
 		mbx[i] = rt_mbx_init(rt_get_name(NULL), BFSZ);
 	}
 
-	poll_thread = rt_thread_create(poll_fun, NULL, 0);
-	rt_sleep(nano2count(100000000));
+	for (i = 0; i < NTHR; i++) {
+		poll_thread[i] = rt_thread_create(poll_fun, (void *)i, 0);
+	}
 
+	i = 0;
 	while (1) {
+#ifdef HAND
 		printf("0 <= mbx < %d: ", NMBX);
 		scanf("%d", &i);
 		if (i < 0 || i >= NMBX) break;
 		printf("msg: ");
 		scanf("%s", buf);
+#else
+		if (++i >= NMBX) i = 0;
+		rt_sleep(nano2count(100000));
+		buf[0] = '0' + i;
+#endif
 		rt_mbx_send(mbx[i], buf, sizeof(buf));
 		polld[0] = (struct rt_poll_s){ mbx[NMBX], RT_POLL_MBX_RECV };
 		rt_poll(polld, 1, 0);
-		rt_mbx_receive(mbx[NMBX], buf, sizeof(buf));
+		rt_mbx_receive(mbx[NMBX], buf, 1);
 	}
 
 	buf[0] = 0;
-	rt_mbx_send(mbx[0], buf, sizeof(buf));
-	rt_thread_join(poll_thread);
+        for (i = 0; i < NTHR; i++) {
+		rt_mbx_send(mbx[0], buf, sizeof(buf));
+        }
 
 	for (i = 0; i < (NMBX + 1); i++) {
 		rt_mbx_delete(mbx[i]);
