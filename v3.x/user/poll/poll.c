@@ -93,9 +93,9 @@ int main(void)
 		printf("msg: ");
 		scanf("%s", buf);
 #else
+		rt_sleep(nano2count((rand()*RNDT)/RAND_MAX));
 //		if (++i >= NMBX) i = 0;
 		i = (rand()*(NMBX - 1LL))/RAND_MAX;
-		rt_sleep(nano2count((rand()*RNDT)/RAND_MAX));
 		buf[0] = '0' + i;
 #endif
 		rt_mbx_send(mbx[i], buf, sizeof(buf));
