@@ -1,4 +1,4 @@
-EXTRA_CFLAGS += $(shell rtai-config --module-cflags) -I/usr/include
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags) -I/usr/include -ffast-math
 
 obj-m += _fp_rt.o
 
