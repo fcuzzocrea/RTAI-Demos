@@ -36,6 +36,9 @@ MODULE_LICENSE("GPL");
 
 static int srq, scount;
 
+#ifndef DECLARE_MUTEX_LOCKED
+#define DECLARE_MUTEX_LOCKED(name) __DECLARE_SEMAPHORE_GENERIC(name,0)
+#endif
 static DECLARE_MUTEX_LOCKED(sem);
 
 static long long user_srq_handler(unsigned long whatever)
