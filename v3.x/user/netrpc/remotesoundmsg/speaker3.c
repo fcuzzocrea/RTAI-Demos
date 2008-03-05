@@ -108,12 +108,10 @@ int main(int argc, char *argv[])
 			len--;
 		} else {
 			if (RT_evdrpx(plrnode, plrport, plrtsk, buf, BUFSIZE, &i)) {
-				rt_printk("EVDRP %d\n", i);
+//				rt_printk("EVDRP %d\n", i);
 			}
 			if (RT_receivex_if(plrnode, plrport, plrtsk, buf, BUFSIZE, &len) == plrtsk) {
-printf("RECEIVE %ld %p\n", len, plrtsk);
 				RT_returnx(plrnode, plrport, plrtsk, &len, sizeof(int));
-printf("RETURN %ld\n", len);
 				if (len == sizeof(int) && ((int *)buf)[0] == 0xFFFFFFFF) {
 					break;
 				} 
