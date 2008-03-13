@@ -32,7 +32,7 @@ extern "C" {
 
 static inline int rt_cond_create(RT_COND *cond, const char *name)
 {
-	struct { unsigned long name, icount, mode; } arg = { nam2id(name), 0, RES_SEM };
+	struct { unsigned long name, icount, mode; } arg = { name ? nam2id(name) : (unsigned long)name, 0, RES_SEM };
         if ((cond->cond = (void *)rtai_lxrt(BIDX, SIZARG, LXRT_SEM_INIT, &arg).v[LOW])) {
                 rt_release_waiters(arg.name);
                 return 0;

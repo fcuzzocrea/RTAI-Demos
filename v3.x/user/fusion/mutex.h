@@ -32,7 +32,7 @@ extern "C" {
 
 static inline int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {
-        struct { unsigned long name, icount, mode; } arg = { nam2id(name), 1, RES_SEM };
+        struct { unsigned long name, icount, mode; } arg = { name ? nam2id(name): (unsigned long)name, 1, RES_SEM };
 	if ((mutex->mutex = (void *)rtai_lxrt(BIDX, SIZARG, LXRT_SEM_INIT, &arg).v[LOW])) {
 		rt_release_waiters(arg.name);
 		return 0;

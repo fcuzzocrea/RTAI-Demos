@@ -35,7 +35,7 @@ extern "C" {
 
 static inline int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 {
-        struct { unsigned long name, icount, mode; } arg = { nam2id(name), icount, CNT_SEM | mode };
+        struct { unsigned long name, icount, mode; } arg = { name ? nam2id(name) : (unsigned long)name, icount, CNT_SEM | mode };
         if ((sem->sem = (void *)rtai_lxrt(BIDX, SIZARG, LXRT_SEM_INIT, &arg).v[LOW])) {
 		rt_release_waiters(arg.name);
         	return 0;

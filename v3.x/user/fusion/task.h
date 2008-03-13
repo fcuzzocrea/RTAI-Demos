@@ -243,7 +243,7 @@ static inline int rt_task_create(RT_TASK *task, const char *name, int stksize, i
 	if (!(me.task = rtai_tskext())) {
 		me.task = rt_task_ext((unsigned long)name, 0, 0xF);
 	}
-	task->id = nam2id(name);
+	task->id = name ? nam2id(name) : (long)task;
 	task->prio = prio;
 	task->mode = mode;
 	task->arg  = &me;
@@ -394,6 +394,8 @@ static inline int rt_task_spawn(RT_TASK *task, const char *name, int stksize, in
 }
 
 #define rt_print_auto_init(a)
+
+int rt_printk(const char *format, ...);
 
 #ifdef __cplusplus
 }

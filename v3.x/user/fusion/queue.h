@@ -99,7 +99,7 @@ static inline void rt_global_heap_close(void)
 
 static inline int rt_queue_create(RT_QUEUE *q, const char *name, size_t poolsize, size_t qlimit, int mode)
 {
-	struct { unsigned long msgq; long nmsg; long msg_size; } arg = { nam2id(name), qlimit != Q_UNLIMITED ? qlimit : 10000, sizeof(void *) };
+	struct { unsigned long msgq; long nmsg; long msg_size; } arg = { name ? nam2id(name) : (unsigned long)name, qlimit != Q_UNLIMITED ? qlimit : 10000, sizeof(void *) };
         RT_TASK me;
         if (!(me.task = rtai_tskext())) {
                 me.task = rt_task_ext((unsigned long)name, 0, 0xF);
