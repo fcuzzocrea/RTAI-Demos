@@ -25,12 +25,13 @@
 
 #define CPU_SHIFT  24
 
-#define T_FPU   1
-#define T_SUSP  2
-#define T_CPU(cpu)  (1 << (CPU_SHIFT + (cpu & 0xff)))
+#define T_FPU      (1 << 0)
+#define T_SUSP     (1 << 1)
+#define T_LOCK     (1 << 2)
+#define T_RRB      (1 << 3)
+#define T_PRIMARY  (1 << 4)
 
-#define T_LOCK  1
-#define T_RRB   2
+#define T_CPU(cpu)  (1 << (CPU_SHIFT + (cpu & 0xff)))
 
 #define T_LOPRIO  1  // FUSION_LOW_PRIO
 #define T_HIPRIO  99 // FUSION_HIGH_PRIO
@@ -291,12 +292,19 @@ static inline int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	if (setmask & T_LOCK) {
 		struct { long dummy; } arg;
 		rtai_lxrt(BIDX, SIZARG, SCHED_LOCK, &arg);
-	} else {
+	} else if (clrmask & T_LOCK) {
 		struct { long dummy; } arg;
 		rtai_lxrt(BIDX, SIZARG, SCHED_UNLOCK, &arg);
+	} else if (setmask & T_PRIMARY) {
+		struct { long dummy; } arg;
+		rtai_lxrt(BIDX, SIZARG, MAKE_HARD_RT, &arg);
+	} else if (clrmask & T_PRIMARY) {
+		struct { long dummy; } arg;
+		rtai_lxrt(BIDX, SIZARG, MAKE_SOFT_RT, &arg);
+	} else if (setmask & T_RRB) {
+		struct { void *task; long policy; long rr_quantum; } arg = { rtai_tskext(), setmask & T_RRB, 0 };
+		rtai_lxrt(BIDX, SIZARG, SET_SCHED_POLICY, &arg);
 	}
-       	struct { void *task; long policy; long rr_quantum; } arg = { rtai_tskext(), setmask & T_RRB, 0 };
-       	rtai_lxrt(BIDX, SIZARG, SET_SCHED_POLICY, &arg);
 	return 0;
 }
 
@@ -384,6 +392,8 @@ static inline int rt_task_spawn(RT_TASK *task, const char *name, int stksize, in
 	}
 	return retval;
 }
+
+#define rt_print_auto_init(a)
 
 #ifdef __cplusplus
 }
