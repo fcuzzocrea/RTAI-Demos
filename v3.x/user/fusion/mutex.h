@@ -58,6 +58,21 @@ static inline int rt_mutex_unlock(RT_MUTEX *mutex)
         return rtai_lxrt(BIDX, SIZARG, SEM_SIGNAL, &arg).i[LOW] == SEM_ERR ? -EINVAL : 0;
 }
 
+static inline int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
+{
+        struct { void *mutex; RTIME timeout; } arg = { mutex->mutex, timeout };
+	int retval;
+	if (timeout == TM_INFINITE) {
+		return rtai_lxrt(BIDX, SIZARG, SEM_WAIT, &arg).i[LOW] == SEM_ERR ? -EINVAL : 0;
+	} else if (timeout == TM_NONBLOCK) {
+		retval = rtai_lxrt(BIDX, SIZARG, SEM_WAIT_IF, &arg).i[LOW];
+	        return retval <= 0 ? -EWOULDBLOCK : retval == SEM_ERR ? -EINVAL : 0;
+	}
+	retval = rtai_lxrt(BIDX, SIZARG, SEM_WAIT_TIMED, &arg).i[LOW];
+	return retval == SEM_TIMOUT ? -ETIMEDOUT : retval == SEM_ERR ? -EINVAL : 0;
+}
+#define rt_mutex_release(mutex)  rt_mutex_unlock(mutex)
+
 static inline int rt_mutex_bind(RT_MUTEX *mutex, const char *name)
 {
         return rt_obj_bind(mutex, name);

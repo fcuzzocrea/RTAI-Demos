@@ -398,7 +398,7 @@ static inline unsigned long nam2id (const char *name)
 		retval = retval*39 + c;
 	}
 	if (i > 0)
-		return retval;
+		return retval + 2;
 	else
 		return 0xFFFFFFFF;
 }
