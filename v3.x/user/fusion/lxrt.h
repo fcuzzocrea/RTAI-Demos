@@ -441,4 +441,10 @@ static inline int rt_obj_unbind(void *p)
 	return 0;
 }
 
+#define rt_print_auto_init(a)
+
+#define rt_printf rt_printk
+
+int rt_printk(const char *format, ...);
+
 #endif /* !_RTAI_FUSION_LXRT_H */

@@ -393,10 +393,6 @@ static inline int rt_task_spawn(RT_TASK *task, const char *name, int stksize, in
 	return retval;
 }
 
-#define rt_print_auto_init(a)
-
-int rt_printk(const char *format, ...);
-
 #ifdef __cplusplus
 }
 #endif
