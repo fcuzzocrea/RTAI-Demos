@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
 	while ((hdlport = rt_request_hard_port(hdlnode)) <= 0 && hdlport != -EINVAL);
 	rt_make_hard_real_time();
 	mbx = RT_get_adr(hdlnode, hdlport, "HDLMBX");
-	rt_make_soft_real_time();
         sem = rt_sem_init(nam2num("PRCSEM"), 0);
 
 	printf("USE: SEM SEND/WAIT (s), TASK RESM/SUSP (r), INTERTASK MSG (m): [s|r|m]? ");

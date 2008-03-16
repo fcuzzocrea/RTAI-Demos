@@ -30,6 +30,7 @@ static char *TaskNode = "127.0.0.1";
 RTAI_MODULE_PARM(TaskNode, charp);
 
 static int tasknode, taskport;
+static RT_TASK sup_task;
 static RT_TASK *rmt_task;
 static SEM *rmt_sem;
 static char run;
@@ -51,6 +52,21 @@ static void timer_tick(void)
 		if (rt_waiting_return(tasknode, taskport)) {
 			overuns++;
 		}
+		rt_task_resume(&sup_task);
+	}
+}
+
+static MBX mbx;
+
+static void sup_fun(long none)
+{
+        while (tasknode && (taskport = rt_request_hard_port(tasknode)) <= 0);
+	rt_mbx_receive(&mbx, &rmt_task, sizeof(rmt_task));
+	rt_mbx_receive(&mbx, &rmt_sem, sizeof(rmt_sem));
+	rt_mbx_receive(&mbx, &run, 1);
+
+	do {
+		rt_task_suspend(&sup_task);
 		switch(run) {
 			case 1: RT_sem_signal(tasknode, -taskport, rmt_sem);
 				break;
@@ -61,20 +77,8 @@ static void timer_tick(void)
 				RT_send_if(tasknode, -taskport, rmt_task, run);
 				break;
 		}
-	}
-}
+	} while (rt_mbx_receive_if(&mbx, &run, 1));
 
-static MBX mbx;
-static RT_TASK sup_task;
-
-static void sup_fun(long none)
-{
-        while (tasknode && (taskport = rt_request_hard_port(tasknode)) <= 0);
-	rt_mbx_receive(&mbx, &rmt_task, sizeof(rmt_task));
-	rt_mbx_receive(&mbx, &rmt_sem, sizeof(rmt_sem));
-	rt_mbx_receive(&mbx, &run, 1);
-
-	rt_mbx_receive(&mbx, &run, 1);
        	rt_release_port(tasknode, taskport);
 	rt_printk("ALL INTERRUPT MODULE FUNCTIONS TERMINATED\n");
 }
