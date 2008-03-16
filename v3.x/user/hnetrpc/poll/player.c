@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
                 spknode = addr.sin_addr.s_addr;
         }
 
-	while ((spkport = rt_request_port(spknode)) <= 0 && spkport != -EINVAL);
+	while ((spkport = rt_request_hard_port(spknode)) <= 0 && spkport != -EINVAL);
 	spktsk = RT_get_adr(spknode, spkport, "SPKTSK");
 	mbx = RT_typed_named_mbx_init(spknode, spkport, "SNDMBX", 1, FIFO_Q);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
