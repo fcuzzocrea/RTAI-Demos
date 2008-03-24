@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2002  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2002-2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -31,13 +31,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_sem.h>
 #include <rtai_usi.h>
 
-#define TIMER_IRQ  0
+#include <rtc.c>
+
+#define TIMER_IRQ  RTC_IRQ
+#define TIMER_FRQ  1024
 #define TIMEOUT    100000000  // to watch, or not to watch, overruns (MP only)
 
 static SEM *dspsem;
 static volatile int ovr, intcnt;
 
-//#define DIAG_FLAGS
 #include "check_flags.h"
 
 static void *timer_handler(void *args)
@@ -53,6 +55,7 @@ static void *timer_handler(void *args)
 	rt_make_hard_real_time();
 
 	rt_request_irq_task(TIMER_IRQ, handler, RT_IRQ_TASK, 1);
+	request_rtc(TIMER_FRQ);
 	rtai_cli();
 	while (ovr != RT_IRQ_TASK_ERR) {
 		CHECK_FLAGS();
@@ -67,9 +70,10 @@ static void *timer_handler(void *args)
 			intcnt++;
 			rt_sem_signal(dspsem);
 		} while (ovr > 0);
-		rt_pend_linux_irq(TIMER_IRQ);
+		rtc_handler(TIMER_IRQ, TIMER_FRQ);
 	}
 	rtai_sti();
+	release_rtc();
 	rt_release_irq_task(TIMER_IRQ);
 	rt_make_soft_real_time();
 	rt_task_delete(handler);
@@ -83,6 +87,8 @@ int main(void)
 
 	printf("GIVE THE NUMBER OF INTERRUPTS YOU WANT TO COUNT: ");
 	scanf("%d", &maxcnt);
+
+	start_rt_timer(0);
         if (!(maint = rt_task_init(nam2num("MAIN"), 1, 0, 0))) {
                 printf("CANNOT INIT MAIN TASK > MAIN <\n");
                 exit(1);
@@ -97,6 +103,7 @@ int main(void)
 		rt_sem_wait(dspsem);
 		printf("OVERRUNS %d, INTERRUPT COUNT %d\n", ovr, intcnt);
 	}
+	release_rtc();
 	rt_release_irq_task(TIMER_IRQ);
 	rt_thread_join(thread);
 	rt_task_delete(maint);
