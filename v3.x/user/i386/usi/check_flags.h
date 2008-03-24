@@ -19,13 +19,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #ifdef DIAG_FLAGS
  
-#	ifdef CONFIG_X86
+#	if DIAG_FLAGS == X86
 #		define CHECK_FLAGS() do { \
  			unsigned long flags; \
  			__asm__ __volatile__("pushfl; popl %0": "=g" (flags)); \
  			if (flags & (1 << 9)) rt_printk("< BAD! ENABLED >\n"); \
  		} while (0);
-#	elif defined(CONFIG_ARM)
+#	elif DIAG_FLAGS == ARM
 #		include <asm/ptrace.h>
 #		define CHECK_FLAGS() do { \
  			unsigned long flags; \
