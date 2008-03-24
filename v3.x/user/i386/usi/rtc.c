@@ -7,7 +7,7 @@
 #define MAX_RTC_FREQ  8192
 #define RTC_FREQ      MAX_RTC_FREQ
 
-static inline void rtc_handler(int irq, int rtc_freq)
+static inline void rtc_enable_irq(int irq, int rtc_freq)
 {
 #ifdef TEST_RTC
 	static int stp, cnt;
@@ -20,7 +20,7 @@ static inline void rtc_handler(int irq, int rtc_freq)
 	rt_enable_irq(RTC_IRQ);
 }
 
-void request_rtc(long rtc_freq)
+void rtc_start(long rtc_freq)
 {
 	int pwr2;
 
@@ -54,7 +54,7 @@ void request_rtc(long rtc_freq)
 	return;
 }
 
-void release_rtc(void)
+void rtc_stop(void)
 {
 	rt_disable_irq(RTC_IRQ);
 	rtai_cli();

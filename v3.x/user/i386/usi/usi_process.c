@@ -55,7 +55,7 @@ static void *timer_handler(void *args)
 	rt_make_hard_real_time();
 
 	rt_request_irq_task(TIMER_IRQ, handler, RT_IRQ_TASK, 1);
-	request_rtc(TIMER_FRQ);
+	rtc_start(TIMER_FRQ);
 	rtai_cli();
 	while (ovr != RT_IRQ_TASK_ERR) {
 		CHECK_FLAGS();
@@ -70,10 +70,10 @@ static void *timer_handler(void *args)
 			intcnt++;
 			rt_sem_signal(dspsem);
 		} while (ovr > 0);
-		rtc_handler(TIMER_IRQ, TIMER_FRQ);
+		rtc_enable_irq(TIMER_IRQ, TIMER_FRQ);
 	}
 	rtai_sti();
-	release_rtc();
+	rtc_stop();
 	rt_release_irq_task(TIMER_IRQ);
 	rt_make_soft_real_time();
 	rt_task_delete(handler);
@@ -103,7 +103,7 @@ int main(void)
 		rt_sem_wait(dspsem);
 		printf("OVERRUNS %d, INTERRUPT COUNT %d\n", ovr, intcnt);
 	}
-	release_rtc();
+	rtc_stop();
 	rt_release_irq_task(TIMER_IRQ);
 	rt_thread_join(thread);
 	rt_task_delete(maint);
