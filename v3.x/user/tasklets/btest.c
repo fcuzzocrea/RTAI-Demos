@@ -60,7 +60,7 @@ int main(void)
  	}       
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
-	start_rt_timer(nano2count(TICK_PERIOD));
+	start_rt_timer(0);
 	timer = rt_init_timer();
 	rt_insert_timer(timer, 0, rt_get_time() + nano2count(10000000), nano2count(TICK_PERIOD), fun, (unsigned long)&data, 1);
 	while(!end) sleep(1);
