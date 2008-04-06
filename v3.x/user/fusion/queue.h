@@ -56,7 +56,7 @@ typedef struct rt_queue_placeholder {
 extern "C" {
 #endif
 
-#define GLOBAL_HEAP_ID  0x9ac6d9e5  // nam2num("RTGLBH");
+#define GLOBAL_HEAP_ID  0x9ac6d9e7  // nam2num("RTGLBH");
 #define RTAI_SHM_DEV    "/dev/rtai_shm"
 
 #include <fcntl.h>
