@@ -43,7 +43,7 @@ void ph(unsigned long data)
 {
 	int i;
 	if (ptloops++ < LOOPS) {
-//		rt_sched_lock();
+		rt_sched_lock();
 		s = 0.0;
 		for (i = 0; i < SHMSIZ; i++) {
 			s += mem->a[i];
@@ -52,7 +52,7 @@ void ph(unsigned long data)
 		for (i = 0; i < SHMSIZ; i++) {
 			mem->a[i] = 0;
 		}
-//		rt_sched_unlock();
+		rt_sched_unlock();
 	} else {
 		end = 1;
 	}
