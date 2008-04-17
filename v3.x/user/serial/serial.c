@@ -26,6 +26,7 @@
 #include <rtai_serial.h>
 
 #define WRITE_TASK_DELAY  5000000
+#define TXTIMEOUT         1000000000
 
 #define WRITE_PORT  0
 #define READ_PORT   1
@@ -48,7 +49,7 @@ static void write_fun(void *arg)
 		rt_sleep(nano2count(WRITE_TASK_DELAY));
 		msg.write_time = rt_get_time_ns();
 		msg.nr++;
-		if ((written = rt_spwrite_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(100000000)))) {
+		if ((written = rt_spwrite_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT)))) {
 			if (written < 0 ) {
 				printf("rt_spwrite_timed, code %d\n", written);
 			} else {
@@ -56,7 +57,7 @@ static void write_fun(void *arg)
 			}
 			goto exit_task;
 		}
-		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(100000000));
+		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT));
 		printf("   recvd check # %d, sent at: %lld (us) from boot time\n", msg.nr, msg.write_time/1000);
 	}
 
@@ -81,8 +82,9 @@ static void read_fun(void *arg)
 		goto exit_task;
 	}
 
+	rt_sleep(nano2count(WRITE_TASK_DELAY));
 	while (1) {
-		if (!(read = rt_spread_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(100000000)))) {
+		if (!(read = rt_spread_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT)))) {
 			printf("recvd as # %d, transm. time: %lld (us), sent as # %d\n", ++nr, (rt_get_time_ns() - msg.write_time)/1000, msg.nr);
 		} else {
 			if (read < 0) {
@@ -94,7 +96,7 @@ static void read_fun(void *arg)
 		}
 		msg.nr = ++cnr;
 		msg.write_time = rt_get_time_ns();
-		rt_spwrite_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(100000000));
+		rt_spwrite_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT));
 	}
 
 exit_task:
