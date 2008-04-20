@@ -8,12 +8,15 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: serial
+all: serial callback
 
 serial: serial.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
+callback: callback.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
+
 clean:
-	rm -f serial
+	rm -f serial callback
 
 .PHONY: clean
