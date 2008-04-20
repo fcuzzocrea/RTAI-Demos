@@ -1,4 +1,6 @@
 /*
+ * COPYRIGHT (C) 2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
+ *
  * RTAI serial driver test
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,7 +28,7 @@
 #include <rtai_serial.h>
 
 #define WRITE_TASK_DELAY  2000000
-#define TXTIMEOUT         10000000
+#define TXTIMEOUT         1000000000
 
 #define WRITE_PORT  0
 #define READ_PORT   1
