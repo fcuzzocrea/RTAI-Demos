@@ -30,9 +30,9 @@ setserial /dev/ttyS1 uart none
 cd ..; ./ldmod; cd -
 if (`rtai-config --linux-version | grep -q 2.6`);
 then
-insmod $MODULES/rtai_serial.ko
+insmod $MODULES/rtai_serial.ko #spconfig=0x3f8,4,0x2f8,3
 else
-insmod $MODULES/rtai_serial.o
+insmod $MODULES/rtai_serial.o #spconfig=0x3f8,4,0x2f8,3
 fi
 
 echo
