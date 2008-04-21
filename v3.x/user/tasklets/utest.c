@@ -96,6 +96,7 @@ void prh(unsigned long data)
 int main(void)
 {
 	RT_TASK * main_rtai_task;
+	struct rt_tasklets_struct *res;
 
 	main_rtai_task = rt_task_init_schmod(rt_get_name(0), 10, 0, 0, SCHED_FIFO, 0xF);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -108,14 +109,17 @@ int main(void)
 	firing_time = rt_get_time() + nano2count(100000000);
 	period = nano2count(TICK_PERIOD);
 	start_rt_timer(period);
-	prt = rt_init_timer();
+	
+	res = rt_create_timers(2);
+	prt = rt_get_timer(res);
 	rt_insert_timer(prt, 1, firing_time, period, prh, 0xAAAAAAAA, 1);
-	ost = rt_init_timer();
+	ost = rt_get_timer(res);
 	rt_insert_timer(ost, 0, firing_time, nano2count(PERIODIC_BUDDY*TICK_PERIOD/2), osh, 0xBBBBBBBB, 1);
 	while(!end) sleep(1);
 	stop_rt_timer();
-	rt_delete_timer(prt);
-	rt_delete_timer(ost);
+	rt_gvb_timer(prt, res);
+	rt_gvb_timer(ost, res);
+	rt_destroy_timers(res);
 	rt_task_delete(main_rtai_task);
 	return 0;
 }
