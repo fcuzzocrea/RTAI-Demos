@@ -27,7 +27,7 @@
 #include <rtai_lxrt.h>
 #include <rtai_serial.h>
 
-#define WRITE_TASK_DELAY  2000000
+#define WRITE_TASK_DELAY  5000000
 #define TXTIMEOUT         1000000000
 
 #define WRITE_PORT  0
