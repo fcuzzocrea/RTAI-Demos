@@ -27,9 +27,6 @@
 #include <rtai_lxrt.h>
 #include <rtai_serial.h>
 
-#define WRITE_TASK_DELAY  5000000
-#define TXTIMEOUT         1000000000
-
 #define WRITE_PORT  0
 #define READ_PORT   1
 
@@ -50,10 +47,9 @@ static void write_fun(void *arg)
 	}
 
 	while (1) {
-		rt_sleep(nano2count(WRITE_TASK_DELAY));
 		msg.time = rt_get_time_ns();
 		msg.nr++;
-		if ((written = rt_spwrite_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT)))) {
+		if ((written = rt_spwrite_timed(WRITE_PORT, (void *)&msg, sizeof(msg), DELAY_FOREVER))) {
 			if (written < 0 ) {
 				printf("rt_spwrite_timed, code %d\n", written);
 			} else {
@@ -61,8 +57,8 @@ static void write_fun(void *arg)
 			}
 			goto exit_task;
 		}
-		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT));
-		printf("    sender check %d sent at: %lld (us)\n", msg.nr, msg.time);
+		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), DELAY_FOREVER);
+		printf("   receiver check # %d, sent at: %lld (us)\n", msg.nr, msg.time/1000);
 	}
 
 exit_task:
@@ -72,20 +68,23 @@ exit_task:
 	printf("write task exiting\n");
 }
 
+static int nr = 0, cnr = 0;
 static void read_callback_fun(int arg1, int arg2)
 {
 	int read;
 	struct msg_s msg;
 
 	if (!(read = rt_spread(READ_PORT, (void *)&msg, sizeof(msg)))) {
-		printf("recvd # %d, transm. at time: %lld (us) (in avb %d, out free %d)\n", msg.nr, msg.time, arg1, arg2);
+		printf("received as # %d, transm. time: %lld (us), sent as # %d (avb %d, free %d)\n", ++nr, (rt_get_time_ns() - msg.time)/1000, msg.nr, arg1, arg2);
 	} else {
 		if (read < 0) {
 			printf("rt_spread_timed error, code %d\n", read);
 		} else {
-			printf("only %d instead of %d bytes received \n", read, sizeof(msg));
+			printf("only %x instead of %d bytes received \n", read, sizeof(msg));
 		}
 	}
+	msg.nr = ++cnr;
+	msg.time = rt_get_time_ns();
 	rt_spwrite(READ_PORT, (void *)&msg, sizeof(msg));
 }
 

@@ -27,16 +27,15 @@
 #include <rtai_lxrt.h>
 #include <rtai_serial.h>
 
-#define WRITE_TASK_DELAY  5000000
-#define TXTIMEOUT         1000000000
-
 #define WRITE_PORT  0
 #define READ_PORT   1
+
+struct msg_s { int nr; RTIME time; };
 
 static void write_fun(void *arg)
 {
 	int written;
-	struct { int nr; RTIME write_time; } msg = { 0, };
+	struct msg_s msg = { 0, };
 
 	rt_task_init_schmod(nam2num("WRTSK"), 0, 0, 0, SCHED_FIFO, 0x1);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -48,19 +47,18 @@ static void write_fun(void *arg)
 	}
 
 	while (1) {
-		rt_sleep(nano2count(WRITE_TASK_DELAY));
-		msg.write_time = rt_get_time_ns();
+		msg.time = rt_get_time_ns();
 		msg.nr++;
-		if ((written = rt_spwrite_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT)))) {
+		if ((written = rt_spwrite_timed(WRITE_PORT, (void *)&msg, sizeof(msg), DELAY_FOREVER))) {
 			if (written < 0 ) {
 				printf("rt_spwrite_timed, code %d\n", written);
 			} else {
-				printf("only %d instead of %d bytes transmitted\n", written, sizeof(msg));
+				printf("only %x instead of %d bytes transmitted\n", written, sizeof(msg));
 			}
 			goto exit_task;
 		}
-		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT));
-		printf("   recvd check # %d, sent at: %lld (us) from boot time\n", msg.nr, msg.write_time/1000);
+		rt_spread_timed(WRITE_PORT, (void *)&msg, sizeof(msg), DELAY_FOREVER);
+		printf("   receiver check # %d, sent at: %lld (us)\n", msg.nr, msg.time/1000);
 	}
 
 exit_task:
@@ -73,7 +71,7 @@ exit_task:
 static void read_fun(void *arg)
 {
 	int read = 0, nr = 0, cnr = 0;
-	struct { int nr; RTIME write_time; } msg;
+	struct msg_s msg;
 
 	rt_task_init_schmod(nam2num("RDTSK"), 0, 0, 0, SCHED_FIFO, 0x1);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -84,21 +82,20 @@ static void read_fun(void *arg)
 		goto exit_task;
 	}
 
-	rt_sleep(nano2count(WRITE_TASK_DELAY));
 	while (1) {
-		if (!(read = rt_spread_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT)))) {
-			printf("recvd as # %d, transm. time: %lld (us), sent as # %d\n", ++nr, (rt_get_time_ns() - msg.write_time)/1000, msg.nr);
+		if (!(read = rt_spread_timed(READ_PORT, (void *)&msg, sizeof(msg), DELAY_FOREVER))) {
+			printf("received as # %d, transm. time: %lld (us), sent as # %d\n", ++nr, (rt_get_time_ns() - msg.time)/1000, msg.nr);
 		} else {
 			if (read < 0) {
 				printf("rt_spread_timed error, code %d\n", read);
 			} else {
-				printf("only %d instead of %d bytes received \n", read, sizeof(msg));
+				printf("only %x instead of %d bytes received \n", read, sizeof(msg));
 			}
 			goto exit_task;
 		}
 		msg.nr = ++cnr;
-		msg.write_time = rt_get_time_ns();
-		rt_spwrite_timed(READ_PORT, (void *)&msg, sizeof(msg), nano2count(TXTIMEOUT));
+		msg.time = rt_get_time_ns();
+		rt_spwrite_timed(READ_PORT, (void *)&msg, sizeof(msg), DELAY_FOREVER);
 	}
 
 exit_task:
