@@ -41,7 +41,7 @@ static void write_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
-	if (rt_spopen(WRITE_PORT, 115200, 8, 1, RT_SP_PARITY_NONE, RT_SP_NO_HAND_SHAKE, RT_SP_FIFO_SIZE_DEFAULT) < 0) {
+	if (rt_spopen(WRITE_PORT, 115200, 8, 1, RT_SP_PARITY_NONE, RT_SP_NO_HAND_SHAKE, RT_SP_FIFO_SIZE_4) < 0) {
 		printf("serial test: rt_spopen for writer port error\n");
 		goto exit_task;
 	}
@@ -77,7 +77,7 @@ static void read_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
-	if (rt_spopen(READ_PORT, 115200, 8, 1, RT_SP_PARITY_NONE, RT_SP_NO_HAND_SHAKE, RT_SP_FIFO_SIZE_DEFAULT) < 0) {
+	if (rt_spopen(READ_PORT, 115200, 8, 1, RT_SP_PARITY_NONE, RT_SP_NO_HAND_SHAKE, RT_SP_FIFO_SIZE_4) < 0) {
 		printf("serial test: rt_spopen for reader port error\n");
 		goto exit_task;
 	}
