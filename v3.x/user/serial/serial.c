@@ -30,13 +30,15 @@
 #define WRITE_PORT  0
 #define READ_PORT   1
 
-struct msg_s { int nr; RTIME time; };
+#define MSGSIZE  1
+struct msg_s { char msg[MSGSIZE]; RTIME time; int nr; };
 
 static void write_fun(void *arg)
 {
 	int written;
-	struct msg_s msg = { 0, };
+	struct msg_s msg;
 
+	msg.nr = 0;
 	rt_task_init_schmod(nam2num("WRTSK"), 0, 0, 0, SCHED_FIFO, 0x1);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
