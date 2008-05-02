@@ -44,5 +44,7 @@ int main(void)
 
 	rt_make_soft_real_time();
 	rt_task_delete(NULL);
+	rt_scb_delete(nam2num("SCB"));
+
 	return 0;
 }
