@@ -12,7 +12,7 @@
 MODULE_LICENSE("GPL");
 
 #define SCBSUPRT  USE_GFP_ATOMIC
-#define SCBSIZ    2*BUFSIZE*sizeof(int)
+#define SCBSIZ    (2*BUFSIZE*sizeof(int))
 
 #define STACK_SIZE 16*1024
 

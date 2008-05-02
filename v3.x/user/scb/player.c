@@ -32,10 +32,10 @@ int main(void)
 
 	while (!end) {
 		if ((cnt = randu()*BUFSIZE) > 0) {
-			printf("UCNT %d\n", cnt);
 			for (i = 0; i < cnt; i++) {
 				data[i] = ++n;
 			}
+			printf("TOT = %u, UCNT = %d\n", n, cnt);
 			while (rt_scb_put(scb, data, cnt*sizeof(int))) {
 				rt_sleep(nano2count(SLEEP_TIME));
 			}
