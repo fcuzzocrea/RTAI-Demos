@@ -57,18 +57,6 @@ int main(int argc, char* argv[])
 	MBX *smbx, *rmbx;
 	int pid, count;
 
-	struct sched_param mysched;
-
-	mysched.sched_priority = 99;
-
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-	puts(" ERROR IN SETTING THE SCHEDULER UP");
-	perror( "errno" );
-	exit( 0 );
- 	}       
-
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
  	if (!(mtsk = rt_task_init_schmod(mtsk_name, 0, 0, 0, SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
@@ -79,6 +67,7 @@ int main(int argc, char* argv[])
 	printf("MASTER TASK STARTS THE ONESHOT TIMER\n");
 	rt_set_oneshot_mode();
 	start_rt_timer(nano2count(10000000));
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_sleep(1000000);
 
