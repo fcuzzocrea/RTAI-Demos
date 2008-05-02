@@ -20,14 +20,12 @@ static RT_TASK thread;
 
 static void *scb;
 
-static volatile int end;
-
 static void intr_handler(long t)
 {
 	unsigned int i, cnt, n = 0;
 	unsigned int data[BUFSIZE];
 
-	while (!end) {
+	while (1) {
 		if ((cnt = randu()*BUFSIZE) > 0) {
 			while (rt_scb_get(scb, data, cnt*sizeof(int))) {
 				rt_sleep(nano2count(SLEEP_TIME));
@@ -60,7 +58,6 @@ int init_module(void)
 
 void cleanup_module(void)
 {
-	end = 1;
 	stop_rt_timer();
 	rt_task_delete(&thread);
 	rt_scb_delete(nam2num("SCB"));

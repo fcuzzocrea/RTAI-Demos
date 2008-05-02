@@ -1,5 +1,5 @@
-#define BUFSIZE    128
-#define SLEEP_TIME 10000000
+#define BUFSIZE     139
+#define SLEEP_TIME  100000
 
 static float randu(void)
 {
@@ -8,4 +8,3 @@ static float randu(void)
 	i = i - (i/2796203)*2796203;
 	return i/2796203.0;
 }
-
