@@ -1,5 +1,5 @@
 #define BUFSIZE     139
-#define SLEEP_TIME  100000
+#define SLEEP_TIME  50000
 
 static float randu(void)
 {
