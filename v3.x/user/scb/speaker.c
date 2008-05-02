@@ -27,9 +27,10 @@ static void intr_handler(long t)
 
 	while (1) {
 		if ((cnt = randu()*BUFSIZE) > 0) {
-			while (rt_scb_get(scb, data, cnt*sizeof(int))) {
+			while (rt_scb_evdrp(scb, data, cnt*sizeof(int))) {
 				rt_sleep(nano2count(SLEEP_TIME));
 			}
+			rt_scb_get(scb, data, cnt*sizeof(int));
 			for (i = 0; i < cnt; i++) {
 				if (data[i] != ++n) {
 					rt_printk(">>> %u\n", n);
