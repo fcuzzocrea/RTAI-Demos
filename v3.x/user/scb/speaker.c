@@ -1,4 +1,3 @@
-
 #include <linux/kernel.h>
 #include <linux/module.h>
 
@@ -33,7 +32,7 @@ static void intr_handler(long t)
 			rt_scb_get(scb, data, cnt*sizeof(int));
 			for (i = 0; i < cnt; i++) {
 				if (data[i] != ++n) {
-					rt_printk(">>> %u\n", n);
+					rt_printk("K >>> %u\n", n);
 				}
 			}
 		}
