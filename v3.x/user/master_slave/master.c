@@ -61,7 +61,6 @@ int main(int argc, char* argv[])
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
 	}
-//	rt_make_hard_real_time();
 	printf("MASTER TASK INIT: name = %lx, address = %p.\n", mtsk_name, mtsk);
 
 	printf("MASTER TASK STARTS THE ONESHOT TIMER\n");

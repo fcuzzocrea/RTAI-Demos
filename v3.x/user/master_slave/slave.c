@@ -46,24 +46,13 @@ int main(int argc, char* argv[])
 	long long mbx_msg;
 	long long llmsg = 0xbbbbbbbbbbbbbbbbLL;
 
-	struct sched_param mysched;
-
-	mysched.sched_priority = 99;
-
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-	puts(" ERROR IN SETTING THE SCHEDULER UP");
-	perror( "errno" );
-	exit( 0 );
- 	}       
-
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
  	if (!(btsk = rt_task_init_schmod(nam2num("BTSK"), 0, 0, 0, SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT BUDDY TASK\n");
 		exit(1);
 	}
-//	rt_make_hard_real_time();
+	rt_make_hard_real_time();
 	printf("BUDDY TASK: name = %lx, address = %p.\n", btsk_name, btsk);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_sleep(nano2count(1000000000));
 
  	if (!(mtsk = rt_get_adr(nam2num("MTSK")))) {
@@ -97,7 +86,6 @@ int main(int argc, char* argv[])
 	rt_receive(mtsk, (void *)&msg);
 	printf("BUDDY TASK RECEIVED MESSAGE %lx FROM MASTER TASK AND RETURNS %lx\n", msg, 0xbbbbbbbbL);
 	rt_return(mtsk, 0xbbbbbbbb);
-//exit(1);
 	printf("BUDDY TASK SLEEP/LOOPS POLLING FOR MAILBOXES CREATED BY MASTER TASK\n");
  	while (!(smbx = rt_get_adr(smbx_name)) || !(rmbx = rt_get_adr(rmbx_name))) {
 		rt_sleep(nano2count(1000000000));
