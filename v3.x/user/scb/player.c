@@ -27,10 +27,6 @@ static void *thread_fun(void *lcb)
 	unsigned int i, cnt, n = 0;
 	unsigned int data[BUFSIZE];
 
-	while (!(cnt = randu()*BUFSIZE));
-	while (--cnt) {
-		randu();
-	}
 	rt_thread_init(nam2num("THREAD"), 0, 0, SCHED_FIFO, 0xF);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
