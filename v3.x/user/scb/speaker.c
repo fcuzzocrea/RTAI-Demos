@@ -1,5 +1,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/random.h>
 
 #include <asm/io.h>
 
@@ -25,7 +26,7 @@ static void intr_handler(long t)
 	unsigned int data[BUFSIZE];
 
 	while (1) {
-		if ((cnt = randu()*BUFSIZE) > 0) {
+		if ((cnt = randu(BUFSIZE)) > 0) {
 			while (rt_scb_evdrp(scb, data, cnt*sizeof(int))) {
 				rt_sleep(nano2count(SLEEP_TIME));
 			}
@@ -42,9 +43,9 @@ static void intr_handler(long t)
 int init_module(void)
 {
 	unsigned cnt;
-	while (!(cnt = randu()*BUFSIZE));
+	while (!(cnt = randu(BUFSIZE)));
 	while (--cnt) {
-		randu();
+		randu(BUFSIZE);
 	}
 	scb = rt_scb_init(nam2num("SCB"), SCBSIZ, SCBSUPRT);
 	rt_set_oneshot_mode();

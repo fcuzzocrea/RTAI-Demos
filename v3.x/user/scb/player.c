@@ -32,7 +32,7 @@ static void *thread_fun(void *lcb)
 	rt_make_hard_real_time();
 
 	while (!end) {
-		if ((cnt = randu()*BUFSIZE) > 0) {
+		if ((cnt = randu(BUFSIZE)) > 0) {
 			while (rt_scb_evdrp(lcb, data, cnt*sizeof(int))) {
 				rt_sleep(nano2count(SLEEP_TIME));
 			}
@@ -71,7 +71,7 @@ int main(void)
 	rt_make_hard_real_time();
 
 	while (!end) {
-		if ((cnt = randu()*BUFSIZE) > 0) {
+		if ((cnt = randu(BUFSIZE)) > 0) {
 			for (i = 0; i < cnt; i++) {
 				data[i] = ++n;
 			}
