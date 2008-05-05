@@ -11,7 +11,7 @@
 #include <rtai_scb.h>
 #include "params.h"
 
-static int end;
+static volatile int end;
 static void endme(int dummy) { end = 1; }
 
 #define LCBSIZ  (2*BUFSIZE*sizeof(int))
@@ -32,7 +32,7 @@ static void *thread_fun(void *lcb)
 	rt_make_hard_real_time();
 
 	while (!end) {
-		if ((cnt = randu(BUFSIZE)) > 0) {
+		if ((cnt = randu()*BUFSIZE) > 0) {
 			while (rt_scb_evdrp(lcb, data, cnt*sizeof(int))) {
 				rt_sleep(nano2count(SLEEP_TIME));
 			}
@@ -71,7 +71,7 @@ int main(void)
 	rt_make_hard_real_time();
 
 	while (!end) {
-		if ((cnt = randu(BUFSIZE)) > 0) {
+		if ((cnt = randu()*BUFSIZE) > 0) {
 			for (i = 0; i < cnt; i++) {
 				data[i] = ++n;
 			}
@@ -87,8 +87,8 @@ int main(void)
 
 	rt_make_soft_real_time();
 	rt_task_delete(NULL);
-	rt_scb_delete(nam2num("SCB"));
 	rt_thread_join(thread);
+	rt_scb_delete(nam2num("SCB"));
 	rt_scb_delete(nam2num("LCB"));
 
 	return 0;
