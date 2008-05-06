@@ -14,7 +14,7 @@
 static volatile int end;
 static void endme(int dummy) { end = 1; }
 
-#define LCBSIZ  (2*BUFSIZE*sizeof(int))
+#define LCBSIZ  (2*BUFSIZE*sizeof(int) + HDRSIZ)
 
 #if 0
 /* another way of sharing a preassigned local circular buffer */
