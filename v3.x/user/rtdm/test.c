@@ -145,8 +145,8 @@ struct rtser_event rx_event;
 		PRINT("hello_world_lxrt: rtser0 and rtser1 test finished\n");
 	}    
 
-	stop_rt_timer();
 	rt_make_soft_real_time();
 	rt_task_delete(testcomtsk);
+	stop_rt_timer();
 	return 0;
 }
