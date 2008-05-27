@@ -2,6 +2,20 @@
 
 #include <linux/mc146818rtc.h>
 
+#if 1
+
+static inline unsigned char RT_CMOS_READ(unsigned char addr)
+{
+	outb_p(addr, RTC_PORT(0));
+	return inb_p(RTC_PORT(1));
+}
+
+#else
+
+#define RT_CMOS_READ  CMOS_READ
+
+#endif
+
 //#define TEST_RTC
 #define MIN_RTC_FREQ  2
 #define MAX_RTC_FREQ  8192
@@ -16,7 +30,7 @@ static inline void rtc_enable_irq(int irq, int rtc_freq)
 		cnt = 0;
 	}
 #endif
- 	CMOS_READ(RTC_INTR_FLAGS);
+ 	RT_CMOS_READ(RTC_INTR_FLAGS);
 	rt_enable_irq(RTC_IRQ);
 }
 
