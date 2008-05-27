@@ -68,8 +68,8 @@ static inline void rt_set_task_self(void *task, void *self)
 
 static inline void rt_make_hard_real_time(void)
 {
-        struct { unsigned long dummy; } arg;
-        rtai_lxrt(BIDX, SIZARG, MAKE_HARD_RT, &arg);
+	struct { unsigned long dummy; } arg;
+	rtai_lxrt(BIDX, SIZARG, MAKE_HARD_RT, &arg);
 }
 
 static inline void rt_make_soft_real_time(void)
