@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2003  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2003-2008 Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -16,15 +16,18 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
+
 #include <sys/mman.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <rtai_fifos.h>
 #include <rtai_sem.h>
+#include <rtai_mbx.h>
+#include <rtai_msg.h>
 
-#define CPUMAP 0x1
+#define CPUMAP 0xF
 
-#define USEDFRAC 50  // %
+#define USEDFRAC 50  // in %
 
 #define SHOWPREEMPT  0
 #if SHOWPREEMPT
@@ -34,8 +37,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define BEGIN(x)
 #define END(x)
 #endif
-
-#define FIFO 1
 
 #define NAVRG 1000
 
@@ -63,7 +64,7 @@ static void *slow_fun(void *arg)
         int jit;
         RTIME svt, t;
 
-        if (!(Slow_Task = rt_task_init_schmod(nam2num("SLWTSK"), 3, 0, 0, SCHED_FIFO, CPUMAP))) {
+        if (!(Slow_Task = rt_thread_init(nam2num("SLWTSK"), 3, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT SLOW TASK\n");
                 exit(1);
         }
@@ -71,6 +72,7 @@ static void *slow_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
+	rt_task_make_periodic(Slow_Task, rt_get_time() + SLOWMUL*period, SLOWMUL*period);
         svt = rt_get_time() - SLOWMUL*period;
         while (!end) {  
                 jit = (int) count2nano((t = rt_get_time()) - svt - SLOWMUL*period);
@@ -84,7 +86,7 @@ static void *slow_fun(void *arg)
         }
 	rt_sem_wait_barrier(barrier);
 	rt_make_soft_real_time();
-	rt_task_delete(Slow_Task);
+	rt_thread_delete(Slow_Task);
 	return 0;
 }                                        
 
@@ -93,7 +95,7 @@ static void *fast_fun(void *arg)
         int jit;
         RTIME svt, t;
 
-        if (!(Fast_Task = rt_task_init_schmod(nam2num("FSTSK"), 2, 0, 0, SCHED_FIFO, CPUMAP))) {
+        if (!(Fast_Task = rt_thread_init(nam2num("FSTSK"), 2, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT FAST TASK\n");
                 exit(1);
         }
@@ -101,7 +103,8 @@ static void *fast_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
-        svt = rt_get_time() - SLOWMUL*period;
+	rt_task_make_periodic(Fast_Task, rt_get_time() + FASTMUL*period, FASTMUL*period);
+        svt = rt_get_time() - FASTMUL*period;
         while (!end) {  
                 jit = (int) count2nano((t = rt_get_time()) - svt - FASTMUL*period);
                 svt = t;
@@ -114,7 +117,7 @@ static void *fast_fun(void *arg)
         }                      
 	rt_sem_wait_barrier(barrier);
 	rt_make_soft_real_time();
-	rt_task_delete(Fast_Task);
+	rt_thread_delete(Fast_Task);
 	return 0;
 }
 
@@ -126,10 +129,11 @@ static void *latency_fun(void *arg)
 	int average;
 	int min_diff;
 	int max_diff;
-
+	RT_TASK *chktsk;
+	
 	min_diff = 1000000000;
 	max_diff = -1000000000;
-        if (!(Latency_Task = rt_task_init_schmod(nam2num("LTCTSK"), 0, 0, 0, SCHED_FIFO, CPUMAP))) {
+        if (!(Latency_Task = rt_thread_init(nam2num("PRETSK"), 0, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT LATENCY TASK\n");
                 exit(1);
         }
@@ -137,6 +141,8 @@ static void *latency_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
+	expected = rt_get_time() + 10*period;
+	rt_task_make_periodic(Latency_Task, expected, period);
         while (!end) {  
 		average = 0;
 		for (skip = 0; skip < NAVRG; skip++) {
@@ -158,11 +164,13 @@ static void *latency_fun(void *arg)
 		samp.avrg = average/NAVRG;
 		samp.jitters[0] = fastjit;
 		samp.jitters[1] = slowjit;
-		rtf_ovrwr_put(FIFO, &samp, sizeof(samp));
+		if ((chktsk = rt_get_adr(nam2num("PRECHK")))) {
+			rt_sendx_if(chktsk, &samp, sizeof(samp));
+		}
 	}
 	rt_sem_wait_barrier(barrier);
 	rt_make_soft_real_time();
-	rt_task_delete(Latency_Task);
+	rt_thread_delete(Latency_Task);
 	return 0;
 }
 
@@ -171,48 +179,35 @@ static int hard_timer_running;
 
 int main(void)
 {
-	char nm[RTF_NAMELEN+1];
 	RT_TASK *Main_Task;
-	int fifo;
+	long msg;
 
-        if (!(Main_Task = rt_task_init_schmod(nam2num("MNTSK"), 0, 0, 0, SCHED_FIFO, 0xF))) {
+        if (!(Main_Task = rt_thread_init(nam2num("MNTSK"), 0, 0, SCHED_FIFO, 0xF))) {
                 printf("CANNOT INIT MAIN TASK\n");
                 exit(1);
         }
 
-	rtf_create(FIFO, 1000);
-        if ((fifo = open(rtf_getfifobyminor(0,nm,sizeof(nm)), O_RDWR)) < 0) {
-                printf("ERROR OPENING FIFO %s\n",nm);
-                exit(1);
-        }
-	rtf_sem_init(fifo, 0);
-	barrier = rt_sem_init(nam2num("PREMSM"), 4);
-	pthread_create(&latency_thread, NULL, latency_fun, NULL);
-	pthread_create(&fast_thread, NULL, fast_fun, NULL);
-	pthread_create(&slow_thread, NULL, slow_fun, NULL);
 	if ((hard_timer_running = rt_is_hard_timer_running())) {
 		period = nano2count(TICK_TIME);
 	} else {
 		rt_set_oneshot_mode();
 		period = start_rt_timer(nano2count(TICK_TIME));
 	}
+	barrier = rt_sem_init(nam2num("PREMS"), 4);
+	latency_thread = rt_thread_create(latency_fun, NULL, 0);
+	fast_thread    = rt_thread_create(fast_fun, NULL, 0);
+	slow_thread    = rt_thread_create(slow_fun, NULL, 0);
 	rt_sem_wait_barrier(barrier);
-	expected = rt_get_time() + 100*period;
-	rt_task_make_periodic(Latency_Task, expected, period);
-	rt_task_make_periodic(Fast_Task, expected, FASTMUL*period);
-	rt_task_make_periodic(Slow_Task, expected, SLOWMUL*period);
-	rtf_sem_wait(fifo);
+	rt_receive(0, &msg);
 	end = 1;
 	rt_sem_wait_barrier(barrier);
-	pthread_join(latency_thread, NULL);
-	pthread_join(fast_thread, NULL);
-	pthread_join(slow_thread, NULL);
+	rt_thread_join(latency_thread);
+	rt_thread_join(fast_thread);
+	rt_thread_join(slow_thread);
 	if (!hard_timer_running) {
 		stop_rt_timer();	
 	}
-	rtf_sem_destroy(fifo);
-	rtf_destroy(FIFO);
 	rt_sem_delete(barrier);
-	rt_task_delete(Main_Task);
+	rt_thread_delete(Main_Task);
 	return 0;
 }

@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 1999  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 1999-2008 Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <unistd.h>
 
-#include <rtai_fifos.h>
+#include <rtai_mbx.h>
+#include <rtai_msg.h>
 
 static int end;
 
@@ -36,34 +37,24 @@ static void endme (int dummy) { end = 1; }
 
 int main(int argc,char *argv[])
 {
-	int fd0, fd1;
-	char nm[RTF_NAMELEN+1];
-        struct pollfd pollkb;
+	RT_TASK *task;
+	long msg;
 	struct sample { long min, max, avrg, jitters[2]; } samp;
 	
-	pollkb.fd = 0;
-	pollkb.events = POLLIN;
-	if ((fd1 = open(rtf_getfifobyminor(1,nm,sizeof(nm)), O_RDONLY)) < 0) {
-		fprintf(stderr, "Error opening %s\n",nm);
-		exit(1);
-	}
-
-	if ((fd0 = open(rtf_getfifobyminor(0,nm,sizeof(nm)), O_RDONLY)) < 0) {
-		fprintf(stderr, "Error opening %s\n",nm);
-		exit(1);
-	}
+        if (!(task = rt_task_init_schmod(nam2num("PRECHK"), 15, 0, 0, SCHED_FIFO, 0xF))) {
+                printf("CANNOT INIT MASTER TASK\n");
+                exit(1);
+        }
 
 	signal (SIGINT, endme);
 
 	while (!end) {
-		read(fd1, &samp, sizeof(samp));
+                struct pollfd pfd = { fd: 0, events: POLLIN|POLLERR|POLLHUP, revents: 0 };
+		rt_receivex(0, &samp, sizeof(samp), (void *)&msg);
 		printf("* latency: min: %ld, max: %ld, average: %ld; fastjit: %ld, slowjit: %ld * (all us) *\n", samp.min/1000, samp.max/1000, samp.avrg/1000, samp.jitters[0]/1000, samp.jitters[1]/1000);
 		fflush(stdout);
-		if (poll(&pollkb, 1, 1) > 0) {
-			getchar();
-			break;
-                }
+                if (poll(&pfd, 1, 20) > 0 && (pfd.revents & (POLLIN|POLLERR|POLLHUP)) != 0) break;
         }
-	rtf_sem_post(fd0);
+	rt_rpc(rt_get_adr(nam2num("MNTSK")), msg, &msg);
 	return 0;
 }
