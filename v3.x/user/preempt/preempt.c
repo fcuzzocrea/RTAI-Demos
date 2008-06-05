@@ -54,14 +54,14 @@ static RT_TASK *Latency_Task;
 static RT_TASK *Slow_Task;
 static RT_TASK *Fast_Task;
 
-static volatile int period, end, slowjit, fastjit;
+static volatile int end, slowjit, fastjit;
 
 static SEM *barrier;
 
 static void *slow_fun(void *arg)
 {
         int jit;
-        RTIME svt, t;
+        RTIME svt, t, period;
 
         if (!(Slow_Task = rt_thread_init(nam2num("SLWTSK"), 3, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT SLOW TASK\n");
@@ -71,13 +71,15 @@ static void *slow_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
-	rt_task_make_periodic(Slow_Task, rt_get_time() + SLOWMUL*period, SLOWMUL*period);
-        svt = rt_get_time() - SLOWMUL*period;
+	period = nano2count(SLOWMUL*TICK_TIME);
+	rt_task_make_periodic(Slow_Task, rt_get_time() + period, period);
+        svt = rt_get_time() - period;
         while (!end) {  
-                jit = (int) count2nano((t = rt_get_time()) - svt - SLOWMUL*period);
+                jit = abs((int)count2nano((t = rt_get_time()) - svt - period));
                 svt = t;
-                if (jit) { jit = - jit; }
-                if (jit > slowjit) { slowjit = jit; }
+                if (jit > slowjit) {
+			slowjit = jit;
+		}
                 rt_busy_sleep((SLOWMUL*TICK_TIME*USEDFRAC)/100);
 		END("SE\n");
                 rt_task_wait_period();                                        
@@ -92,7 +94,7 @@ static void *slow_fun(void *arg)
 static void *fast_fun(void *arg) 
 {                             
         int jit;
-        RTIME svt, t;
+        RTIME svt, t, period;
 
         if (!(Fast_Task = rt_thread_init(nam2num("FSTSK"), 2, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT FAST TASK\n");
@@ -102,13 +104,15 @@ static void *fast_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
-	rt_task_make_periodic(Fast_Task, rt_get_time() + FASTMUL*period, FASTMUL*period);
-        svt = rt_get_time() - FASTMUL*period;
+	period = nano2count(FASTMUL*TICK_TIME);
+	rt_task_make_periodic(Fast_Task, rt_get_time() + period, period);
+        svt = rt_get_time() - period;
         while (!end) {  
-                jit = (int) count2nano((t = rt_get_time()) - svt - FASTMUL*period);
+                jit = abs(count2nano((t = rt_get_time()) - svt - period));
                 svt = t;
-                if (jit) { jit = - jit; }
-                if (jit > fastjit) { fastjit = jit; }
+                if (jit > fastjit) {
+			fastjit = jit;
+		}
                 rt_busy_sleep((FASTMUL*TICK_TIME*USEDFRAC)/100);
 		END("FE\n");
                 rt_task_wait_period();                                        
@@ -128,6 +132,7 @@ static void *latency_fun(void *arg)
 	int average;
 	int min_diff;
 	int max_diff;
+	int period;
 	RT_TASK *chktsk;
 	RTIME expected;
 	
@@ -141,11 +146,12 @@ static void *latency_fun(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
+	period = nano2count(TICK_TIME);
 	expected = rt_get_time() + 10*period;
 	rt_task_make_periodic(Latency_Task, expected, period);
         while (!end) {  
 		average = 0;
-		for (skip = 0; skip < NAVRG; skip++) {
+		for (skip = 0; skip < NAVRG && !end; skip++) {
 			expected += period;
 			END("HE\n");
 			rt_task_wait_period();
@@ -157,7 +163,7 @@ static void *latency_fun(void *arg)
 			if (diff > max_diff) {
 				max_diff = diff;
 			}
-		average += diff;
+			average += diff;
 		}
 		samp.min = min_diff;
 		samp.max = max_diff;
@@ -187,11 +193,8 @@ int main(void)
                 exit(1);
         }
 
-	if ((hard_timer_running = rt_is_hard_timer_running())) {
-		period = nano2count(TICK_TIME);
-	} else {
-		rt_set_oneshot_mode();
-		period = start_rt_timer(nano2count(TICK_TIME));
+	if (!(hard_timer_running = rt_is_hard_timer_running())) {
+		start_rt_timer(0);
 	}
 	barrier = rt_sem_init(nam2num("PREMS"), 4);
 	latency_thread = rt_thread_create(latency_fun, NULL, 0);
@@ -204,7 +207,7 @@ int main(void)
 	rt_thread_join(latency_thread);
 	rt_thread_join(fast_thread);
 	rt_thread_join(slow_thread);
-	if (!hard_timer_running) {
+	if (hard_timer_running) {
 		stop_rt_timer();	
 	}
 	rt_sem_delete(barrier);
