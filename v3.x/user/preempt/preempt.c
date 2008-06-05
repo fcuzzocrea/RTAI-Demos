@@ -75,7 +75,7 @@ static void *slow_fun(void *arg)
 	rt_task_make_periodic(Slow_Task, rt_get_time() + period, period);
         svt = rt_get_time() - period;
         while (!end) {  
-                jit = abs((int)count2nano((t = rt_get_time()) - svt - period));
+                jit = abs(count2nano((t = rt_get_time()) - svt - period));
                 svt = t;
                 if (jit > slowjit) {
 			slowjit = jit;
