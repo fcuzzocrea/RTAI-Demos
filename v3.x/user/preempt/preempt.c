@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
 
-#define CPUMAP 0xF
+#define CPUMAP 0x1
 
 #define USEDFRAC 20  // in %
 
@@ -54,14 +54,15 @@ static RT_TASK *Latency_Task;
 static RT_TASK *Slow_Task;
 static RT_TASK *Fast_Task;
 
+static volatile RTIME start;
 static volatile int end, slowjit, fastjit;
 
 static SEM *barrier;
 
 static void *slow_fun(void *arg)
 {
-        int jit;
-        RTIME svt, t, period;
+        int jit, period;
+        RTIME expected;
 
         if (!(Slow_Task = rt_thread_init(nam2num("SLWTSK"), 3, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT SLOW TASK\n");
@@ -72,15 +73,15 @@ static void *slow_fun(void *arg)
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
 	period = nano2count(SLOWMUL*TICK_TIME);
-	rt_task_make_periodic(Slow_Task, rt_get_time() + period, period);
-        svt = rt_get_time() - period;
+	expected = start + 9*nano2count(TICK_TIME);
+	rt_task_make_periodic(Slow_Task, expected, period);
         while (!end) {  
-                jit = abs(count2nano((t = rt_get_time()) - svt - period));
-                svt = t;
+                jit = abs(count2nano(rt_get_time() - expected));
                 if (jit > slowjit) {
 			slowjit = jit;
 		}
                 rt_busy_sleep((SLOWMUL*TICK_TIME*USEDFRAC)/100);
+                expected += period;
 		END("SE\n");
                 rt_task_wait_period();                                        
 		BEGIN("SB\n");
@@ -93,8 +94,8 @@ static void *slow_fun(void *arg)
 
 static void *fast_fun(void *arg) 
 {                             
-        int jit;
-        RTIME svt, t, period;
+        int jit, period;
+        RTIME expected;
 
         if (!(Fast_Task = rt_thread_init(nam2num("FSTSK"), 2, 0, SCHED_FIFO, CPUMAP))) {
                 printf("CANNOT INIT FAST TASK\n");
@@ -105,15 +106,15 @@ static void *fast_fun(void *arg)
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
 	period = nano2count(FASTMUL*TICK_TIME);
-	rt_task_make_periodic(Fast_Task, rt_get_time() + period, period);
-        svt = rt_get_time() - period;
+	expected = start + 6*nano2count(TICK_TIME);
+	rt_task_make_periodic(Fast_Task, expected, period);
         while (!end) {  
-                jit = abs(count2nano((t = rt_get_time()) - svt - period));
-                svt = t;
+                jit = abs(count2nano(rt_get_time() - expected));
                 if (jit > fastjit) {
 			fastjit = jit;
 		}
                 rt_busy_sleep((FASTMUL*TICK_TIME*USEDFRAC)/100);
+                expected += period;
 		END("FE\n");
                 rt_task_wait_period();                                        
 		BEGIN("FB\n");
@@ -147,7 +148,8 @@ static void *latency_fun(void *arg)
 	rt_make_hard_real_time();
 	rt_sem_wait_barrier(barrier);
 	period = nano2count(TICK_TIME);
-	expected = rt_get_time() + 10*period;
+	start = rt_get_time() + nano2count(200000000);
+	expected = start + 3*period;
 	rt_task_make_periodic(Latency_Task, expected, period);
         while (!end) {  
 		average = 0;
