@@ -207,7 +207,7 @@ int main(void)
 	rt_thread_join(latency_thread);
 	rt_thread_join(fast_thread);
 	rt_thread_join(slow_thread);
-	if (hard_timer_running) {
+	if (!hard_timer_running) {
 		stop_rt_timer();	
 	}
 	rt_sem_delete(barrier);
