@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define CPUMAP 0xF
 
-#define USEDFRAC 50  // in %
+#define USEDFRAC 20  // in %
 
 #define SHOWPREEMPT  0
 #if SHOWPREEMPT
@@ -55,7 +55,6 @@ static RT_TASK *Slow_Task;
 static RT_TASK *Fast_Task;
 
 static volatile int period, end, slowjit, fastjit;
-static RTIME expected;
 
 static SEM *barrier;
 
@@ -130,6 +129,7 @@ static void *latency_fun(void *arg)
 	int min_diff;
 	int max_diff;
 	RT_TASK *chktsk;
+	RTIME expected;
 	
 	min_diff = 1000000000;
 	max_diff = -1000000000;
