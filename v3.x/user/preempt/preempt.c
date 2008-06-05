@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_mbx.h>
 #include <rtai_msg.h>
 
-#define CPUMAP 0x1
+#define CPUMAP 0xF
 
 #define USEDFRAC 20  // in %
 
