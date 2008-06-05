@@ -54,7 +54,7 @@ static RT_TASK *Latency_Task;
 static RT_TASK *Slow_Task;
 static RT_TASK *Fast_Task;
 
-static int period, end, slowjit, fastjit;
+static volatile int period, end, slowjit, fastjit;
 static RTIME expected;
 
 static SEM *barrier;
