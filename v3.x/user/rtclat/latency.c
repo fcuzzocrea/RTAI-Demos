@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #if CONFIG_RTAI_RTC_FREQ < 2
 #undef CONFIG_RTAI_RTC_FREQ
-#define CONFIG_RTAI_RTC_FREQ 100000
+#define CONFIG_RTAI_RTC_FREQ 10000
 #endif
 
 #define AVRGTIME    1
