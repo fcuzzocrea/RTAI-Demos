@@ -157,7 +157,7 @@ static void *latency_fun(void *arg)
 			END("HE\n");
 			rt_task_wait_period();
 			BEGIN("HB\n");
-			diff = (int)count2nano(rt_get_time() - expected);
+			diff = count2nano(rt_get_time() - expected);
 			if (diff < min_diff) {
 				min_diff = diff;
 			}
@@ -189,7 +189,7 @@ int main(void)
 	RT_TASK *Main_Task;
 	long msg;
 
-        if (!(Main_Task = rt_thread_init(nam2num("MNTSK"), 0, 0, SCHED_FIFO, 0xF))) {
+        if (!(Main_Task = rt_thread_init(nam2num("MNTSK"), 10, 0, SCHED_FIFO, 0xF))) {
                 printf("CANNOT INIT MAIN TASK\n");
                 exit(1);
         }
