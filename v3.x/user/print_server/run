@@ -22,5 +22,4 @@ $SUDO ./latency
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-rm -f rtfile
 ../remod
