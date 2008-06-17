@@ -56,7 +56,9 @@ do_test (void)
   } else if (r != EDEADLOCK) {
     puts ("2nd spin_lock failed but did not EDEADLOCKed");
   }
-  while (pthread_spin_trylock (&s) == EBUSY);
+// needed to avoid freezing linux
+  pthread_soft_real_time_np();
+  while (pthread_spin_trylock (&s) == EBUSY) rt_sleep(nano2count(10000));
 #endif /* ORIGINAL */
   return 1;
 }

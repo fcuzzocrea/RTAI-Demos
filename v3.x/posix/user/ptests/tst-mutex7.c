@@ -65,7 +65,9 @@ tf (void *arg)
 	  return (void *) 1l;
 	}
 
-      nanosleep (&ts, NULL);
+// needed to avoid frozing Linux
+      pthread_soft_real_time_np();
+      pthread_hard_real_time_np();
     }
 
   return NULL;
@@ -115,6 +117,7 @@ do_test (void)
       return 1;
     }
 
+RTIME t = rt_get_cpu_time_ns();
   if (pthread_mutex_unlock (&lock) != 0)
     {
       puts ("unlocking in parent failed");
@@ -127,7 +130,7 @@ do_test (void)
 	printf ("joining thread %d failed\n", cnt);
 	return 1;
       }
-
+printf(">>>>> %lld\n", rt_get_cpu_time_ns() - t);
   return 0;
 }
 
