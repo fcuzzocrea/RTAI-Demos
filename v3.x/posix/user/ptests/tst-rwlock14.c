@@ -32,7 +32,7 @@ static pthread_rwlock_t r; // = PTHREAD_RWLOCK_INITIALIZER;
 static void *
 tf (void *arg)
 {
-        pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);
+  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);
   /* Lock the read-write lock.  */
   if (pthread_rwlock_wrlock (&r) != 0)
     {
@@ -56,8 +56,6 @@ do_test (void)
 {
   int result = 0;
   struct timespec ts;
-
-  pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);
 
   if (clock_gettime (CLOCK_MONOTONIC, &ts) != 0)
     {
@@ -176,3 +174,12 @@ int main(void)
         do_test();
         return 0;
 }
+
+60,61d59
+<   pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);
+<
+173c171
+<         pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME);
+---
+>         pthread_setschedparam_np(0, SCHED_FIFO, 0, 0xF, PTHREAD_SOFT_REAL_TIME);
+
