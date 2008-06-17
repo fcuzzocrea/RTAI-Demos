@@ -52,6 +52,7 @@ static int hard_timer_running;
 
 int main(int argc, char *argv[])
 {
+	char buf[1000];
 	int diff;
 	int sample;
 	int average;
@@ -145,7 +146,8 @@ int main(int argc, char *argv[])
 		samp.index = average/SMPLSXAVRG;
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
-		printf("* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		printf("%s\n", buf);
 		if (rt_receive_if(rt_get_adr(nam2num("LATCHK")), (unsigned int *)&average)) {
 			rt_return(rt_get_adr(nam2num("LATCHK")), (unsigned int)average);
 			break;
