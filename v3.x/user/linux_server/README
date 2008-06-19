@@ -1,8 +1,8 @@
-           *** SERVING LINUX SYSCALLS IN RTAI HARD REAL TIMER MODE ***
+       *** SERVING LINUX SYSCALLS IN RTAI HARD REAL TIMER MODE ***
 
 This example shows a way to be used by hard real RTAI applications in user 
-space wanting to access Linux services. It is based on the cration of a 
-general purpose server thread that takes over the Linux request. The other 
+space wanting to access Linux services. It is based on the creation of a 
+general purpose server thread that takes over Linux requests. The other 
 way is the RTAI default of moving a task wanting to use Linux back to soft 
 mode, recovering it to hard real time again as soon as possible. See the 
 related RTAI configuration helper for an explanation of the different 
@@ -22,7 +22,7 @@ real time determinism. Such a capability can be implemented in many ways, the
 one chosen by RTAI is based on async Linux syscalls buffering mated with an 
 optional callback function mechanism to help implementing a user own async 
 call mechanism. Beware of not reusing read/write data/buffers made available
-to async calls, use RTAI dynamic memory to allocate them in real time, 
+to async calls, use RTAI dynamic memory or SCB to allocate them in real time, 
 freeing them afterward, possibly with the help of a support call back function. 
 
 How it works
@@ -44,12 +44,12 @@ there is none in async mode as the server will execute in soft mode when there
 will be no RTAI real time activity any more.
 The need of copying some data is responsable for most of the penalty you have 
 to pay for using this server. The related response is not so bad anyhow. 
-Moreover recall this is an just an alternative way to what the RTAI scheduler 
+Moreover recall this is just an alternative way to what the RTAI scheduler 
 will have to do anyhow, i.e. make you soft and recover hard mode at the next 
 RTAI proper service call, which will require 4 task switches and keep you in 
 Linux hands from the Linux syscall till RTAI is used again. 
-With this server you'll stay soft just either till Linux has finished 
-servicing your request, if in sync mode, or keep wrking in reqal time, if in
+With a server you'll stay soft just either till Linux has finished 
+servicing your request, if in sync mode, or keep working in real time, if in
 async mode.
 
 Beware that what explained above makes a few Linux sycalls not executable by
@@ -61,16 +61,18 @@ API Functions prototypes
 The only functions needed are:
 
 - int rt_linux_syscall_server_create(RT_TASK *task);
-a zero return meaning success, non zero a failure in setting up the buddy;
+short cut to create a synchronous Linux syscall server;
+a zero return meaning success, non zero a failure in setting the server up;
 a NULL task means the current one; will operate in sync mode always.
 
 - int rt_sync_async_linux_syscall_server_create(RT_TASK *task, int mode, 
   void (*callback_fun)(long, long), int nr_bufd_async_calls);
-a zero return meaning success, non zero a failure in setting up the buddy;
+general call to create a Linux syscall server;
+a zero return meaning success, non zero a failure in setting the server up;
 a NULL task means the current one; a NULL callback_fun is allowed. It will 
 operate according to mode setting, either SYNC_LINUX_SYSCALL or
 ASYNC_LINUX_SYSCALL. Beware of using an appropriate nr_bufd_async_calls, if
-async requests overrun the oldest one pending ones will be overwritten and
+async requests overrun the oldest pending ones will be overwritten and
 not executed.
 
 - void rt_set_linux_syscall_mode(int mode, void (*callback_fun)(long, long);
