@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <fcntl.h>
 #include <sched.h>
 #include <sys/mman.h>
+#include <sys/poll.h>
 #include <asm/io.h>
 #include <math.h>
 
@@ -30,10 +31,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_msg.h>
 
 #define AVRGTIME    1
-#define PERIOD      25000
+#define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1000
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -50,9 +51,18 @@ static double dot(double *a, double *b, int n)
 
 static int hard_timer_running;
 
+static volatile int end;
+
+static void async_callback(long syscall_nr, long retval)
+{
+	struct pollfd ufds = { 0, POLLIN, };
+	if (poll(&ufds, 1, 1)) {
+		end = 1;
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	char buf[1000];
 	int diff;
 	int sample;
 	int average;
@@ -72,7 +82,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	rt_sync_async_linux_syscall_server_create(NULL, ASYNC_LINUX_SYSCALL, NULL, 10);
+	rt_sync_async_linux_syscall_server_create(NULL, ASYNC_LINUX_SYSCALL, async_callback, 100);
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
 	printf("# average time = %i (s)\n", (int)AVRGTIME);
@@ -96,6 +106,7 @@ int main(int argc, char *argv[])
                 a[i] = b[i] = 3.141592;
         }
 	sref = dot(a, b, MAXDIM);
+	s = 0.0;
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
@@ -105,12 +116,12 @@ int main(int argc, char *argv[])
 	svt = rt_get_cpu_time_ns();
 	i = 0;
 	samp.ovrn = 0;
-	while (1) {
+	while (!end) {
 		min_diff = 1000000000;
 		max_diff = -1000000000;
 		average = 0;
 
-		for (sample = 0; sample < SMPLSXAVRG; sample++) {
+		for (sample = 0; sample < SMPLSXAVRG && !end; sample++) {
 			expected += period;
 			if (!rt_task_wait_period()) {
 				if (TIMER_MODE) {
@@ -146,8 +157,7 @@ int main(int argc, char *argv[])
 		samp.index = average/SMPLSXAVRG;
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
-		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
-		printf("%s\n", buf);
+		printf("* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
 		if (rt_receive_if(rt_get_adr(nam2num("LATCHK")), (unsigned int *)&average)) {
 			rt_return(rt_get_adr(nam2num("LATCHK")), (unsigned int)average);
 			break;
@@ -165,11 +175,6 @@ int main(int argc, char *argv[])
 	if (exectime[1] && exectime[2]) {
 		printf("\n>>> S = %g, EXECTIME = %G\n", s, (double)exectime[0]/(double)(exectime[2] - exectime[1]));
 	}
-	rt_gettimeorig(exectime);
-		printf("\n>>> %lld %lld %lld\n", exectime[0] + rt_get_time(), exectime[1] + rt_get_time_ns(), rt_get_real_time_ns());
-	sleep(1);
-	rt_gettimeorig(exectime);
-		printf("\n>>> %lld %lld %lld\n", exectime[0] + rt_get_time(), exectime[1] + rt_get_time_ns(), rt_get_real_time_ns());
 	rt_task_delete(task);
 
 	return 0;
