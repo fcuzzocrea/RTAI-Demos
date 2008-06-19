@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1000
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/100
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -82,7 +82,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	rt_sync_async_linux_syscall_server_create(NULL, ASYNC_LINUX_SYSCALL, async_callback, 100);
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
 	printf("# average time = %i (s)\n", (int)AVRGTIME);
@@ -90,6 +89,7 @@ int main(int argc, char *argv[])
 	printf("#%sstart the timer\n", argc == 1 ? " " : " do not ");
 	printf("# timer_mode is %s\n", TIMER_MODE ? "periodic" : "oneshot");
 	printf("\n");
+	rt_sync_async_linux_syscall_server_create(NULL, ASYNC_LINUX_SYSCALL, async_callback, 20);
 
 	if (!(hard_timer_running = rt_is_hard_timer_running())) {
 		if (TIMER_MODE) {
