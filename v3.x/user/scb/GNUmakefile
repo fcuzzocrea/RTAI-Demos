@@ -38,7 +38,7 @@ endif
 
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-player: player.c
+player: player.c params.h
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean::
