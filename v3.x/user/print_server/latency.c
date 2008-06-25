@@ -24,17 +24,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sched.h>
 #include <sys/mman.h>
 #include <sys/poll.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <asm/io.h>
 #include <math.h>
 
-#include <rtai_mbx.h>
-#include <rtai_msg.h>
+#include <rtai_lxrt.h>
 
 #define AVRGTIME    1
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/100
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -63,13 +66,19 @@ static void async_callback(long syscall_nr, long retval)
 
 int main(int argc, char *argv[])
 {
+	int sock;
+	struct sockaddr_in SPRT_ADDR;
+	char buf[1000];
+	FILE *fs;
+
 	int diff;
 	int sample;
 	int average;
 	int min_diff;
 	int max_diff;
 	int period;
-	int i, cnt = 0;
+	int i;
+	int cnt;
 	RTIME t, svt;
 	RTIME expected, exectime[3];
 	RT_TASK *task;
@@ -82,6 +91,14 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	sock = socket(AF_INET, SOCK_DGRAM, 0);
+	bzero(&SPRT_ADDR, sizeof(struct sockaddr_in));
+	SPRT_ADDR.sin_family = AF_INET;
+	SPRT_ADDR.sin_port = htons(5000);
+	SPRT_ADDR.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+	fs = fopen("pippo", "w+");
+
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
 	printf("# average time = %i (s)\n", (int)AVRGTIME);
@@ -89,7 +106,8 @@ int main(int argc, char *argv[])
 	printf("#%sstart the timer\n", argc == 1 ? " " : " do not ");
 	printf("# timer_mode is %s\n", TIMER_MODE ? "periodic" : "oneshot");
 	printf("\n");
-	rt_sync_async_linux_syscall_server_create(NULL, ASYNC_LINUX_SYSCALL, async_callback, 20);
+
+	rt_sync_async_linux_syscall_server_create(NULL, ASYNC_LINUX_SYSCALL, async_callback, 120);
 
 	if (!(hard_timer_running = rt_is_hard_timer_running())) {
 		if (TIMER_MODE) {
@@ -114,6 +132,7 @@ int main(int argc, char *argv[])
 	expected = rt_get_time() + 200*period;
 	rt_task_make_periodic(task, expected, period);
 	svt = rt_get_cpu_time_ns();
+	cnt = 0;
 	i = 0;
 	samp.ovrn = 0;
 	while (!end) {
@@ -158,15 +177,15 @@ int main(int argc, char *argv[])
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
 		printf("* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
-		if (rt_receive_if(rt_get_adr(nam2num("LATCHK")), (unsigned int *)&average)) {
-			rt_return(rt_get_adr(nam2num("LATCHK")), (unsigned int)average);
-			break;
-		}
+		fflush(stdout);
+		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		fprintf(fs, "%s", buf);
+		fflush(fs);
+		sendto(sock, buf, 100, 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 	}
 
-	while (rt_get_adr(nam2num("LATCHK"))) {
-		rt_sleep(nano2count(1000000));
-	}
+	close(sock);
+	fclose(fs);
 	rt_make_soft_real_time();
 	if (!hard_timer_running) {
 		stop_rt_timer();	
