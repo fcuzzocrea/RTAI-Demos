@@ -8,12 +8,14 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: latency
+all: latency display
 
 latency: latency.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
+display: display.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) 
 clean:
-	rm -f *.o latency
+	rm -f *.o latency display
 
 .PHONY: clean
