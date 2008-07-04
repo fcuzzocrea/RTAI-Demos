@@ -162,6 +162,7 @@ int init_module(void)
 	pthread_cond_init(&cond, 0);
 	pthread_mutex_init(&mtx, 0);
 	pthread_barrier_init(&barrier, NULL, 5);
+	attr.priority = 0;
 	pthread_create(&task1, &attr, task_func1, 0);
 	attr.priority = 1;
 	pthread_create(&task2, &attr, task_func2, 0);
