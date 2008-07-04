@@ -134,9 +134,9 @@ int __init init_heartbeat(void)
 void __exit cleanup_heartbeat(void)
 {
 	end = 1;
-	stop_rt_timer();
 	rtdm_task_join_nrt(&heartbeat_task, 100);
 	leds_cleanup();
+	stop_rt_timer();
 }
 
 module_init(init_heartbeat);
