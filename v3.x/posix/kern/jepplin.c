@@ -41,8 +41,8 @@ static pthread_mutex_t print_mtx;
 #define PRINT_LOCK    pthread_mutex_lock(&print_mtx);
 #define PRINT_UNLOCK  pthread_mutex_unlock(&print_mtx);
 
-#define MAX_MSG_SIZE  10
-static MQ_ATTR mqattrs = { NUM_TASKS, MAX_MSG_SIZE, 0, 0};
+#define MAX_MSG_LENGTH  10
+static MQ_ATTR mqattrs = { NUM_TASKS, MAX_MSG_LENGTH, 0, 0};
 
 static pthread_attr_t attr = { STACK_SIZE, 0, 0, 0 };
 
@@ -55,7 +55,7 @@ static pthread_attr_t attr = { STACK_SIZE, 0, 0, 0 };
 static void *task_code(int task_no)
 {
 	int i;
-	char buf[MAX_MSG_SIZE];
+	char buf[MAX_MSG_LENGTH];
 	struct timespec t;
 	static mqd_t mq_in, mq_out;
 
@@ -121,7 +121,7 @@ static void *start_task_code(void *arg)
 {
 	int i, k;
 	mqd_t mq_in, mq_out;
-	char buf[MAX_MSG_SIZE];
+	char buf[MAX_MSG_LENGTH];
 
 	pthread_mutex_init(&print_mtx, NULL);
 	mq_in  = mq_open("mq_in", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, &mqattrs);
