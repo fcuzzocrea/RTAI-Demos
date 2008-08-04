@@ -1,20 +1,60 @@
+/*
+COPYRIGHT (C) 2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+*/
+
+
+/*
+   For an easy use in user space made independent from 
+   Linux includes by copying from it all of what needed
+*/
+
 #include <asm/io.h>
 
-#include <linux/mc146818rtc.h>
+#define RTC_IRQ  8
 
-#if 1
+#define RTC_REG_A  10
+#define RTC_REG_B  11
+#define RTC_REG_C  12
 
-static inline unsigned char RT_CMOS_READ(unsigned char addr)
-{
-	outb_p(addr, RTC_PORT(0));
-	return inb_p(RTC_PORT(1));
-}
+#define RTC_CONTROL      RTC_REG_B
+#define RTC_INTR_FLAGS   RTC_REG_C
+#define RTC_FREQ_SELECT  RTC_REG_A
 
-#else
+#define RTC_REF_CLCK_32KHZ  0x20
+#define RTC_PIE             0x40
 
-#define RT_CMOS_READ  CMOS_READ
+#define RTC_PORT(x)     (0x70 + (x))
+#define RTC_ALWAYS_BCD  1
 
-#endif
+#define pause_io() \
+	do { asm volatile("outb %%al,$0x80" : : : "memory"); } while (0)
+
+#define CMOS_READ(addr) ({ \
+	outb((addr),RTC_PORT(0)); \
+	pause_io(); \
+	inb(RTC_PORT(1)); \
+})
+
+#define CMOS_WRITE(val, addr) ({ \
+	outb((addr),RTC_PORT(0)); \
+	pause_io(); \
+	outb((val),RTC_PORT(1)); \
+	pause_io(); \
+})
 
 //#define TEST_RTC
 #define MIN_RTC_FREQ  2
@@ -30,7 +70,7 @@ static inline void rtc_enable_irq(int irq, int rtc_freq)
 		cnt = 0;
 	}
 #endif
- 	RT_CMOS_READ(RTC_INTR_FLAGS);
+ 	CMOS_READ(RTC_INTR_FLAGS);
 	rt_enable_irq(RTC_IRQ);
 }
 
