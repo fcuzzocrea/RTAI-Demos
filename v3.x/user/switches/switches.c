@@ -30,6 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/poll.h>
 
 #include <rtai_sem.h>
+#include <rtai_msg.h>
 
 #define LOOPS  2000
 #define NR_RT_TASKS 10
@@ -101,7 +102,7 @@ int main(void)
 
 	for (i = 0; i < NR_RT_TASKS; i++) {
 		indx[i] = i;
-		if ((thread[i] = rt_thread_create(thread_fun, indx + i, 10000)) < 0) {
+		if (!(thread[i] = rt_thread_create(thread_fun, indx + i, 10000))) {
 			printf("ERROR IN CREATING THREAD %d\n", indx[i]);
 			exit(1);
  		}       
