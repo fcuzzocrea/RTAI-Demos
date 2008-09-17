@@ -237,8 +237,8 @@ rt_cond_wait_until = rtai.rt_cond_wait_until
 rtai.rt_cond_wait_timed.argtypes = [c_void_p, c_void_p, c_longlong]
 rt_cond_wait_timed = rtai.rt_cond_wait_timed
 
-rtai.rt_poll.argtypes = [c_void_p, c_ulong, c_longlong]
-rt_poll = rtai.rt_poll
+#rtai.rt_poll.argtypes = [c_void_p, c_ulong, c_longlong]
+#rt_poll = rtai.rt_poll
 
 
 # mail boxes
@@ -441,7 +441,8 @@ rt_Creceive = rtai.rt_Creceive
 rtai.rt_Reply.argtypes = [c_long, c_void_p, c_long]
 rt_Reply = rtai.rt_Reply
 
-#pid_t rt_Proxy_attach(pid_t pid, void *msg, int nbytes, int priority);
+rtai.rt_Proxy_attach.argtypes = [c_long, c_void_p, c_int, c_int]
+rt_Proxy_attach = rtai.rt_Proxy_attach
 
 rt_Proxy_detach = rtai.rt_Proxy_detach
 

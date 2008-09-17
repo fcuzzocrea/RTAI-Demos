@@ -1,8 +1,8 @@
 from rtai import *
 
 class SAMP(Structure) :
-	_fields_ = [("max", c_longlong), 
-	            ("min", c_longlong),
+	_fields_ = [("min", c_longlong), 
+	            ("max", c_longlong),
 		    ("index", c_int),
 		    ("ovrn", c_int)]
 samp = SAMP(0, 0, 0, 0)
