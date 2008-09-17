@@ -6,6 +6,8 @@ libc = CDLL("libc.so.6")
 cdll.LoadLibrary("liblxrt.so")
 rtai = CDLL("liblxrt.so")
 
+NULL = None
+
 # lxrt services
 
 rtai.nam2num.argstype = [c_void_p]

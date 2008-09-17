@@ -16,11 +16,11 @@ max = -1000000000
 min = 1000000000
 msg = c_ulong(0)
 
-task = rt_task_init_schmod(nam2num("LATCHK"), 20, 0, 0, 0, 0xf)
+task = rt_task_init_schmod(nam2num("LATCHK"), 20, 0, 0, 0, 0xF)
 mbx = rt_get_adr(nam2num("LATMBX"))
 rt_make_hard_real_time()
 
-while 1 :
+while True :
 	rt_mbx_receive(mbx, byref(samp), sizeof(samp))
 	if max < samp.max :
 		max = samp.max
