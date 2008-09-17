@@ -16,6 +16,8 @@ max = -1000000000
 min = 1000000000
 msg = c_ulong(0)
 
+rt_allow_nonroot_hrt()
+
 task = rt_task_init_schmod(nam2num("LATCHK"), 20, 0, 0, 0, 0xF)
 mbx = rt_get_adr(nam2num("LATMBX"))
 rt_make_hard_real_time()

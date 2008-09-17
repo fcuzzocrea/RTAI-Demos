@@ -25,6 +25,8 @@ rtai.rt_get_name.argtypes = [c_void_p]
 rtai.rt_get_name.restype  = c_ulong
 rt_get_name = rtai.rt_get_name.restype
 
+rt_allow_nonroot_hrt = rtai.rt_allow_nonroot_hrt
+
 rtai.rt_task_init_schmod.argtypes = [c_ulong, c_int, c_int, c_int, c_int, c_int]
 rtai.rt_task_init_schmod.restype  = c_void_p
 rt_task_init_schmod = rtai.rt_task_init_schmod
