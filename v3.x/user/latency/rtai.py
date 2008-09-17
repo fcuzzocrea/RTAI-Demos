@@ -90,7 +90,7 @@ rt_sched_lock = rtai.rt_sched_lock
 
 rt_sched_unlock = rtai.rt_sched_unlock
 
-rtai.rt_task_make_periodic.argtypex = [c_void_p, c_longlong, c_longlong]
+rtai.rt_task_make_periodic.argtypes = [c_void_p, c_longlong, c_longlong]
 rt_task_make_periodic = rtai.rt_task_make_periodic
 
 rtai.rt_task_make_periodic_relative_ns.argtypes = [c_void_p, c_longlong, c_longlong]
@@ -247,6 +247,9 @@ rt_cond_wait_timed = rtai.rt_cond_wait_timed
 rtai.rt_typed_mbx_init.argtypes = [c_ulong, c_int, c_int]
 rtai.rt_typed_mbx_init.restype = c_void_p
 rt_typed_mbx_init = rtai.rt_typed_mbx_init
+
+def rt_mbx_init(name, size) :
+	return rt_typed_mbx_init(name, size, FIFO_Q)
 
 rtai.rt_mbx_delete.argtypes = [c_void_p]
 rt_mbx_delete = rtai.rt_mbx_delete
