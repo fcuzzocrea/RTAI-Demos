@@ -17,9 +17,8 @@ class SAMP(Structure) :
 		    ("ovrn", c_int)]
 samp = SAMP(0, 0, 0, 0)
 
-class EXECTIME(Structure) :
-	_fields_ = [("exectime", c_longlong*3)]
-exectime = EXECTIME()
+EXECTIME = c_longlong*3
+exectime = EXECTIME(0, 0, 0)
 
 msg = c_ulong(0)
 min_diff = 1000000000
@@ -121,8 +120,8 @@ while rt_get_adr(nam2num("LATCHK")) != NULL :
 	rt_sleep(nano2count(1000000))
 if hard_timer_running == 0 :
 	stop_rt_timer()	
-rt_get_exectime(task, byref(exectime))
-if exectime.exectime[1] and exectime.exectime[2] :
-	print "\n>>> S = ", dot(a, b), "EXECTIME = ", c_double(exectime.exectime[0]).value/c_double(exectime.exectime[2] - exectime.exectime[1]).value
+rt_get_exectime(task, exectime)
+if exectime[1] and exectime[2] :
+	print "\n>>> S = ", s, "EXECTIME = ", c_double(exectime[0]).value/c_double(exectime[2] - exectime[1]).value
 rt_task_delete(task)
 rt_mbx_delete(mbx)
