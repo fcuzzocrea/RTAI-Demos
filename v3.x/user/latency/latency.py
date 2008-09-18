@@ -16,6 +16,11 @@ class SAMP(Structure) :
 		    ("index", c_int),
 		    ("ovrn", c_int)]
 samp = SAMP(0, 0, 0, 0)
+
+class EXECTIME(Structure) :
+	_fields_ = [("exectime", c_longlong*3)]
+exectime = EXECTIME()
+
 msg = c_ulong(0)
 min_diff = 1000000000
 max_diff = -1000000000
@@ -27,16 +32,14 @@ expected = c_longlong(0)
 latchk = c_void_p(NULL)
 sample = 0
 
-MAXDIM = 10
-a = array('d', [ 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14 ])
-b = [ 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14 ]
+PI = 3.141592
+a = array('d', [ PI, PI, PI, PI, PI, PI, PI, PI, PI, PI ])
+b = [ PI, PI, PI, PI, PI, PI, PI, PI, PI, PI ]
 
-def dot(a, b, n) :
-	i = n - 1
+def dot(a, b) :
 	s = 0.0
-	while i >= 0 :
+	for i in range(0, min(len(a), len(b))) :
 		s = s + a[i]*b[i]
-		i -= 1
 	return s
 
 mbx = rt_mbx_init(nam2num("LATMBX"), 20*sizeof(samp))
@@ -68,7 +71,7 @@ if hard_timer_running == 0 :
 	period = start_rt_timer(nano2count(PERIOD))
 else :
 	period = nano2count(PERIOD)
-sref = dot(a, b, MAXDIM)
+sref = dot(a, b)
 
 rt_make_hard_real_time()
 expected = rt_get_time() + 200*period
@@ -79,10 +82,8 @@ while True :
 	min_diff = 1000000000
 	max_diff = -1000000000
 	average = 0
-	sample = SMPLSXAVRG
 
-	while sample > 0 :
-		sample -= 1
+	for sample in range(1, SMPLSXAVRG) :
 		expected += period
 		if rt_task_wait_period() == 0 :
 			if TIMER_MODE != 0 :
@@ -101,7 +102,7 @@ while True :
 		if diff > max_diff :
 			max_diff = diff
 		average += diff
-		s = dot(a, b, MAXDIM)
+		s = dot(a, b)
 		if fabs(s/sref - 1.0) > 1.0e-16 :
 			print "\nERROR: DOT PRODUCT RESULT = ", s, sref, sref - s, "\n"
 			sys.exit(1)
@@ -120,5 +121,8 @@ while rt_get_adr(nam2num("LATCHK")) != NULL :
 	rt_sleep(nano2count(1000000))
 if hard_timer_running == 0 :
 	stop_rt_timer()	
+rt_get_exectime(task, byref(exectime))
+if exectime.exectime[1] and exectime.exectime[2] :
+	print "\n>>> S = ", dot(a, b), "EXECTIME = ", c_double(exectime.exectime[0]).value/c_double(exectime.exectime[2] - exectime.exectime[1]).value
 rt_task_delete(task)
 rt_mbx_delete(mbx)
