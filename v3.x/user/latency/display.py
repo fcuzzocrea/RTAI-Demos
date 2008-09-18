@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from rtai import *
 
 class SAMP(Structure) :

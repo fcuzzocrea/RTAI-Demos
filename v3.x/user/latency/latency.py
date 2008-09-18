@@ -1,4 +1,8 @@
+#!/usr/bin/python
+
 from rtai import *
+from math import *
+from array import *
 
 AVRGTIME = 1
 PERIOD = 100000
@@ -23,15 +27,27 @@ expected = c_longlong(0)
 latchk = c_void_p(NULL)
 sample = 0
 
+MAXDIM = 10
+a = array('d', [ 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14 ])
+b = [ 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14 ]
+
+def dot(a, b, n) :
+	i = n - 1
+	s = 0.0
+	while i >= 0 :
+		s = s + a[i]*b[i]
+		i -= 1
+	return s
+
 mbx = rt_mbx_init(nam2num("LATMBX"), 20*sizeof(samp))
 if mbx == NULL :
 	libc.libc.printf("CANNOT CREATE MAILBOX\n")
-	exit(1)
+	sys.exit(1)
 
 task = rt_task_init_schmod(nam2num("LATCAL"), 0, 0, 0, 0, 0xF)
 if task == 0 :
 	libc.printf("CANNOT INIT MASTER LATENCY TASK\n")
-	exit(1)
+	sys.exit(1)
 
 libc.printf("\n## RTAI latency calibration tool ##\n")
 libc.printf("# period = %i (ns) \n", PERIOD)
@@ -52,6 +68,7 @@ if hard_timer_running == 0 :
 	period = start_rt_timer(nano2count(PERIOD))
 else :
 	period = nano2count(PERIOD)
+sref = dot(a, b, MAXDIM)
 
 rt_make_hard_real_time()
 expected = rt_get_time() + 200*period
@@ -84,6 +101,10 @@ while True :
 		if diff > max_diff :
 			max_diff = diff
 		average += diff
+		s = dot(a, b, MAXDIM)
+		if fabs(s/sref - 1.0) > 1.0e-16 :
+			print "\nERROR: DOT PRODUCT RESULT = ", s, sref, sref - s, "\n"
+			sys.exit(1)
 
 	samp.min = min_diff
 	samp.max = max_diff
