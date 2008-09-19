@@ -324,39 +324,39 @@ rtai.rt_send_timed.argtypes = [c_void_p, c_ulong, c_longlong]
 rtai.rt_send_timed.restype = c_void_p
 rt_send_timed = rtai.rt_send_timed
 
-rtai.rt_evdrp.argtypes = [c_void_p, POINTER(c_ulong)]
+rtai.rt_evdrp.argtypes = [c_void_p, c_void_p]
 rtai.rt_evdrp.restype = c_void_p
 rt_evdrp = rtai.rt_evdrp
 
-rtai.rt_receive.argtypes = [c_void_p, POINTER(c_ulong)]
+rtai.rt_receive.argtypes = [c_void_p, c_void_p]
 rtai.rt_receive.restype = c_void_p
 rt_receive = rtai.rt_receive
 
-rtai.rt_receive_if.argtypes = [c_void_p, POINTER(c_ulong)]
+rtai.rt_receive_if.argtypes = [c_void_p, c_void_p]
 rtai.rt_receive_if.restype = c_void_p
 rt_receive_if = rtai.rt_receive_if
 
-rtai.rt_receive_until.argtypes = [c_void_p, POINTER(c_ulong), c_longlong]
+rtai.rt_receive_until.argtypes = [c_void_p, c_void_p, c_longlong]
 rtai.rt_receive_until.restype = c_void_p
 rt_receive_until = rtai.rt_receive_until
 
-rtai.rt_receive_timed.argtypes = [c_void_p, POINTER(c_ulong), c_longlong]
+rtai.rt_receive_timed.argtypes = [c_void_p, c_void_p, c_longlong]
 rtai.rt_receive_timed.restype = c_void_p
 rt_receive_timed = rtai.rt_receive_timed
 
-rtai.rt_rpc.argtypes = [c_void_p, c_ulong, POINTER(c_ulong)]
+rtai.rt_rpc.argtypes = [c_void_p, c_ulong, c_void_p]
 rtai.rt_rpc.restype = c_void_p
 rt_rpc = rtai.rt_rpc
 
-rtai.rt_rpc_if.argtypes = [c_void_p, c_ulong, POINTER(c_ulong)]
+rtai.rt_rpc_if.argtypes = [c_void_p, c_ulong, c_void_p]
 rtai.rt_rpc_if.restype = c_void_p
 rt_rpc_if = rtai.rt_rpc_if
 
-rtai.rt_rpc_until.argtypes = [c_void_p, c_ulong, POINTER(c_ulong), c_longlong]
+rtai.rt_rpc_until.argtypes = [c_void_p, c_ulong, c_void_p, c_longlong]
 rtai.rt_rpc_until.restype = c_void_p
 rt_rpc_until = rtai.rt_rpc_until
 
-rtai.rt_rpc_timed.argtypes = [c_void_p, c_ulong, POINTER(c_ulong), c_longlong]
+rtai.rt_rpc_timed.argtypes = [c_void_p, c_ulong, c_void_p, c_longlong]
 rtai.rt_rpc_timed.restype = c_void_p
 rt_rpc_timed = rtai.rt_rpc_timed
 
