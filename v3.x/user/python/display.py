@@ -3,6 +3,9 @@
 from rtai_lxrt import *
 from rtai_mbx import *
 from rtai_msg import *
+from rtai_sem import *
+
+TEST_POLL = False
 
 class SAMP(Structure) :
 	_fields_ = [("min", c_longlong), 
@@ -24,9 +27,20 @@ rt_allow_nonroot_hrt()
 
 task = rt_task_init_schmod(nam2num("LATCHK"), 20, 0, 0, 0, 0xF)
 mbx = rt_get_adr(nam2num("LATMBX"))
+polld = (rt_poll_s*2)()
 rt_make_hard_real_time()
 
 while True :
+
+	if TEST_POLL :
+		while True :
+			polld[0] = ( mbx, RT_POLL_MBX_RECV )
+			polld[1] = ( mbx, RT_POLL_MBX_RECV )
+			retval = rt_poll(byref(polld), 2, -200000000)
+			libc.printf("POLL: %x %p %p\n", retval, polld[0].what, polld[1].what)
+			if polld[0].what == NULL :
+				break
+
 	rt_mbx_receive(mbx, byref(samp), sizeof(samp))
 	if max < samp.max :
 		max = samp.max

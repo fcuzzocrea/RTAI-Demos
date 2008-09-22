@@ -18,9 +18,8 @@ cd ..; ./ldmod; cd -
 echo
 echo "Now start the realtime process <enter> and wait for its end:"
 read junk
-python latency.py &
 echo "Latency task running."
+python latency.py
 echo "Latency task exited. Press <enter> to remove the modules."
 read junk
 ../remod
-
