@@ -16,6 +16,13 @@ RESEM_RECURS = 1
 RESEM_BINSEM = 0
 RESEM_CHEKWT = -1
 
+RT_POLL_MBX_RECV = 1
+RT_POLL_MBX_SEND = 2
+
+class rt_poll_s(Structure) :
+        _fields_ = [("what",    c_void_p),
+                    ("forwhat", c_ulong)]
+
 rtai.rt_typed_sem_init.argtypes = [c_ulong, c_int, c_int]
 rtai.rt_typed_sem_init.restype = c_void_p
 rt_typed_sem_init = rtai.rt_typed_sem_init
@@ -86,5 +93,5 @@ rt_cond_wait_until = rtai.rt_cond_wait_until
 rtai.rt_cond_wait_timed.argtypes = [c_void_p, c_void_p, c_longlong]
 rt_cond_wait_timed = rtai.rt_cond_wait_timed
 
-#rtai.rt_poll.argtypes = [c_void_p, c_ulong, c_longlong]
-#rt_poll = rtai.rt_poll
+rtai.rt_poll.argtypes = [c_void_p, c_ulong, c_longlong]
+rt_poll = rtai.rt_poll
