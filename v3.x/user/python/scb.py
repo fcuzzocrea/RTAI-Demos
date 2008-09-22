@@ -12,7 +12,7 @@ BUFSIZE = 139
 SLEEP_TIME = 100000
 
 SCBSUPRT = USE_GFP_ATOMIC
-LCBSIZ = (2*BUFSIZE*sizeof(c_int) + HDRSIZ)
+LCBSIZ = (2*BUFSIZE*sizeof(c_long) + HDRSIZ)
 
 #thread
 
@@ -27,9 +27,9 @@ def thread_fun(lcb, null) :
 	while True :
 		cnt = randint(0, BUFSIZE)
 		if cnt > 0 :
-			while rt_scb_evdrp(lcb, data, cnt*sizeof(c_int)) != 0 :
+			while rt_scb_evdrp(lcb, data, cnt*sizeof(c_long)) != 0 :
 				rt_sleep(nano2count(SLEEP_TIME))
-			rt_scb_get(lcb, data, cnt*sizeof(c_int))
+			rt_scb_get(lcb, data, cnt*sizeof(c_long))
 			for i in range(0, cnt) :
 				n += 1
 				if data[i] != n :
@@ -58,7 +58,7 @@ while True :
 			n += 1
 			data[i] = n
 		print "TOTAL DATA = ", n, "RAND GEN = ", cnt, "\n"
-		while rt_scb_put(lcb, data, cnt*sizeof(c_int)) != 0 :
+		while rt_scb_put(lcb, data, cnt*sizeof(c_long)) != 0 :
 			rt_sleep(nano2count(SLEEP_TIME))
 
 #rt_make_soft_real_time()
