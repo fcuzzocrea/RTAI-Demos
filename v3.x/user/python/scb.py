@@ -2,7 +2,6 @@
 
 from rtai_lxrt import *
 from rtai_scb  import *
-from rtai_wd  import *
 
 from math import *
 from array import *
