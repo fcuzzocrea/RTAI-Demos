@@ -36,7 +36,7 @@ def thread_fun(lcb, null) :
 					print "*** SYNC MISSED AT: ", n, "***\n"
 					return 0
 
-#	rt_make_soft_real_time()
+	rt_make_soft_real_time()
 	rt_task_delete(NULL)
 	return 0
 
@@ -61,7 +61,7 @@ while True :
 		while rt_scb_put(lcb, data, cnt*sizeof(c_long)) != 0 :
 			rt_sleep(nano2count(SLEEP_TIME))
 
-#rt_make_soft_real_time()
+rt_make_soft_real_time()
 rt_task_delete(NULL)
 rt_thread_join(thread)
 rt_scb_delete(nam2num("LCB"))

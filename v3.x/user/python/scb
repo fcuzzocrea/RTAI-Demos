@@ -11,16 +11,16 @@ export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
-echo "*** LATENCY MEASUREMENT (user) ***"
-echo "Press <enter> to load LXRT modules:"
-read junk
+echo "*** TEST SHARED MEMORY CIRCULAR BUFFERS (user) ***"
+echo "Press <enter> to load modules:"
 cd ..; ./ldmod; cd -
+read junk
 echo
-echo "Now start the realtime process <enter> and wait for its end:"
+echo "Now start the realtime process <enter>, <ctrl-C> to end it."
 read junk
+sync
 python scb.py
-echo "Latency task running."
-echo "Latency task exited. Press <enter> to remove the modules."
+echo
+echo "Done. Press <enter> to remove the modules."
 read junk
-../remod
-
+./rem
