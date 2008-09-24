@@ -27,7 +27,7 @@ rt_task_init_schmod = rtai.rt_task_init_schmod
 
 rtai.rt_task_init.argtypes = [c_ulong, c_int, c_int, c_int]
 rtai.rt_task_init.restype  = c_void_p
-rt_task_init = rtai.rt_task_init.restype
+rt_task_init = rtai.rt_task_init
 
 rtai.rt_thread_create.argtypes = [c_void_p, c_void_p, c_int]
 rtai.rt_thread_create.restype  = c_ulong
