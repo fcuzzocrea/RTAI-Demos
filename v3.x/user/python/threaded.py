@@ -23,10 +23,14 @@ task = (c_long*NTASKS)()
 
 ntasks = NTASKS
 
+cpus_allowed = 0
+
 def thread_fun(mytask_indx, null2) :
+	global cpus_allowed
 	sem = c_void_p()
 	mytask_name = taskname(mytask_indx)
- 	mytask = rt_task_init_schmod(mytask_name, 1, 0, 0, 0, 0xF)
+	cpus_allowed = 1 - cpus_allowed 
+ 	mytask = rt_task_init_schmod(mytask_name, 1, 0, 0, 0, 1 << cpus_allowed)
  	if mytask == NULL :
 		printf("CANNOT INIT TASK %lu\n", mytask_name)
 		sys.exit(1)
