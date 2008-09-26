@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 int main (void)
 { 
 	rt_allow_nonroot_hrt();
-	rt_task_init_schmod(nam2num("KILLER"), 0, 0, 0, SCHED_FIFO, 0xF);
+	rt_task_init_schmod(nam2num("KILLER"), 1, 0, 0, SCHED_FIFO, 0xF);
 	if (rt_get_adr(nam2num("LOOPER"))) {
 		rt_make_hard_real_time();
 		if (rt_get_adr(nam2num("KILSEM"))) {

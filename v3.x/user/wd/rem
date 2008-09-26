@@ -1,1 +1,2 @@
+rmmod rtai_wd
 ../remod
