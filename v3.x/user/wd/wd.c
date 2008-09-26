@@ -21,14 +21,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_sem.h>
 #include <rtai_msg.h>
 
-#define USEMSG 0
-
-int main (void)
+int main (int argc, char **argv)
 { 
 	rt_allow_nonroot_hrt();
 	rt_task_init_schmod(nam2num("LOOPER"), 1, 0, 0, SCHED_FIFO, 0x2);
 	rt_make_hard_real_time();
-	if (USEMSG) {
+	if (argc == 1) {
 		unsigned long msg;
 		while (!rt_receive_if(NULL, &msg));
 	} else {
