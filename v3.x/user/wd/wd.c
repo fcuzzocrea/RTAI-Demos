@@ -26,6 +26,9 @@ int main (int argc, char **argv)
 	rt_allow_nonroot_hrt();
 	rt_task_init_schmod(nam2num("LOOPER"), 1, 0, 0, SCHED_FIFO, 0x2);
 	rt_make_hard_real_time();
+	if (rt_is_hard_timer_running()) {
+		rt_task_make_periodic(rt_get_adr(nam2num("LOOPER")), rt_get_time(), nano2count(1000000));
+	}
 	if (argc == 1) {
 		unsigned long msg;
 		while (!rt_receive_if(NULL, &msg));

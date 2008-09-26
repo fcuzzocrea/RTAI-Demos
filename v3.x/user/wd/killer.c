@@ -24,13 +24,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 int main (void)
 { 
 	rt_allow_nonroot_hrt();
-	rt_task_init_schmod(nam2num("KILLER"), 1, 0, 0, SCHED_FIFO, 0xF);
-	if (rt_get_adr(nam2num("KILSEM"))) {
-		printf("KILLER ENDS NEVER ENDING TASK USING A SEM.\n");
-		rt_sem_signal(rt_get_adr(nam2num("KILSEM")));
-	} else {
-		printf("KILLER ENDS NEVER ENDING TASK USING A MSG.\n");
-		rt_send(rt_get_adr(nam2num("LOOPER")), 1UL);
+	rt_task_init_schmod(nam2num("KILLER"), 0, 0, 0, SCHED_FIFO, 0xF);
+	if (rt_get_adr(nam2num("LOOPER"))) {
+		rt_make_hard_real_time();
+		if (rt_get_adr(nam2num("KILSEM"))) {
+			rt_task_resume(rt_get_adr(nam2num("LOOPER")));
+			rt_sem_signal(rt_get_adr(nam2num("KILSEM")));
+			rt_make_soft_real_time();
+			printf("KILLER ENDS NEVER ENDING TASK USING A SEM.\n");
+		} else {
+			rt_task_resume(rt_get_adr(nam2num("LOOPER")));
+			rt_send(rt_get_adr(nam2num("LOOPER")), 1UL);
+			rt_make_soft_real_time();
+			printf("KILLER ENDS NEVER ENDING TASK USING A MSG.\n");
+		}
 	}
 	rt_task_delete(NULL);
 	return 0; 
