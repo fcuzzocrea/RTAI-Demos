@@ -16,21 +16,20 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
-#include <sys/mman.h>
-#include <pthread.h>
-#include <stdlib.h>
 
 #include <rtai_lxrt.h>
+#include <rtai_sem.h>
 #include <rtai_msg.h>
-
 
 int main (void)
 { 
-	RT_TASK *rt_task;
-
 	rt_allow_nonroot_hrt();
-	rt_task = rt_task_init_schmod(nam2num("KILLER"), 1, 0, 0, SCHED_FIFO, 0xF);
-	rt_send(rt_get_adr(nam2num("LOOPER")), 1UL);
-	rt_task_delete(rt_task);
+	rt_task_init_schmod(nam2num("KILLER"), 1, 0, 0, SCHED_FIFO, 0xF);
+	if (rt_get_adr(nam2num("KILSEM"))) {
+		rt_sem_signal(rt_get_adr(nam2num("KILSEM")));
+	} else {
+		rt_send(rt_get_adr(nam2num("LOOPER")), 1UL);
+	}
+	rt_task_delete(NULL);
 	return 0; 
 }

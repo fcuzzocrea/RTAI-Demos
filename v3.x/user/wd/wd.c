@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2003  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -16,27 +16,28 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
-#include <sys/mman.h>
-#include <pthread.h>
-#include <stdlib.h>
 
 #include <rtai_lxrt.h>
+#include <rtai_sem.h>
 #include <rtai_msg.h>
 
-#define TASK_PERIOD 1000000 // ns
+#define USEMSG 0
 
 int main (void)
 { 
-	RT_TASK *rt_task;
-	unsigned long msg;
-
 	rt_allow_nonroot_hrt();
-	rt_task = rt_task_init_schmod(nam2num("LOOPER"), 1, 0, 0, SCHED_FIFO, 0x2);
-	mlockall(MCL_CURRENT | MCL_FUTURE); 
+	rt_task_init_schmod(nam2num("LOOPER"), 1, 0, 0, SCHED_FIFO, 0x2);
 	rt_make_hard_real_time();
-	while (!rt_receive_if(NULL, &msg));
+	if (USEMSG) {
+		unsigned long msg;
+		while (!rt_receive_if(NULL, &msg));
+	} else {
+		SEM *sem;
+		sem = rt_sem_init(nam2num("KILSEM"), 0);
+		while (rt_sem_wait_if(sem) <= 0);
+		rt_sem_delete(sem);
+	}
 	rt_make_soft_real_time();
-
-	rt_task_delete(rt_task);
+	rt_task_delete(NULL);
 	return 0; 
 }
