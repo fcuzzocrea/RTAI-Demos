@@ -6,6 +6,10 @@ endif
 
 CC = $(shell rtai-config --cc)
 
+LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
+
+all: killer
+
 ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)),)
 
 LINUX_DIR = $(shell rtai-config --linux-dir)
@@ -29,5 +33,11 @@ clean:
 	rm -f *.o
 
 endif
+
+killer: killer.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+
+clean:
+	rm -f *.o killer
 
 .PHONY: clean
