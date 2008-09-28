@@ -17,32 +17,32 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 
-#include <linux/kernel.h>
-#include <linux/module.h>
-
-#include <rtai.h>
-#include <rtai_sched.h>
-#include <rtai_nam2num.h>
+#include <rtai_lxrt.h>
 #include <rtai_shm.h>
 #include <rtai_msg.h>
-
-MODULE_LICENSE("GPL");
+#include <rtai_usi.h>
 
 #define PERIOD        25000
-#define WAIT_DELAY    20000
-#define WORKING_TIME  15000
+#define WAIT_DELAY    15000
+#define WORKING_TIME  10000
 
 #define WAIT_AIM_TIME()  do { while (rt_get_time() < aim_time); } while (0)
 
-long *worst_lat;
-
-static void fun(long none)
-{
-	long msg;
+int main (int argc, char **argv)
+{ 
+	long *worst_lat, msg;
 	RTIME period, wait_delay, sync_time, aim_time; 
+
+	rt_allow_nonroot_hrt();
+	start_rt_timer(0);
+	rt_grow_and_lock_stack(100000);
+	worst_lat = rt_shm_alloc(nam2num("WSTLAT"), sizeof(RTIME), USE_VMALLOC);
 	*worst_lat = -2000000000;
+	rt_task_init_schmod(nam2num("LOOPER"), 0, 0, 0, SCHED_FIFO, 0x2);
 	wait_delay = nano2count(WAIT_DELAY); 
 	period     = nano2count(PERIOD); 
+
+	rt_make_hard_real_time();
 	rtai_cli();
 	aim_time  = rt_get_time();
 	sync_time = aim_time + wait_delay; 
@@ -60,22 +60,10 @@ static void fun(long none)
 		rt_sleep_until(sync_time);
 	}
 	rtai_sti();
-}
+	rt_make_soft_real_time();
 
-static RT_TASK *task;
-
-int init_module(void)
-{
-	start_rt_timer(0);
-	worst_lat = rt_shm_alloc(nam2num("WSTLAT"), sizeof(RTIME), USE_VMALLOC);
-	task = rt_named_task_init_cpuid("LOOPER", fun, 0, 8000, 0, 0, 0, 1);
-	rt_task_resume(task);
-	return 0;
-}
-
-void cleanup_module(void)
-{
 	stop_rt_timer();
 	rt_shm_free(nam2num("WSTLAT"));
-	rt_named_task_delete(task);
+	rt_task_delete(NULL);
+	return 0; 
 }
