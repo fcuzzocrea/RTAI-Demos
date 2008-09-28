@@ -23,16 +23,31 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_usi.h>
 
 #define PERIOD        25000
-#define WAIT_DELAY    15000
-#define WORKING_TIME  10000
+#define WAIT_DELAY    18000
+#define WORKING_TIME  5000
 
 #define WAIT_AIM_TIME()  do { while (rt_get_time() < aim_time); } while (0)
 
+#define MAXDIM 1000
+static double dot(double *a, double *b, int n)
+{
+	int k = n - 1;
+	double s = 0.0;
+	for(; k >= 0; k--) {
+		s = s + a[k]*b[k];
+	}
+	return s;
+}
+
 int main (int argc, char **argv)
 { 
+	volatile double s, a[MAXDIM], b[MAXDIM];
 	long *worst_lat, msg;
 	RTIME period, wait_delay, sync_time, aim_time; 
 
+	for(msg = 0; msg < MAXDIM; msg++) {
+		a[msg] = b[msg] = 3.141592;
+	}
 	rt_allow_nonroot_hrt();
 	start_rt_timer(0);
 	rt_grow_and_lock_stack(100000);
@@ -56,6 +71,7 @@ int main (int argc, char **argv)
 		if (msg > *worst_lat) {
 			*worst_lat = msg;
 		}
+		s = dot(a,b, MAXDIM);
 		rt_busy_sleep(WORKING_TIME);
 		rt_sleep_until(sync_time);
 	}

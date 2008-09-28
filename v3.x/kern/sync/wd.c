@@ -30,19 +30,34 @@ MODULE_LICENSE("GPL");
 
 #define PERIOD        25000
 #define WAIT_DELAY    20000
-#define WORKING_TIME  15000
+#define WORKING_TIME  5000
 
 #define WAIT_AIM_TIME()  do { while (rt_get_time() < aim_time); } while (0)
 
 long *worst_lat;
 
+#define MAXDIM 3000
+static double dot(double *a, double *b, int n)
+{
+	int k = n - 1;
+	double s = 0.0;
+	for(; k >= 0; k--) {
+		s = s + a[k]*b[k];
+	}
+	return s;
+}
+
 static void fun(long none)
 {
+	volatile double s, a[MAXDIM], b[MAXDIM];
 	long msg;
 	RTIME period, wait_delay, sync_time, aim_time; 
 	*worst_lat = -2000000000;
 	wait_delay = nano2count(WAIT_DELAY); 
 	period     = nano2count(PERIOD); 
+	for(msg = 0; msg < MAXDIM; msg++) {
+		a[msg] = b[msg] = 3.141592;
+	}
 	rtai_cli();
 	aim_time  = rt_get_time();
 	sync_time = aim_time + wait_delay; 
@@ -56,6 +71,7 @@ static void fun(long none)
 		if (msg > *worst_lat) {
 			*worst_lat = msg;
 		}
+		s = dot(a,b, MAXDIM);
 		rt_busy_sleep(WORKING_TIME);
 		rt_sleep_until(sync_time);
 	}
@@ -68,7 +84,7 @@ int init_module(void)
 {
 	start_rt_timer(0);
 	worst_lat = rt_shm_alloc(nam2num("WSTLAT"), sizeof(RTIME), USE_VMALLOC);
-	task = rt_named_task_init_cpuid("LOOPER", fun, 0, 8000, 0, 0, 0, 1);
+	task = rt_named_task_init_cpuid("LOOPER", fun, 0, 100000, 0, 1, 0, 1);
 	rt_task_resume(task);
 	return 0;
 }
