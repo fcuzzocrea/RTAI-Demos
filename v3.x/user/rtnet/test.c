@@ -81,7 +81,11 @@ static void *sender(void *arg)
 	while(!end) {
 		stime = rt_get_time_ns();
 		slen = rt_dev_sendto(sock, (void *)&stime, sizeof(RTIME), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr));
-		ECHO("TRASMITTED %d %d %lld\n", ++msgcnt, slen, stime);
+		if (slen == sizeof(RTIME)) {
+			ECHO("TRASMITTED %d %d %lld\n", ++msgcnt, slen, stime);
+		} else {
+			ECHO("SENDER SENT %d INSTEAD OF %d\n", slen, sizeof(RTIME));
+		}
 		rt_sleep(nano2count(WORKCYCLE));
 	}
 
@@ -134,7 +138,7 @@ static void *receiver(void *arg)
 				rt_mbx_send_if(mbx, &rx_samp, sizeof(rx_samp));
 				ECHO("RECEIVED %d %d %lld %lld\n", ++msgcnt, rlen, rx_samp.tx, rx_samp.rx);
 			} else {
-				ECHO("RECEIVED REQUESTED %d GOT %d\n", sizeof(rx_samp), rlen);
+				ECHO("RECEIVER REQUESTED %d GOT %d\n", sizeof(rx_samp), rlen);
 			}
 		}
 	}
