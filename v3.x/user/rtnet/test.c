@@ -40,9 +40,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define USESEL    1
 #define USEMBX    1
-#define CPUMAP    0x2
+#define CPUMAP    0xF
 #define WORKCYCLE 100000LL
-#define TIMEOUT   (WORKCYCLE*50)/100
+#define TIMEOUT   (WORKCYCLE*10)/100
 
 //#define ECHO rt_printk
 #define ECHO printf
@@ -77,16 +77,12 @@ static void *sender(void *arg)
 	ECHO("Transmitter task initialised\n");
 
 	rt_make_hard_real_time();
-	if (0 != rt_task_make_periodic(Sender_Task, rt_get_time() + nano2count(100000000), nano2count(WORKCYCLE))) {
-		printf("Make periodic failed\n");
-		exit(1);
-	}
 
 	while(!end) {
 		stime = rt_get_time_ns();
 		slen = rt_dev_sendto(sock, (void *)&stime, sizeof(RTIME), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr));
 		ECHO("TRASMITTED %d %d %lld\n", ++msgcnt, slen, stime);
-		rt_task_wait_period();
+		rt_sleep(nano2count(WORKCYCLE));
 	}
 
 	rt_task_masked_unblock(Receiver_Task, ~RT_SCHED_READY);
