@@ -1,19 +1,21 @@
-/*
-COPYRIGHT (C) 2008  Bernhard Pfund (bernhard@chapter7.ch)
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+/* select.c
+ *
+ * select - an example demonstrating the use of select within RTNet
+ * COPYRIGHT (C) 2008  Bernhard Pfund (bernhard@chapter7.ch)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 /*
@@ -62,62 +64,69 @@ struct sample { unsigned long cnt; RTIME tx, rx; };
 
 static void *sender(void *arg)
 {
-	struct sample tx_samp = { 0, };
 	RT_TASK *Sender_Task;
-	struct sockaddr_in transmit_addr;
 	unsigned long sock, slen;
+	struct sockaddr_in transmit_addr;
+	struct sample tx_samp = { 0, };
 
 	if (!(Sender_Task = rt_thread_init(nam2num("TXTSK"), 0, 0, SCHED_FIFO, CPUMAP))) {
 		printf("Cannot initialise the sender task\n");
 		exit(1);
 	}
+
 	if (((sock = rt_dev_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))) == -1) {
 		printf("Error opening UDP/IP socket: %lu\n", sock);
 		exit(1);
 	}
+
 	transmit_addr.sin_family      = AF_INET;
 	transmit_addr.sin_port        = htons(PORT);
 	transmit_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
 	rt_rpc(rt_get_adr(nam2num("MNTSK")), 0UL, &slen);
 
 	ECHO("Transmitter task initialised\n");
+
 	rt_make_hard_real_time();
 
 	while(rt_receive_timed(rt_get_adr(nam2num("MNTSK")), &slen, nano2count(WORKCYCLE)) != rt_get_adr(nam2num("MNTSK"))) {
 		++tx_samp.cnt;
-		tx_samp.tx = rt_get_time_ns();
+		tx_samp.tx = rt_get_real_time_ns();
 		slen = rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr));
 		if (slen == offsetof(struct sample, rx)) {
-			ECHO("TRASMITTED %lu %ld %lld\n", slen, tx_samp.cnt, tx_samp.tx);
+			ECHO("TRASMITTED %lu %ld %lld\n", slen, tx_samp.cnt, tx_samp.tx/1000);
 		} else {
 			ECHO("SENDER SENT %lu INSTEAD OF %d\n", slen, offsetof(struct sample, rx));
 		}
-//		rt_sleep(nano2count(WORKCYCLE)); timing cared by timed while
+//		rt_sleep(nano2count(WORKCYCLE)); timing cared by the timed while
 	}
 
 	rt_task_masked_unblock(rt_get_adr(nam2num("RXTSK")), ~RT_SCHED_READY);
 	rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr)); // not needed, just to be safe
+
 	rt_make_soft_real_time();
 	rt_dev_close(sock);
 	rt_dev_shutdown(sock, SHUT_RDWR);
 	rt_thread_delete(Sender_Task);
+
 	printf("Transmitter exiting\n");
+
 	return 0;
 }
 
 static void *receiver(void *arg)
 {
 	RT_TASK *Receiver_Task;
-	struct sockaddr_in local_addr;
-	MBX *mbx = rt_get_adr(nam2num("MYMBX"));
-	struct sample rx_samp;
-	long cnt = 0;
 	unsigned long sock, rlen;
 	int broadcast = 1;
+	struct sockaddr_in local_addr;
 	socklen_t fromlen;
 	struct sockaddr_in receive_addr;
 	fromlen = sizeof(receive_addr);
 	fd_set rxfds;
+	struct sample rx_samp;
+	long cnt = 0;
+	MBX *mbx = rt_get_adr(nam2num("MYMBX"));
 
 	if (!(Receiver_Task = rt_thread_init(nam2num("RXTSK"), 0, 0, SCHED_FIFO, CPUMAP))) {
 		printf("Cannot initialise the receiver task\n");
@@ -136,18 +145,20 @@ static void *receiver(void *arg)
 		int64_t timeout = -1;
 		rt_dev_ioctl(sock, RTNET_RTIOC_TIMEOUT, &timeout);
 	}
+
 	local_addr.sin_family      = AF_INET;
 	local_addr.sin_port        = htons(PORT);
 	local_addr.sin_addr.s_addr = INADDR_ANY;
-
 	if (rt_dev_bind(sock, (struct sockaddr *)&local_addr, sizeof(struct sockaddr_in)) == -1) {
 		ECHO("Can't configure the network socket");
 		rt_dev_close(sock);
 		exit(1);
 	}
+
 	rt_rpc(rt_get_adr(nam2num("MNTSK")), 0UL, &rlen);
 
 	ECHO("Receiver task initialised\n");
+
 	rt_make_hard_real_time();
 
 	while(!rt_receive_if(rt_get_adr(nam2num("MNTSK")), &rlen)) {
@@ -170,9 +181,9 @@ static void *receiver(void *arg)
 		if (!USESEL || (ready > 0 && FD_ISSET(sock, &rxfds))) {
 			rlen = rt_dev_recvfrom(sock, (void *)&rx_samp, sizeof(struct sample), 0, (struct sockaddr*)&receive_addr, &fromlen);
 			if (rlen == offsetof(struct sample, rx)) {
-				rx_samp.rx = rt_get_time_ns();
+				rx_samp.rx = rt_get_real_time_ns();
 				rt_mbx_send_if(mbx, &rx_samp, sizeof(rx_samp));
-				ECHO("RECEIVED %lu %ld-%ld %lld %lld\n", rlen, ++cnt, rx_samp.cnt, rx_samp.tx, rx_samp.rx);
+				ECHO("RECEIVED %lu %ld-%ld %lld %lld\n", rlen, ++cnt, rx_samp.cnt, rx_samp.tx/1000, rx_samp.rx/1000);
 			} else {
 				ECHO("RECEIVER EXPECTED %d GOT %lu\n", sizeof(rx_samp), rlen);
 			}
@@ -183,7 +194,9 @@ static void *receiver(void *arg)
 	rt_dev_close(sock);
 	rt_dev_shutdown(sock, SHUT_RDWR);
 	rt_thread_delete(Receiver_Task);
+
 	ECHO("Receiver exiting\n");
+
 	return 0;
 }
 
@@ -196,8 +209,8 @@ int main(void)
 	MBX *mbx;
 	pthread_t sender_thread;
 	pthread_t receiver_thread;
-	unsigned long cnt = 0, misd;
 	struct sample frombx;
+	unsigned long cnt = 0, misd;
 
 	signal(SIGHUP, endme);
 	signal(SIGINT, endme);
@@ -207,26 +220,31 @@ int main(void)
 
 	rt_allow_nonroot_hrt();
 	start_rt_timer(0);
+
 	if (!(Main_Task = rt_thread_init(nam2num("MNTSK"), 0, 0, SCHED_FIFO, 0xF))) {
 		printf("Cannot initialise the main task\n");
 		exit(1);
 	}
+
 	if (!(mbx = rt_mbx_init(nam2num("MYMBX"), 10*sizeof(struct sample)))) {
 		printf("Cannot create the mailbox\n");
 		exit(1);
 	}
+
 	sender_thread = rt_thread_create(sender, NULL, 0);
 	rt_return(rt_receive(NULL, &cnt), 0UL); 
+
 	receiver_thread = rt_thread_create(receiver, NULL, 0);
 	rt_return(rt_receive(NULL, &cnt), 0UL); 
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
+
 	rt_make_hard_real_time();
 
 #if USEMBX
 	while (!end) {
 		if (!(misd = rt_mbx_receive(mbx, (void *)&frombx, sizeof(frombx)))) {
-			ECHO("MAIN FROM MBX %lu-%lu %lld %lld\n", ++cnt, frombx.cnt, frombx.tx, frombx.rx);
+			ECHO("MAIN FROM MBX %lu-%lu %lld %lld\n", ++cnt, frombx.cnt, frombx.tx/1000, frombx.rx/1000);
 		} else {
 			ECHO("MAIN MBX ASKED FOR %d MISSED %lu\n", sizeof(frombx), misd);
 		}
@@ -239,9 +257,11 @@ int main(void)
 	rt_send(rt_get_adr(nam2num("RXTSK")), 0UL); 
 	rt_thread_join(sender_thread);
 	rt_thread_join(receiver_thread);
+
 	stop_rt_timer();
 	rt_make_soft_real_time();
 	rt_mbx_delete(mbx);
 	rt_thread_delete(Main_Task);
+
 	return 0;
 }
