@@ -52,7 +52,7 @@
 #define USESEL    1
 #define USEMBX    1
 #define CPUMAP    0xF
-#define WORKCYCLE 1000000LL
+#define WORKCYCLE 200000LL
 #define TIMEOUT   (WORKCYCLE*25)/100
 
 //#define ECHO rt_printk
@@ -102,7 +102,7 @@ static void *sender(void *arg)
 	}
 
 	rt_task_masked_unblock(rt_get_adr(nam2num("RXTSK")), ~RT_SCHED_READY);
-	rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr)); // not needed, just to be safe
+//	rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr)); not needed, just to be safe
 
 	rt_make_soft_real_time();
 	rt_dev_close(sock);
