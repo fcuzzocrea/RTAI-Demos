@@ -27,4 +27,4 @@ $SUDO ./test
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-#../remod
+../remod

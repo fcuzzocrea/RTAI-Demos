@@ -16,6 +16,12 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
+/*
+ This example might appear a bit bloated as, being based on threads, it 
+ could have shared anything. We have elected to not use global data just
+ to show a few more RTAI services working together, e.g.: synchronization
+ through intertask messages and objects handles through registered infos.
+*/
 
 #include <pthread.h>
 #include <stdlib.h>
@@ -24,6 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <errno.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -35,73 +42,73 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <arpa/inet.h>
 
 #include <rtai_mbx.h>
+#include <rtai_msg.h>
 
 #include <rtnet.h>
 
 #define USESEL    1
 #define USEMBX    1
 #define CPUMAP    0xF
-#define WORKCYCLE 100000LL
-#define TIMEOUT   (WORKCYCLE*10)/100
+#define WORKCYCLE 1000000LL
+#define TIMEOUT   (WORKCYCLE*25)/100
 
 //#define ECHO rt_printk
 #define ECHO printf
 
 #define PORT 55555
 
-struct sample { RTIME tx, rx; };
-
-static RT_TASK *Receiver_Task;
-
-static MBX *mbx;
-
-static int sock;
-
-static struct sockaddr_in transmit_addr;
-static struct sockaddr_in receive_addr;
-
-volatile int end;
-
-static void endme(int unused) { end = 1; }
+struct sample { unsigned long cnt; RTIME tx, rx; };
 
 static void *sender(void *arg)
 {
+	struct sample tx_samp = { 0, };
 	RT_TASK *Sender_Task;
-	RTIME stime;
-	int msgcnt = 0, slen;
+	struct sockaddr_in transmit_addr;
+	unsigned long sock, slen;
 
 	if (!(Sender_Task = rt_thread_init(nam2num("TXTSK"), 0, 0, SCHED_FIFO, CPUMAP))) {
 		printf("Cannot initialise the sender task\n");
 		exit(1);
 	}
-	ECHO("Transmitter task initialised\n");
 
+	transmit_addr.sin_family      = AF_INET;
+	transmit_addr.sin_port        = htons(PORT);
+	transmit_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	rt_rpc(rt_get_adr(nam2num("MNTSK")), 0UL, &sock);
+
+	ECHO("Transmitter task initialised\n");
 	rt_make_hard_real_time();
 
-	while(!end) {
-		stime = rt_get_time_ns();
-		slen = rt_dev_sendto(sock, (void *)&stime, sizeof(RTIME), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr));
-		if (slen == sizeof(RTIME)) {
-			ECHO("TRASMITTED %d %d %lld\n", ++msgcnt, slen, stime);
+	while(!rt_receive_if(rt_get_adr(nam2num("MNTSK")), &slen)) {
+		++tx_samp.cnt;
+		tx_samp.tx = rt_get_time_ns();
+		slen = rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr));
+		if (slen == offsetof(struct sample, rx)) {
+			ECHO("TRASMITTED %lu %ld %lld\n", slen, tx_samp.cnt, tx_samp.tx);
 		} else {
-			ECHO("SENDER SENT %d INSTEAD OF %d\n", slen, sizeof(RTIME));
+			ECHO("SENDER SENT %lu INSTEAD OF %d\n", slen, offsetof(struct sample, rx));
 		}
 		rt_sleep(nano2count(WORKCYCLE));
 	}
 
-	rt_task_masked_unblock(Receiver_Task, ~RT_SCHED_READY);
-	rt_dev_sendto(sock, (void *)&stime, sizeof(RTIME), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr)); // not needed, just to be safer
+	rt_task_masked_unblock(rt_get_adr(nam2num("RXTSK")), ~RT_SCHED_READY);
+	rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr)); // not needed, just to be safe
 	rt_make_soft_real_time();
-	printf("Transmitter exiting\n");
 	rt_thread_delete(Sender_Task);
+	printf("Transmitter exiting\n");
 	return 0;
 }
 
 static void *receiver(void *arg)
 {
+	RT_TASK *Receiver_Task;
+	MBX *mbx = rt_get_adr(nam2num("MYMBX"));
 	struct sample rx_samp;
-	int msgcnt = 0, rlen, usetimeout = 0;
+	long cnt = 0;
+	unsigned long sock, rlen;
+	int usetimeout = 0;
 	socklen_t fromlen;
+	struct sockaddr_in receive_addr;
 	fromlen = sizeof(receive_addr);
 	fd_set rxfds;
 
@@ -110,11 +117,12 @@ static void *receiver(void *arg)
 		exit(1);
 	}
 
-	ECHO("Receiver task initialised\n");
+	rt_rpc(rt_get_adr(nam2num("MNTSK")), 0UL, &sock);
 
+	ECHO("Receiver task initialised\n");
 	rt_make_hard_real_time();
 
-	while(!end) {
+	while(!rt_receive_if(rt_get_adr(nam2num("MNTSK")), &rlen)) {
 		int ready = 0;
 #if USESEL
 		RTIME timeout;
@@ -125,39 +133,42 @@ static void *receiver(void *arg)
 		ready = rt_dev_select(sock + 1, &rxfds, NULL, NULL, timeout);
 		ECHO("Receiver select returned %d (0 is TIMEDOUT)\n", ready);
 		if (ready < 0) {
-			end = 1;
 			break;
 		} else if (!ready) {
 			continue;
 		}
 #endif
 		if (!USESEL || (ready > 0 && FD_ISSET(sock, &rxfds))) {
-			rlen = rt_dev_recvfrom(sock, (void *)&rx_samp.tx, sizeof(RTIME), 0, (struct sockaddr*) &receive_addr, &fromlen);
-			if (rlen > 0) {
+			rlen = rt_dev_recvfrom(sock, (void *)&rx_samp, sizeof(struct sample), 0, (struct sockaddr*) &receive_addr, &fromlen);
+			if (rlen == offsetof(struct sample, rx)) {
 				rx_samp.rx = rt_get_time_ns();
 				rt_mbx_send_if(mbx, &rx_samp, sizeof(rx_samp));
-				ECHO("RECEIVED %d %d %lld %lld\n", ++msgcnt, rlen, rx_samp.tx, rx_samp.rx);
+				ECHO("RECEIVED %lu %ld-%ld %lld %lld\n", rlen, ++cnt, rx_samp.cnt, rx_samp.tx, rx_samp.rx);
 			} else {
-				ECHO("RECEIVER REQUESTED %d GOT %d\n", sizeof(rx_samp), rlen);
+				ECHO("RECEIVER EXPECTED %d GOT %lu\n", sizeof(rx_samp), rlen);
 			}
 		}
 	}
 
 	rt_make_soft_real_time();
-	ECHO("Receiver exiting\n");
 	rt_thread_delete(Receiver_Task);
+	ECHO("Receiver exiting\n");
 	return 0;
 }
 
-/** The main method */
+volatile int end;
+static void endme(int unused) { end = 1; }
+
 int main(void)
 {
+	MBX *mbx;
 	struct sockaddr_in local_addr;
 	pthread_t sender_thread;
 	pthread_t receiver_thread;
 	RT_TASK *Main_Task;
-	int msgcnt = 0;
+	unsigned long cnt = 0;
 	struct sample frombx;
+	unsigned long sock;
 	int broadcast = 1;
 
 	signal(SIGHUP, endme);
@@ -172,12 +183,12 @@ int main(void)
 		printf("Cannot initialise the main task\n");
 		exit(1);
 	}
-	if (!(mbx = rt_mbx_init(nam2num("MYMBX"), 20*sizeof(struct sample)))) {
+	if (!(mbx = rt_mbx_init(nam2num("MYMBX"), 10*sizeof(struct sample)))) {
 		printf("Cannot create the mailbox\n");
 		exit(1);
 	}
 	if (((sock = rt_dev_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))) == -1) {
-		printf("Error opening UDP/IP socket: %d\n", sock);
+		printf("Error opening UDP/IP socket: %lu\n", sock);
 		exit(1);
 	}
 	if (rt_dev_setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) == -1) {
@@ -188,16 +199,11 @@ int main(void)
 	if (USESEL) {
 		int64_t timeout = -1;
 		rt_dev_ioctl(sock, RTNET_RTIOC_TIMEOUT, &timeout);
-//		fcntl(sock, F_SETFL, O_NONBLOCK); do not use, it sets stdin
 	}
 
 	local_addr.sin_family      = AF_INET;
 	local_addr.sin_port        = htons(PORT);
 	local_addr.sin_addr.s_addr = INADDR_ANY;
-
-	transmit_addr.sin_family      = AF_INET;
-	transmit_addr.sin_port        = htons(PORT);
-	transmit_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if (rt_dev_bind(sock, (struct sockaddr *) &local_addr, sizeof(struct sockaddr_in)) == -1) {
 		ECHO("Can't configure the network socket");
@@ -205,8 +211,10 @@ int main(void)
 		exit(1);
 	}
 
-	sender_thread   = rt_thread_create(sender,   NULL, 0);
+	sender_thread = rt_thread_create(sender, NULL, 0);
+	rt_return(rt_receive(NULL, &cnt), sock); 
 	receiver_thread = rt_thread_create(receiver, NULL, 0);
+	rt_return(rt_receive(NULL, &cnt), sock); 
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
@@ -214,11 +222,13 @@ int main(void)
 #if USEMBX
 	while (!end) {
 		rt_mbx_receive(mbx, (void *)&frombx, sizeof(frombx));
-		ECHO("MAIN FROM MBX %d %lld %lld\n", ++msgcnt, frombx.tx, frombx.rx);
+		ECHO("MAIN FROM MBX %lu %lld %lld\n", ++cnt, frombx.tx, frombx.rx);
 	}
 #else
 	pause();
 #endif
+	rt_send(rt_get_adr(nam2num("TXTSK")), 0UL); 
+	rt_send(rt_get_adr(nam2num("RXTSK")), 0UL); 
 
 	rt_thread_join(sender_thread);
 	rt_thread_join(receiver_thread);
