@@ -52,7 +52,7 @@
 #define USESEL    1
 #define USEMBX    1
 #define CPUMAP    0xF
-#define WORKCYCLE 200000LL
+#define WORKCYCLE 1000000LL
 #define TIMEOUT   (WORKCYCLE*25)/100
 
 //#define ECHO rt_printk
@@ -67,6 +67,7 @@ static void *sender(void *arg)
 	RT_TASK *Sender_Task;
 	unsigned long sock, slen;
 	struct sockaddr_in transmit_addr;
+	RTIME until;
 	struct sample tx_samp = { 0, };
 
 	if (!(Sender_Task = rt_thread_init(nam2num("TXTSK"), 0, 0, SCHED_FIFO, CPUMAP))) {
@@ -89,7 +90,8 @@ static void *sender(void *arg)
 
 	rt_make_hard_real_time();
 
-	while(rt_receive_timed(rt_get_adr(nam2num("MNTSK")), &slen, nano2count(WORKCYCLE)) != rt_get_adr(nam2num("MNTSK"))) {
+	until = rt_get_time();
+	while(rt_receive_until(rt_get_adr(nam2num("MNTSK")), &slen, until += nano2count(WORKCYCLE)) != rt_get_adr(nam2num("MNTSK"))) {
 		++tx_samp.cnt;
 		tx_samp.tx = rt_get_real_time_ns();
 		slen = rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr));
@@ -98,11 +100,8 @@ static void *sender(void *arg)
 		} else {
 			ECHO("SENDER SENT %lu INSTEAD OF %d\n", slen, offsetof(struct sample, rx));
 		}
-//		rt_sleep(nano2count(WORKCYCLE)); timing cared by the timed while
+//		rt_sleep_until(until += nano2count(WORKCYCLE)); timing cared by the timed while
 	}
-
-	rt_task_masked_unblock(rt_get_adr(nam2num("RXTSK")), ~RT_SCHED_READY);
-//	rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr)); not needed, just to be safe
 
 	rt_make_soft_real_time();
 	rt_dev_close(sock);
@@ -254,6 +253,7 @@ int main(void)
 #endif
 
 	rt_send(rt_get_adr(nam2num("TXTSK")), 0UL); 
+	rt_task_masked_unblock(rt_get_adr(nam2num("RXTSK")), ~RT_SCHED_READY);
 	rt_send(rt_get_adr(nam2num("RXTSK")), 0UL); 
 	rt_thread_join(sender_thread);
 	rt_thread_join(receiver_thread);
