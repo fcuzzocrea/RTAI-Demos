@@ -55,8 +55,8 @@
 #define WORKCYCLE 1000000LL
 #define TIMEOUT   (WORKCYCLE*25)/100
 
-//#define ECHO rt_printk
-#define ECHO printf
+#define ECHO rt_printk
+//#define ECHO printf
 
 #define PORT 55555
 
