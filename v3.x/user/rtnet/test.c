@@ -106,6 +106,7 @@ static void *sender(void *arg)
 	rt_make_soft_real_time();
 	rt_dev_close(sock);
 	rt_dev_shutdown(sock, SHUT_RDWR);
+	rt_return(rt_get_adr(nam2num("MNTSK")), 0UL);
 	rt_thread_delete(Sender_Task);
 
 	printf("Transmitter exiting\n");
@@ -171,9 +172,7 @@ static void *receiver(void *arg)
 		FD_SET(sock, &rxfds);
 		ready = rt_dev_select(sock + 1, &rxfds, NULL, NULL, timeout);
 		ECHO("Receiver select returned %d (0 is TIMEDOUT)\n", ready);
-		if (ready < 0) {
-			break;
-		} else if (!ready) {
+		if (ready <= 0) {
 			continue;
 		}
 #endif
@@ -192,6 +191,7 @@ static void *receiver(void *arg)
 	rt_make_soft_real_time();
 	rt_dev_close(sock);
 	rt_dev_shutdown(sock, SHUT_RDWR);
+	rt_return(rt_get_adr(nam2num("MNTSK")), 0UL);
 	rt_thread_delete(Receiver_Task);
 
 	ECHO("Receiver exiting\n");
@@ -252,9 +252,9 @@ int main(void)
 	pause();
 #endif
 
-	rt_send(rt_get_adr(nam2num("TXTSK")), 0UL); 
 	rt_task_masked_unblock(rt_get_adr(nam2num("RXTSK")), ~RT_SCHED_READY);
-	rt_send(rt_get_adr(nam2num("RXTSK")), 0UL); 
+	rt_rpc(rt_get_adr(nam2num("RXTSK")), 0UL, &cnt); 
+	rt_rpc(rt_get_adr(nam2num("TXTSK")), 0UL, &cnt); 
 	rt_thread_join(sender_thread);
 	rt_thread_join(receiver_thread);
 
