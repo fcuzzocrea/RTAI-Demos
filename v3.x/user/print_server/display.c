@@ -18,7 +18,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/poll.h>
 #include <sys/types.h>
@@ -30,7 +32,7 @@ int main(void)
 {
 	int sock;
 	struct sockaddr_in SPRT_ADDR;
-	char buf[100];
+	char buf[1000];
 
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 	bzero(&SPRT_ADDR, sizeof(struct sockaddr_in));
@@ -40,7 +42,7 @@ int main(void)
 	bind(sock, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 
 	while (1) {
-		recvfrom(sock, buf, 100, 0, NULL, NULL);
+		recvfrom(sock, buf, sizeof(buf), 0, NULL, NULL);
 		printf("%s", buf);
 	}
 	close(sock);

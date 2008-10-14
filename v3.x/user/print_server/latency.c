@@ -28,7 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <asm/io.h>
 #include <math.h>
 
 #include <rtai_lxrt.h>
@@ -37,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/100
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -69,7 +68,7 @@ int main(int argc, char *argv[])
 	int sock;
 	struct sockaddr_in SPRT_ADDR;
 	char buf[1000];
-	FILE *fs;
+	int fd;
 
 	int diff;
 	int sample;
@@ -97,7 +96,7 @@ int main(int argc, char *argv[])
 	SPRT_ADDR.sin_port = htons(5000);
 	SPRT_ADDR.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	fs = fopen("pippo", "w+");
+	fd = open("echo", O_RDWR | O_CREAT);
 
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
@@ -156,7 +155,6 @@ int main(int argc, char *argv[])
 					svt = rt_get_cpu_time_ns();
 				}
 			}
-			outb(i = 1 - i, 0x378);
 
 			if (diff < min_diff) {
 				min_diff = diff;
@@ -179,13 +177,12 @@ int main(int argc, char *argv[])
 		printf("* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
 		fflush(stdout);
 		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
-		fprintf(fs, "%s", buf);
-		fflush(fs);
-		sendto(sock, buf, 100, 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
+		write(fd, buf, strlen(buf));
+		sendto(sock, buf, strlen(buf), 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 	}
 
 	close(sock);
-	fclose(fs);
+	close(fd);
 	rt_make_soft_real_time();
 	if (!hard_timer_running) {
 		stop_rt_timer();	
