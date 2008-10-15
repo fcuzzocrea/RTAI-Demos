@@ -93,7 +93,7 @@ static void *sender(void *arg)
 
 	until = rt_get_time();
 	while(rt_receive_until(rt_get_adr(nam2num("MNTSK")), &slen, until += nano2count(WORKCYCLE)) != rt_get_adr(nam2num("MNTSK"))) {
-		diff = nano2count(abs((int)(until - rt_get_time())));
+		diff = count2nano(abs((int)(until - rt_get_time())));
 		if (diff > max) max = diff;
 		rt_printk("LATENCY %d, max = %d\n", diff, max);
 		++tx_samp.cnt;
