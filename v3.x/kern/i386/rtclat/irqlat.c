@@ -65,7 +65,7 @@ RTAI_MODULE_PARM(ECHO_PERIOD, int);
 static RTIME t0;
 static int tsc_period, maxj, maxj_echo, pasd;
 
-static void rtc_handler (void)
+static void rtc_handler (int irq, unsigned long rtc_freq)
 {
 	if (pasd) {
 		RTIME t;
@@ -109,7 +109,7 @@ static void rtc_start(long rtc_freq)
 	}
 
 	rt_disable_irq(RTC_IRQ);
-	rt_request_irq(RTC_IRQ, (void *)rtc_handler, (void *)rtc_freq, 0);
+	rt_request_irq(RTC_IRQ, (void *)rtc_handler, (void *)rtc_freq, 1);
 	rtai_cli();
 	CMOS_WRITE(CMOS_READ(RTC_FREQ_SELECT), RTC_FREQ_SELECT);
 	CMOS_WRITE(CMOS_READ(RTC_CONTROL),     RTC_CONTROL);
