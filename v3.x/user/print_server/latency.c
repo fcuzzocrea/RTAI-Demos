@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 	SPRT_ADDR.sin_port = htons(5000);
 	SPRT_ADDR.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	fd = open("echo", O_RDWR | O_CREAT);
+	fd = open("echo", O_RDWR | O_CREAT | O_TRUNC);
 
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
