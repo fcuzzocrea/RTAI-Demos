@@ -69,6 +69,7 @@ static void *sender(void *arg)
 	struct sockaddr_in transmit_addr;
 	RTIME until;
 	struct sample tx_samp = { 0, };
+	int diff, max = -100000000;
 
 	if (!(Sender_Task = rt_thread_init(nam2num("TXTSK"), 0, 0, SCHED_FIFO, CPUMAP))) {
 		printf("Cannot initialise the sender task\n");
@@ -92,6 +93,9 @@ static void *sender(void *arg)
 
 	until = rt_get_time();
 	while(rt_receive_until(rt_get_adr(nam2num("MNTSK")), &slen, until += nano2count(WORKCYCLE)) != rt_get_adr(nam2num("MNTSK"))) {
+		diff = nano2count(abs((int)(until - rt_get_time())));
+		if (diff > max) max = diff;
+		rt_printk("LATENCY %d, max = %d\n", diff, max);
 		++tx_samp.cnt;
 		tx_samp.tx = rt_get_real_time_ns();
 		slen = rt_dev_sendto(sock, (void *)&tx_samp, offsetof(struct sample, rx), 0, (struct sockaddr*)&transmit_addr, sizeof(transmit_addr));
