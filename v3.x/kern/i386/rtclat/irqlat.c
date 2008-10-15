@@ -21,6 +21,8 @@
 
 #include <rtai.h>
 
+#define USETHIS 1
+
 #define MAX_RTC_FREQ  8192
 #define RTC_FREQ      MAX_RTC_FREQ
 
@@ -80,9 +82,13 @@ static void rtc_handler (int irq, unsigned long rtc_freq)
 		pasd = 1;
 		t0 = rdtsc();
 	}
+#if USETHIS 
  	CMOS_READ(RTC_INTR_FLAGS);
 	rt_enable_irq(RTC_IRQ);
+#endif
 }
+
+#if USETHIS 
 
 #define MIN_RTC_FREQ  2
 
@@ -130,6 +136,8 @@ static void rtc_stop(void)
 	rtai_sti();
 }
 
+#endif
+
 static struct timer_list timer;
 
 static void timer_fun(unsigned long none)
@@ -150,7 +158,11 @@ int _init_module(void)
 	mod_timer(&timer, jiffies + ECHO_PERIOD*HZ/1000);
 	printk("\nCHECKING WITH PERIOD: %d (us)\n\n", PERIOD/1000);
 	tsc_period = imuldiv(PERIOD, rtai_tunables.cpu_freq, 1000000000);
+#if USETHIS 
 	rtc_start(RTC_FREQ);
+#else
+	rt_request_rtc(RTC_FREQ, (void *)rtc_handler);
+#endif
 	return 0;
 }
 
@@ -158,7 +170,11 @@ void _cleanup_module(void)
 {
 	int t;
 
+#if USETHIS 
 	rtc_stop();
+#else
+	rt_release_rtc();
+#endif
 	del_timer(&timer);
 	t = imuldiv(maxj_echo, 1000000000, rtai_tunables.cpu_freq);
 	printk("\nCHECKED WITH PERIOD: %d (us), MAXJ: %d.%-3d (us)\n\n", PERIOD/1000, t/1000, t%1000);
