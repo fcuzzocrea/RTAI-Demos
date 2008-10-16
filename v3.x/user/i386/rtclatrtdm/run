@@ -27,6 +27,8 @@ $insmod $MODULES/rtai_sem.ko;
 $insmod $MODULES/rtai_rtdm.ko;
 else
 $insmod $MODULES/rtai_hal.o;
+$insmod $MODULES/rtai_ksched.o;
+$insmod $MODULES/rtai_sem.o;
 $insmod $MODULES/rtai_rtdm.o;
 fi
 fi
