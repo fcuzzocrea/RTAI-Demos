@@ -20,7 +20,6 @@
 #include <asm/io.h>
 
 #include "params.h"
-#include <rtai.h>
 #include <rtdm/rtdm_driver.h>
 
 int ECHO_PERIOD = 1000; // ms

@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 1999  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@ int main(void)
 		exit(1);
 	}
 
-	count = 8192;
+	count = RTC_FREQ;
 	maxj = 0;
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -75,8 +75,8 @@ int main(void)
 		}
 	}
 
-	rt_make_soft_real_time();
 	rt_disable_irq(RTC_IRQ);
+	rt_make_soft_real_time();
 	rt_task_delete(mytask);
 	return 0;
 }
