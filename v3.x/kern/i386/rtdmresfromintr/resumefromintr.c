@@ -130,7 +130,7 @@ static void rtc_stop(void)
 	rtai_sti();
 }
 
-static void intr_handler(long dummy)
+static void thread_fun(long dummy)
 {
 	RT_TASK *task;
 	RTIME t0 = 0, t;
@@ -165,7 +165,7 @@ static void intr_handler(long dummy)
 int _init_module(void)
 {
 	rt_assign_irq_to_cpu(RTC_IRQ, (1 << IRQ_CPU));
-	rt_task_init_cpuid(&thread, intr_handler, 0, STACK_SIZE, 0, 0, 0, TASK_CPU);
+	rt_task_init_cpuid(&thread, thread_fun, 0, STACK_SIZE, 0, 0, 0, TASK_CPU);
 	rt_register(nam2num("RPCTSK"), &thread, IS_TASK, 0);
 	rt_task_resume(&thread);
 	rtc_start(RTC_FREQ);
