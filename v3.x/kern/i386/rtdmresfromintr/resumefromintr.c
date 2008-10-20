@@ -136,7 +136,12 @@ static void thread_fun(long dummy)
 	RTIME t0 = 0, t;
 	long count = RTC_FREQ, jit, maxj = 0, echo = 0;
 	
-	task = rt_receive(NULL, &jit);
+	task = rt_receive(NULL, (unsigned long *)&jit);
+	if (task != (void *)jit) {
+		rt_printk("INCONSISTENT RECEIVE %p %p\n", task, (void *)jit);
+		return;
+	}
+	rt_return(task, 0UL);
 	go = 1;
 
         while(!rt_task_suspend(&thread)) {

@@ -38,7 +38,7 @@ int main(void)
 
 	signal(SIGINT, endme);
         task = rt_task_init_schmod(nam2num("MNTASK"), 0, 0, 0, SCHED_OTHER, 0xF);
-	rt_send(rt_get_adr(nam2num("RPCTSK")), (unsigned long)task);
+	rt_rpc(rt_get_adr(nam2num("RPCTSK")), (unsigned long)task, &maxj);
 
 	while(!end) {
 		rt_receive(NULL, &maxj);
