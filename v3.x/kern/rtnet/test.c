@@ -116,11 +116,6 @@ static void sender(long t)
 	}
 }
 
-static void close_sockets(void)
-{
-	rt_dev_close(sock);
-	rt_dev_shutdown(sock, SHUT_RDWR);
-}
 
 static int _init(void)
 {
@@ -154,16 +149,14 @@ static int _init(void)
 	}
 	if (rt_dev_setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) == -1) {
 		rt_printk("FuCSnet: Can't set broadcast options\n");
-		close_sockets();
-		return -1;
+		goto close_socks;
 	}
 
 	rt_dev_ioctl(sock, RTNET_RTIOC_TIMEOUT, &timeout);
 
 	if (rt_dev_bind(sock, (struct sockaddr *) &loc_addr, sizeof(struct sockaddr_in)) < 0) {
 		rt_printk("FuCSnet: Can't bind the network socket");
-		close_sockets();
-		return -1;
+		goto close_socks;
 	}
 
 	rt_set_periodic_mode();
@@ -171,30 +164,32 @@ static int _init(void)
 
 	if (rt_task_init_cpuid(&rx_task, receiver, 0, STKSIZ, 0, 0, 0, CPU) < 0) {
 		rt_printk("FuCSnet: Can't initialise the receiver task");
-		close_sockets();
-		return -1;
+		goto close_socks;
 	}
 
 	if (rt_task_init_cpuid(&tx_task, sender, 0, STKSIZ, 0, 0, 0, CPU) < 0) {
 		rt_printk("FuCSnet: Can't initialise the transmitter task");
-		close_sockets();
-		return -1;
+		goto close_socks;
 	}
 
 	if (0 != rt_task_make_periodic(&tx_task, rt_get_time() + 20*period, period)) {
 		rt_printk("FuCSnet: Make sender periodic failed\n");
-		close_sockets();
-		return -1;
+		goto close_socks;
 	}
 
 	if (rt_task_resume(&rx_task) < 0) {
 		rt_printk("FuCSnet: Can't start the receiver task");
-		close_sockets();
-		return -1;
+		goto close_socks;
 	}
 
 	rt_printk("FuCSnet: Module initialisation completed\n");
 	return 0;
+
+close_socks:
+
+	rt_dev_close(sock);
+	rt_dev_shutdown(sock, SHUT_RDWR);
+	return -1;
 }
 
 static void _cleanup(void)
@@ -206,7 +201,8 @@ static void _cleanup(void)
 	rt_task_delete(&rx_task);
 	rt_task_delete(&tx_task);
 
-	close_sockets();
+	rt_dev_close(sock);
+	rt_dev_shutdown(sock, SHUT_RDWR);
 
 	rt_named_mbx_delete(mbx);
 
