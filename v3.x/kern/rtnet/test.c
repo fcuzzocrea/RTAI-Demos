@@ -18,7 +18,7 @@
 
 
 /* 
- * FuCSnet core module
+ * RtnetTest core module
  */
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -37,7 +37,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Bernhard Pfund <bernhard@chapter7.ch>");
-MODULE_DESCRIPTION("FuCSnet core module");
+MODULE_DESCRIPTION("RtnetTest core module");
 
 static RT_TASK rx_task, tx_task;
 static struct sockaddr_in loc_addr, rx_addr, tx_addr;
@@ -64,7 +64,7 @@ static void receiver(long nothing)
 	int ready = 0;
 	socklen_t fromlen = sizeof(rx_addr);
 
-	rt_printk("FuCSnet: Receiver task initialised\n");
+	rt_printk("RtnetTest: Receiver task initialised\n");
 
 	while(!end) {
 		FD_ZERO(&rxfds);
@@ -86,12 +86,12 @@ static void receiver(long nothing)
 			}
 
 		} else if (EPERM == -ready) {
-			rt_printk("FuCSnet: Failed to rt_dev_select on socket\n");
+			rt_printk("RtnetTest: Failed to rt_dev_select on socket\n");
 			end = 1;
 			break;
 
 		} else if (EINTR == -ready) {
-			rt_printk("FuCSnet: rt_dev_select was interrupted\n");
+			rt_printk("RtnetTest: rt_dev_select was interrupted\n");
 			end = 1;
 			break;
 		}
@@ -105,7 +105,7 @@ static void sender(long nothing)
 	int diff = 0, warmup = 1000000000/WORKCYCLE;
 	RTIME t, tb;
 	struct sample { unsigned long cnt; RTIME tx, rx; } samp = { 0, 0, 0 };
-	rt_printk("FuCSnet: Transmitter task initialised\n");
+	rt_printk("RtnetTest: Transmitter task initialised\n");
 
 	tb = t = rt_get_real_time_ns();
 	while(!end) {
@@ -113,7 +113,7 @@ static void sender(long nothing)
 		slen = rt_dev_sendto(sock, buffer_out, slen, 0, (struct sockaddr*)&tx_addr, sizeof(tx_addr));
 
 		if (slen < 0) {
-			rt_printk("FuCSnet: Packet send failed! Errno %d\n", -slen);
+			rt_printk("RtnetTest: Packet send failed! Errno %d\n", -slen);
 			return;
 		}
 		rt_task_wait_period();
@@ -137,7 +137,7 @@ static int _init(void)
 	int broadcast = 1;
 	int64_t timeout = -1;
 
-	rt_printk("FuCSnet: Module initialisation started\n");
+	rt_printk("RtnetTest: Module initialisation started\n");
 
 	memset(buffer_in, 0, sizeof(buffer_in));
 	memset(&loc_addr, 0, sizeof (struct sockaddr_in));
@@ -154,23 +154,23 @@ static int _init(void)
 	tx_addr.sin_addr.s_addr  = rt_inet_aton("127.0.0.1");
 
 	if (((mbx = rt_typed_named_mbx_init("MYMBX", 2000*sizeof(struct sample), FIFO_Q))) == NULL) {
-		rt_printk("FuCSnet: Cannot create the mailbox\n");
+		rt_printk("RtnetTest: Cannot create the mailbox\n");
 		return -1;
 	}
 
 	if (((sock = rt_dev_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))) < 0) {
-		rt_printk("FuCSnet: Error opening UDP/IP socket: %d\n", sock);
+		rt_printk("RtnetTest: Error opening UDP/IP socket: %d\n", sock);
 		return -1;
 	}
 	if (rt_dev_setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) == -1) {
-		rt_printk("FuCSnet: Can't set broadcast options\n");
+		rt_printk("RtnetTest: Can't set broadcast options\n");
 		goto close_socks;
 	}
 
 	rt_dev_ioctl(sock, RTNET_RTIOC_TIMEOUT, &timeout);
 
 	if (rt_dev_bind(sock, (struct sockaddr *) &loc_addr, sizeof(struct sockaddr_in)) < 0) {
-		rt_printk("FuCSnet: Can't bind the network socket");
+		rt_printk("RtnetTest: Can't bind the network socket");
 		goto close_socks;
 	}
 
@@ -178,26 +178,26 @@ static int _init(void)
 	period = start_rt_timer(nano2count(WORKCYCLE));
 
 	if (rt_task_init_cpuid(&rx_task, receiver, 0, STKSIZ, 0, 0, 0, CPU) < 0) {
-		rt_printk("FuCSnet: Can't initialise the receiver task");
+		rt_printk("RtnetTest: Can't initialise the receiver task");
 		goto close_socks;
 	}
 
 	if (rt_task_init_cpuid(&tx_task, sender, 0, STKSIZ, 0, 0, 0, CPU) < 0) {
-		rt_printk("FuCSnet: Can't initialise the transmitter task");
+		rt_printk("RtnetTest: Can't initialise the transmitter task");
 		goto close_socks;
 	}
 
 	if (0 != rt_task_make_periodic(&tx_task, rt_get_time() + 20*period, period)) {
-		rt_printk("FuCSnet: Make sender periodic failed\n");
+		rt_printk("RtnetTest: Make sender periodic failed\n");
 		goto close_socks;
 	}
 
 	if (rt_task_resume(&rx_task) < 0) {
-		rt_printk("FuCSnet: Can't start the receiver task");
+		rt_printk("RtnetTest: Can't start the receiver task");
 		goto close_socks;
 	}
 
-	rt_printk("FuCSnet: Module initialisation completed\n");
+	rt_printk("RtnetTest: Module initialisation completed\n");
 	return 0;
 
 close_socks:
@@ -209,7 +209,7 @@ close_socks:
 
 static void _cleanup(void)
 {
-	rt_printk("FuCSnet: Module shutdown requested\n");
+	rt_printk("RtnetTest: Module shutdown requested\n");
 
 	end = 1;
 
@@ -221,7 +221,7 @@ static void _cleanup(void)
 
 	rt_named_mbx_delete(mbx);
 
-	rt_printk("FuCSnet: Module shutdown completed\n");
+	rt_printk("RtnetTest: Module shutdown completed\n");
 }
 
 module_init(_init);
