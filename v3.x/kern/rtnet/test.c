@@ -57,7 +57,7 @@ static int end = 0;
 /* This is the real period, returned by start_rt_timer */
 static long period = 0;
 
-static void receiver(long t)
+static void receiver(long nothing)
 {
 	fd_set rxfds;
 	RTIME timeout = 0;
@@ -100,12 +100,16 @@ static void receiver(long t)
 	return;
 }
 
-static void sender(long t)
+static void sender(long nothing)
 {
+	int diff = 0, warmup = 1000000000/WORKCYCLE;
+	RTIME t, tb;
+	struct sample { unsigned long cnt; RTIME tx, rx; } samp = { 0, 0, 0 };
 	rt_printk("FuCSnet: Transmitter task initialised\n");
 
+	tb = t = rt_get_real_time_ns();
 	while(!end) {
-		slen = sprintf(buffer_out, "%lld", rt_get_real_time_ns());
+		slen = sprintf(buffer_out, "%lld", t);
 		slen = rt_dev_sendto(sock, buffer_out, slen, 0, (struct sockaddr*)&tx_addr, sizeof(tx_addr));
 
 		if (slen < 0) {
@@ -113,6 +117,17 @@ static void sender(long t)
 			return;
 		}
 		rt_task_wait_period();
+		t = rt_get_real_time_ns();
+		if (!warmup) {
+			diff = abs((int)(t - tb - WORKCYCLE));
+			samp.cnt++;
+			tb = t;
+			if (diff > samp.rx) samp.rx = diff;
+			rt_mbx_send_if(mbx, &samp, sizeof(samp));
+		} else {
+			tb = rt_get_real_time_ns();
+			warmup--;
+		}
 	}
 }
 
@@ -138,7 +153,7 @@ static int _init(void)
 	tx_addr.sin_port         = htons(UDPPORT);
 	tx_addr.sin_addr.s_addr  = rt_inet_aton("127.0.0.1");
 
-	if (((mbx = rt_typed_named_mbx_init("MYMBX", 1000*sizeof(struct sample), FIFO_Q))) == NULL) {
+	if (((mbx = rt_typed_named_mbx_init("MYMBX", 2000*sizeof(struct sample), FIFO_Q))) == NULL) {
 		rt_printk("FuCSnet: Cannot create the mailbox\n");
 		return -1;
 	}
