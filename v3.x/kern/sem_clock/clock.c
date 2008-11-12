@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 1999  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 1999-2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -287,6 +287,7 @@ void cleanup_module(void)
 	rt_task_delete(&write);
 	rtf_destroy(Keyboard);
 	rtf_destroy(Screen);
+	rt_sem_delete(&keybrd_sem);
 	printk("\n\nCPU USE SUMMARY\n");
 	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
 		printk("# %d -> %d\n", cpuid, cpu_used[cpuid]);
