@@ -70,12 +70,6 @@ static void task_code(long task_no)
 	rt_sem_signal(sync_sem);
 
 /* message queue stuff */
-#if 0
-{
-	struct rt_poll_s polld = { mbx_in, RT_POLL_MBX_RECV };
-	rt_poll(&polld, 1, 0);
-}
-#endif
 	if ((ret = rt_mbx_receive(mbx_in, buf, 8)) != 0) {
 		TAKE_PRINT; 
 		rt_printk("rt_mbx_receive() failed with %d\n", ret);
@@ -147,6 +141,10 @@ static void start_task_code(long notused)
 		}
 	}
 	for (i = 0; i < NUM_TASKS; ++i) {
+#if 0
+		struct rt_poll_s polld = { mbx_out, RT_POLL_MBX_RECV };
+		rt_poll(&polld, 1, 0);
+#endif
 		rt_mbx_receive(mbx_out, buf, 8);
 		TAKE_PRINT; 
 		rt_printk("\nreceived from mbx_out: %s", buf); 
