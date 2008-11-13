@@ -70,6 +70,12 @@ static void task_code(long task_no)
 	rt_sem_signal(sync_sem);
 
 /* message queue stuff */
+#if 0
+{
+	struct rt_poll_s polld = { mbx_in, RT_POLL_MBX_RECV };
+	rt_poll(&polld, 1, 0);
+}
+#endif
 	if ((ret = rt_mbx_receive(mbx_in, buf, 8)) != 0) {
 		TAKE_PRINT; 
 		rt_printk("rt_mbx_receive() failed with %d\n", ret);
