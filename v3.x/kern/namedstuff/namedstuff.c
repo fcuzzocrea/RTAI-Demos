@@ -10,6 +10,18 @@
 
 MODULE_LICENSE("GPL");
 
+#define USE_POLL 0
+
+#if USE_POLL
+#define poll_mbx(mbx, what) \
+	do { \
+		struct rt_poll_s polld = { mbx, what }; \
+		rt_poll(&polld, 1, 0); \
+	} while (0)
+#else
+#define poll_mbx(mbx, what)
+#endif
+
 //#define DELETE
 
 #define ONE_SHOT
@@ -70,6 +82,7 @@ static void task_code(long task_no)
 	rt_sem_signal(sync_sem);
 
 /* message queue stuff */
+	poll_mbx(mbx_in, RT_POLL_MBX_RECV);
 	if ((ret = rt_mbx_receive(mbx_in, buf, 8)) != 0) {
 		TAKE_PRINT; 
 		rt_printk("rt_mbx_receive() failed with %d\n", ret);
@@ -79,6 +92,7 @@ static void task_code(long task_no)
 	rt_printk("\nreceived by task %d ", task_no);
 	rt_printk(buf); 
 	GIVE_PRINT;
+	poll_mbx(mbx_out, RT_POLL_MBX_SEND);
 	rt_mbx_send(mbx_out, strs[task_no], 8);
 /* test receive timeout */
 	rt_sem_wait(sync_sem);
@@ -134,6 +148,7 @@ static void start_task_code(long notused)
 	rt_printk("testing message queues\n");
 	GIVE_PRINT;
 	for (i = 0; i < NUM_TASKS; ++i) {
+		poll_mbx(mbx_in, RT_POLL_MBX_SEND);
 		if (rt_mbx_send(mbx_in, strs[i], 8)) {
 			TAKE_PRINT; 
 			rt_printk("rt_mbx_send() failed\n");
@@ -141,10 +156,7 @@ static void start_task_code(long notused)
 		}
 	}
 	for (i = 0; i < NUM_TASKS; ++i) {
-#if 0
-		struct rt_poll_s polld = { mbx_out, RT_POLL_MBX_RECV };
-		rt_poll(&polld, 1, 0);
-#endif
+		poll_mbx(mbx_out, RT_POLL_MBX_RECV);
 		rt_mbx_receive(mbx_out, buf, 8);
 		TAKE_PRINT; 
 		rt_printk("\nreceived from mbx_out: %s", buf); 
