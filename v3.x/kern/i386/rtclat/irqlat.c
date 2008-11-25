@@ -23,6 +23,8 @@
 
 #define USETHIS 1
 
+#define USETIMEOFDAY 1
+
 #define MAX_RTC_FREQ  8192
 #define RTC_FREQ      MAX_RTC_FREQ
 
@@ -67,8 +69,21 @@ RTAI_MODULE_PARM(ECHO_PERIOD, int);
 static RTIME t0;
 static int tsc_period, maxj, maxj_echo, pasd;
 
+#if USETIMEOFDAY
+static volatile int tvi;
+static struct timeval tv[2];
+#endif
+
 static void rtc_handler (int irq, unsigned long rtc_freq)
 {
+#if USETIMEOFDAY
+	static int stp, cnt;
+	if (++cnt == rtc_freq) {
+		rt_printk("<> IRQ %d, %d: CNT %d: TIMEOFDAY %lu, %lu <>\n", irq, ++stp, cnt, tv[tvi].tv_sec, tv[tvi].tv_usec);
+		cnt = 0;
+	}
+#endif
+
 	if (pasd) {
 		RTIME t;
 		int jit;
@@ -148,6 +163,10 @@ static void timer_fun(unsigned long none)
 		t = imuldiv(maxj_echo, 1000000000, rtai_tunables.cpu_freq);
 		printk("INCREASED TO: %d.%-3d (us)\n", t/1000, t%1000); // silly and wrong but acceptable
 	}
+#if USETIMEOFDAY
+	do_gettimeofday(&tv[1 - tvi]);
+	tvi = 1 - tvi;
+#endif
 	mod_timer(&timer, jiffies + ECHO_PERIOD*HZ/1000);
 }
 
