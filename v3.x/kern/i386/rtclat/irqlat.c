@@ -23,7 +23,7 @@
 
 #define USETHIS 1
 
-#define USETIMEOFDAY 1
+#define USETIMEOFDAY 0
 
 #define MAX_RTC_FREQ  8192
 #define RTC_FREQ      MAX_RTC_FREQ
