@@ -36,7 +36,7 @@ static SEM mtx;
 
 static int cond_data;
 
-static atomic_t cleanup;
+static atomic_t cleanup = ATOMIC_INIT(0);
 
 static void task_func1(long dummy)
 {
