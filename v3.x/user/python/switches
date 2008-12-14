@@ -1,5 +1,14 @@
 #!/bin/sh
 
+prefix=`rtai-config --prefix`
+
+if [ "$prefix" == "" ]; then
+echo "ERROR: please set your PATH variable to <rtai-install>/bin"
+exit
+fi
+
+export PYTHONPATH=$prefix/rtai-py
+
 libpath=`rtai-config --library-dir`
 
 if [ "$libpath" == "" ]; then
