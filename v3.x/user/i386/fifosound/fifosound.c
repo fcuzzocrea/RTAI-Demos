@@ -1,6 +1,6 @@
 /*
-COPYRIGHT (C) 2002  Thomas Leibner (leibner@t-online.de)
-                    Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2002-2008  Thomas Leibner (leibner@t-online.de)
+                         Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define PORT_ADR 0x61
 
+static volatile int end;
+
 static int filter(int x)
 {
 	static int oldx;
@@ -55,10 +57,7 @@ static void *intr_handler(void *args)
 	int playfifo, cntrfifo;
 	char data, temp;
 
-//	ioperm(PORT_ADR, 1, 1);
-	iopl(3);
-
- 	if (!(mytask = rt_task_init_schmod(nam2num("SOUND"), 1, 0, 0, SCHED_FIFO, 0xF))) {
+ 	if (!(mytask = rt_thread_init(nam2num("SOUND"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT SOUND TASK\n");
 		exit(1);
 	}
@@ -67,7 +66,6 @@ static void *intr_handler(void *args)
 	playfifo = 0;
 	cntrfifo = 1;
 
-	rt_set_oneshot_mode();
 	start_rt_timer(0);
 	period = nano2count(PERIOD);
 	printf("\nINIT SOUND TASK\n");
@@ -76,7 +74,7 @@ static void *intr_handler(void *args)
 	rt_task_make_periodic(mytask, rt_get_time() + 5*period, period);
 	rtf_put(cntrfifo, &data, 1);
 
-	while(1) {
+	while(!end) {
 		if (rtf_get(playfifo, &data, 1) > 0) {
 			data = filter(data);
 			temp = inb(PORT_ADR);            
@@ -99,8 +97,6 @@ static void *intr_handler(void *args)
 	return 0;
 }
 
-static int end;
-
 static void endme(int dummy) { end = 1; }
 
 int main(void)
@@ -109,7 +105,10 @@ int main(void)
 	int playfifo, cntrfifo, thread;
 	char data;
 
-	signal(SIGINT, endme);
+	signal(SIGINT,  endme);
+	signal(SIGTERM, endme);
+	signal(SIGHUP,  endme);
+	signal(SIGALRM, endme);
 
 	if ((player = open("../../../share/linux.au", O_RDONLY)) < 0) {
 		printf("ERROR OPENING SOUND FILE (linux.au)\n");
@@ -123,6 +122,7 @@ int main(void)
 		printf("ERROR OPENING FIFO1\n");
 		exit(1);
 	}
+
 	thread = rt_thread_create(intr_handler, NULL, 10000);
 	read(cntrfifo, &data, 1);
 	printf("\nINIT MASTER TASK\n\n(CTRL-C TO END EVERYTHING)\n");

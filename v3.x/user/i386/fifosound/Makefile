@@ -11,7 +11,7 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 all: fifosound
 
 fifosound: fifosound.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 clean:
 	rm -f *.o fifosound
