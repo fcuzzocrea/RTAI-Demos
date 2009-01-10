@@ -155,7 +155,7 @@ printf("TASK CODE GOT INIT COMNODE PORT %lx, %d\n", comnode, srvport);
 	mbx_out  = RT_get_adr(comnode, srvport, "MBXOUT");
         for (i = 0; i < NUM_TASKS; i++) {
 		sems[i] = RT_get_adr(comnode, srvport, sem[i]);
-		if ((thread[i] = rt_thread_create(task_code, (void *)&i, 10000)) < 0) {
+		if (!(thread[i] = rt_thread_create(task_code, (void *)&i, 10000))) {
                         printf("ERROR IN CREATING THREAD %d\n", i);
                         exit(1);
                 }
