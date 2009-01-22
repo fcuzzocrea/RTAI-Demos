@@ -302,22 +302,22 @@ int main(int argc, char* argv[])
 	OneUnit = nano2count(ONE_UNIT);
 	start_rt_timer((int)nano2count(TICK_PERIOD));
 
-	if ((Read = rt_thread_create(ClockChrono_Read, NULL, 10000)) < 0) { 
+	if (!(Read = rt_thread_create(ClockChrono_Read, NULL, 10000))) { 
 		printf("ERROR IN CREATING ClockChrono_Read\n");
 		exit(1);
  	}       
 
-	if ((Chrono = rt_thread_create(ClockChrono_Chrono, NULL, 10000)) < 0) { 
+	if (!(Chrono = rt_thread_create(ClockChrono_Chrono, NULL, 10000))) { 
 		printf("ERROR IN CREATING ClockChrono_Chrono\n");
 		exit(1);
  	}       
 
-	if ((Clock = rt_thread_create(ClockChrono_Clock, NULL, 10000)) < 0) { 
+	if (!(Clock = rt_thread_create(ClockChrono_Clock, NULL, 10000))) { 
 		printf("ERROR IN CREATING ClockChrono_Clock\n");
 		exit(1);
  	}       
 
-	if ((Write = rt_thread_create(ClockChrono_Write, NULL, 10000)) < 0) {
+	if (!(Write = rt_thread_create(ClockChrono_Write, NULL, 10000))) {
 		printf("ERROR IN CREATING ClockChrono_Write\n");
 		exit(1);
  	}       
