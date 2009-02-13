@@ -30,7 +30,7 @@ int main(void)
 	RT_TASK *receiving_task;
 	RT_TASK *agentask;
 	int i, *shm;
-	unsigned int msg, chksum;
+	unsigned long msg, chksum;
 
 	receiving_task = rt_task_init_schmod(nam2num("RTSK"), 0, 0, 0, SCHED_FIFO, 0xF);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -40,13 +40,13 @@ int main(void)
 	while(1) {
 		printf("RECEIVING TASK RPCS TO AGENT TASK %x\n", 0xaaaaaaaa);
 		rt_rpc(agentask, 0xaaaaaaaa, &msg);
-		printf("AGENT TASK RETURNED %x\n", msg);
+		printf("AGENT TASK RETURNED %lx\n", msg);
 		if (msg != 0xeeeeeeee) {
 			chksum = 0;
 			for (i = 1; i <= shm[0]; i++) {
 				chksum += shm[i];
 			}
-			printf("RECEIVING TASK: CHECKSUM = %x\n", chksum);
+			printf("RECEIVING TASK: CHECKSUM = %lx\n", chksum);
 			if (chksum != shm[shm[0] + 1]) {
 				printf("RECEIVING TASK: WRONG SHMEM CHECKSUM\n");
 			}

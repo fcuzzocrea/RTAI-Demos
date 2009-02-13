@@ -37,7 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define CHECK_FLAGS
 #endif
 
-#define SUPRT USE_GFP_ATOMIC
+//#define SUPRT USE_GFP_ATOMIC
+#define SUPRT USE_VMALLOC
 
 #define TICK_PERIOD 100000
 
@@ -58,7 +59,7 @@ void fun(long t)
 {
 	int op;
 	RT_TASK *msgtsk;
-	unsigned int i, chksum, msg;
+	unsigned long i, chksum, msg;
 
 	while (!rt_get_adr(nam2num("STSK")) || !rt_get_adr(nam2num("RTSK"))) {
 		cpu_used[hard_cpu_id()]++;
