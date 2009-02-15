@@ -1,5 +1,6 @@
 /*
 COPYRIGHT (C) 2000  Andrew Hooper (andrew@best.net.nz)
+COPYRIGHT (C) 2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -60,23 +61,16 @@ static int Item_Qty, Pressed_Items;
 static void *encoder_irq(void *args)
 {
 	RT_TASK *mytask;
-	struct sched_param mysched;
 	int mycount = 0;
 
-	mysched.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-	if( sched_setscheduler( 0, SCHED_FIFO, &mysched ) == -1 ) {
-		puts("ERROR IN SETTING THE SCHEDULER UP");
-		exit(1);
- 	}       
- 	if (!(mytask = rt_task_init(nam2num("ENCTSK"), 1, 0, 0))) {
+	rt_allow_nonroot_hrt();
+	iopl(3);
+ 	if (!(mytask = rt_thread_init(nam2num("ENCTSK"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT PROCESS TASK\n");
 		exit(1);
 	}
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
-	rt_allow_nonroot_hrt();
-	iopl(3);
-//	ioperm(LPT_PORT, 3, 1);
 	rt_make_hard_real_time();
 	while (end != 2) {
 		rt_sem_wait(sem);
@@ -96,16 +90,6 @@ static void *encoder_irq(void *args)
 	rt_task_delete(mytask);
 
 	return NULL;
-}
-
-/* Initalise the module */
-static int init_module(void)
-{
-	return 0;
-}
-
-static void cleanup_module(void)
-{
 }
 
 static WINDOW *screen, *title, *mywin1, *mywin2, *foot;
@@ -222,7 +206,7 @@ int main(void)
 	int thread;
 
 	signal(SIGINT, endme);
-        if (!(mytask = rt_task_init(nam2num("MAIN"), 1, 0, 0))) {
+        if (!(mytask = rt_thread_init(nam2num("MAIN"), 1, 0, SCHED_FIFO, 0xF))) {
                 printf("CANNOT INIT PROCESS TASK\n");
                 exit(1);
         }
@@ -234,12 +218,11 @@ int main(void)
 		printf("CANNOT FIND SEMAPHORE\n");
 		exit(1);
 	}
-	thread = rt_thread_create(encoder_irq, NULL, 10000);
+	thread = rt_thread_create(encoder_irq, NULL, 0);
 	get_data();
 	screen_init();
 	paint_screen();
-	init_module();
-	msleep(1);
+	msleep(10);
         start = 1;
         rt_mbx_send(mbx, &start, 1);
 
@@ -257,7 +240,6 @@ int main(void)
 	}
         rt_mbx_send(mbx, &start, 1);
 	rt_task_delete(mytask);
-	cleanup_module();
 	screen_end();
 	printf("\n");
         rt_thread_join(thread);
