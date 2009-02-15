@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 1999  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 1999-2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -24,11 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <signal.h>
 #include <sys/mman.h>
 #include <stdlib.h>
+
 #include <rtai_mbx.h>
+
 #include "period.h"
 
-#define OPT_MINUS(x)    (('-' << 8) + x)
-#define OPT_EQ(x)       ((x << 8) + '=')
+#define OPT_MINUS(x)  (('-' << 8) + x)
+#define OPT_EQ(x)     ((x << 8) + '=')
 
 static int verbose, bug, semaforo, test_time;
 
@@ -41,19 +43,17 @@ int main(int argc, char *argv[])
 	int i, count, jit, maxj;
 	char run, *opt;
 
-	test_time = TEST_TIME;
-	for( i=1 ; i < argc ; i++ ) {
+	for(i = 1; i < argc; i++) {
 		opt = argv[i];
-		switch((*opt<<8) + *(opt+1)) {
-		case OPT_MINUS('s'):semaforo++; break;
-		case OPT_MINUS('b'):bug++; break;
-		case OPT_MINUS('v'):verbose++; break;
-		case OPT_EQ('t'):test_time = strtol(opt+2,NULL,0); break;
+		switch((*opt << 8) + *(opt + 1)) {
+			case OPT_MINUS('s'): semaforo++; break;
+			case OPT_MINUS('b'): bug++; break;
+			case OPT_MINUS('v'): verbose++; break;
 			break;
 		}
 	}
 
- 	if (!(mytask = rt_task_init_schmod(nam2num("PRCTSK"), 1, 0, 0, SCHED_FIFO, 1))) {
+ 	if (!(mytask = rt_thread_init(nam2num("PRCTSK"), 1, 0, SCHED_FIFO, TASK_CPU))) {
 		printf("CANNOT INIT PROCESS TASK\n");
 		exit(1);
 	}
@@ -65,38 +65,40 @@ int main(int argc, char *argv[])
 		printf("CANNOT FIND SEMAPHORE\n");
 		exit(1);
 	}
-
-	if (semaforo) printf("SEMAPHORE WAIT/SEND ");else printf("TASK SUSPEND/RESUME ");
+	printf("%s", semaforo ? "SEMAPHORE WAIT/SEND" : "TASK SUSPEND/RESUME");
 
 	printf("\nTest time (s): ");
 	scanf("%d", &test_time);
-	if (test_time < 0 || test_time > TEST_TIME) {
-		printf("TEST TIME OUT OF RANGE (0-%d)\n", TEST_TIME);
-		exit(1);
-	}
         printf("\n... DO NOT PANIC, WAIT FOR %d SECONDS (RUNNING AT %d hz).\n", test_time, 1000000000/PERIOD);
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	rt_make_hard_real_time();
 	run = semaforo ? 1 : 2;
-	rt_mbx_send(mbx, &run, 1);
 
+	t0 = 0;
 	count = maxj = 0;
-	t0 = rt_get_cpu_time_ns();
-	while(++count <= test_time*(1000000000/(PERIOD*100))) {
-		for (i = 0; i < 100; i++) {
+	rt_mbx_send(mbx, &run, 1);
+	while(++count <= test_time*1000000000LL/PERIOD) {
+		if (semaforo) {
+			rt_sem_wait(sem);
+		} else {
+			rt_task_suspend(mytask);
+		} 
+		if (!t0) {
+			t0 = rt_get_cpu_time_ns();
+		} else {
 			t = rt_get_cpu_time_ns();
 			if ((jit = t - t0 - PERIOD) < 0) {
 				jit = -jit;
 			}
-			if (count > 1 && jit > maxj) {
+			if (jit > maxj) {
 				maxj = jit;
+				rt_printk("AT COUNT = %d, MAXJ = %d\n", count, maxj);
 			}
 			t0 = t;
-			if (semaforo) rt_sem_wait(sem); else rt_task_suspend(mytask);
 		} 
-//		rtai_print_to_screen("> COUNT = %d\n", count);
+//		rt_printk("> COUNT = %d\n", count);
 	}
 
 	run = 0;

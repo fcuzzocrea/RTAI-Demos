@@ -68,7 +68,7 @@ static SEM sem;
 	pause_io(); \
 })
 
-static int rtc_handler(int irq, unsigned long rtc_freq)
+static void rtc_handler(int irq, unsigned long rtc_freq)
 {
 	static char start = 0;
  	CMOS_READ(RTC_INTR_FLAGS);
@@ -76,7 +76,6 @@ static int rtc_handler(int irq, unsigned long rtc_freq)
 	if (start) {
 		rt_sem_signal(&sem);
 	}
-	return 0;
 }
 
 #define MIN_RTC_FREQ  2
@@ -103,18 +102,22 @@ static void rtc_start(long rtc_freq)
 		}
 	}
 
-	rt_request_irq(RTC_IRQ, (void *)rtc_handler, (void *)rtc_freq, 1);
+	rt_disable_irq(RTC_IRQ);
+	rt_release_irq(RTC_IRQ);
 	rtai_cli();
 	CMOS_WRITE(CMOS_READ(RTC_FREQ_SELECT), RTC_FREQ_SELECT);
 	CMOS_WRITE(CMOS_READ(RTC_CONTROL),     RTC_CONTROL);
 	CMOS_WRITE(RTC_REF_CLCK_32KHZ | (16 - pwr2),          RTC_FREQ_SELECT);
 	CMOS_WRITE((CMOS_READ(RTC_CONTROL) & 0x8F) | RTC_PIE, RTC_CONTROL);
+	rt_request_irq(RTC_IRQ, (void *)rtc_handler, (void *)rtc_freq, 0);
+	rt_enable_irq(RTC_IRQ);
 	CMOS_READ(RTC_INTR_FLAGS);
 	rtai_sti();
 }
 
 static void rtc_stop(void)
 {
+	rt_disable_irq(RTC_IRQ);
 	rt_release_irq(RTC_IRQ);
 	rtai_cli();
 	CMOS_WRITE(CMOS_READ(RTC_FREQ_SELECT), RTC_FREQ_SELECT);

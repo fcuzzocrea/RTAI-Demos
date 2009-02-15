@@ -1,3 +1,4 @@
-//#define SEMAFORO   // uncomment this to use semaphore wait/signal
-#define PERIOD 100000 // nanos
-#define TEST_TIME 10 //secs
+#define RTC_FREQ  8192
+#define PERIOD  ((1000000000 + RTC_FREQ/2)/RTC_FREQ) // nanos
+#define TASK_CPU  (1 << 0)
+#define IRQ_CPU   (1 << 0)

@@ -37,7 +37,7 @@ clean::
 
 endif
 
-resumefromintr: resumefromintr.c
+resumefromintr: resumefromintr.c period.h
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 clean::
