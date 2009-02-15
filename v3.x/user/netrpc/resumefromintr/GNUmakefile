@@ -36,7 +36,7 @@ endif
 
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-resumefromintr: resumefromintr.c
+resumefromintr: resumefromintr.c period.h
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -llxrt
 
 clean::
