@@ -59,8 +59,8 @@ static void timer_handler(unsigned long data)
 	}
 	/* normal processing goes here */
 	intcnt++;
-	rt_sem_signal(dspsem);
 	rtc_enable_irq(TIMER_IRQ, TIMER_FRQ);
+	rt_sem_signal(dspsem);
 }
 
 int main(void)
@@ -85,6 +85,7 @@ int main(void)
 	rt_insert_tasklet(tasklet, 0, timer_handler, 111, nam2num("TSKLET"), 1);
 	rt_request_irq_task(TIMER_IRQ, tasklet, RT_IRQ_TASKLET, 1);
 	rtc_start(TIMER_FRQ);
+	rtc_enable_irq(TIMER_IRQ, TIMER_FRQ);
 
 	while (intcnt < maxcnt) {
 		rt_sem_wait(dspsem);

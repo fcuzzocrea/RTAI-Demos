@@ -56,6 +56,7 @@ static void *timer_handler(void *args)
 
 	rt_request_irq_task(TIMER_IRQ, handler, RT_IRQ_TASK, 1);
 	rtc_start(TIMER_FRQ);
+	rtc_enable_irq(TIMER_IRQ, TIMER_FRQ);
 	rtai_cli();
 	while (ovr != RT_IRQ_TASK_ERR) {
 		CHECK_FLAGS();
