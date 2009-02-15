@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	unsigned long run;
 	char c;
 
- 	if (!(task = rt_task_init_schmod(nam2num("PRCTSK"), 1, 0, 0, SCHED_FIFO, 0xF))) {
+ 	if (!(task = rt_task_init_schmod(nam2num("PRCTSK"), 1, 0, 0, SCHED_FIFO, TASK_CPU))) {
 		printf("CANNOT INIT PROCESS TASK\n");
 		exit(1);
 	}

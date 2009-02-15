@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2001  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 
 #include <linux/module.h>
-
 #include <asm/io.h>
 
 #include <rtai_registry.h>
@@ -36,17 +35,45 @@ static unsigned long run;
 
 static volatile int overuns;
 
-static void timer_tick(void)
+static MBX mbx;
+static RT_TASK sup_task;
+
+#define RTC_IRQ  8
+#define MAX_RTC_FREQ  8192
+
+#define RTC_REG_A  10
+#define RTC_REG_B  11
+#define RTC_REG_C  12
+
+#define RTC_CONTROL      RTC_REG_B
+#define RTC_INTR_FLAGS   RTC_REG_C
+#define RTC_FREQ_SELECT  RTC_REG_A
+
+#define RTC_REF_CLCK_32KHZ  0x20
+#define RTC_PIE             0x40
+
+#define RTC_PORT(x)     (0x70 + (x))
+#define RTC_ALWAYS_BCD  1
+
+#define pause_io()  \
+	do { asm volatile("outb %%al,$0x80" : : : "memory"); } while (0)
+
+#define CMOS_READ(addr) ({ \
+	outb((addr),RTC_PORT(0)); \
+	pause_io(); \
+	inb(RTC_PORT(1)); \
+})
+
+#define CMOS_WRITE(val, addr) ({ \
+	outb((addr),RTC_PORT(0)); \
+	pause_io(); \
+	outb((val),RTC_PORT(1)); \
+	pause_io(); \
+})
+
+static int rtc_handler(int irq, unsigned long rtc_freq)
 {
-	rt_times.tick_time = rt_times.intr_time;
-	rt_times.intr_time = rt_times.tick_time + rt_times.periodic_tick;
-	rt_set_timer_delay(0);
-	if (rt_times.tick_time >= rt_times.linux_time) {
-		if (rt_times.linux_tick > 0) {
-			rt_times.linux_time += rt_times.linux_tick;
-		}
-		rt_pend_linux_irq(TIMER_8254_IRQ);
-	} 
+ 	CMOS_READ(RTC_INTR_FLAGS);
 	if (run) {
 		if (rt_waiting_return(tasknode, taskport)) {
 			overuns++;
@@ -62,10 +89,51 @@ static void timer_tick(void)
 				break;
 		}
 	}
+	return 0;
 }
 
-static MBX mbx;
-static RT_TASK sup_task;
+#define MIN_RTC_FREQ  2
+
+static void rtc_start(long rtc_freq)
+{
+	int pwr2;
+
+	if (rtc_freq <= 0) {
+		rtc_freq = RTC_FREQ;
+	}
+	if (rtc_freq > MAX_RTC_FREQ) {
+		rtc_freq = MAX_RTC_FREQ;
+	} else if (rtc_freq < MIN_RTC_FREQ) {
+		rtc_freq = MIN_RTC_FREQ;
+	}
+	pwr2 = 1;
+	if (rtc_freq > MIN_RTC_FREQ) {
+		while (rtc_freq > (1 << pwr2)) {
+			pwr2++;
+		}
+		if (rtc_freq <= ((3*(1 << (pwr2 - 1)) + 1)>>1)) {
+			pwr2--;
+		}
+	}
+
+	rt_request_irq(RTC_IRQ, (void *)rtc_handler, (void *)rtc_freq, 1);
+	rtai_cli();
+	CMOS_WRITE(CMOS_READ(RTC_FREQ_SELECT), RTC_FREQ_SELECT);
+	CMOS_WRITE(CMOS_READ(RTC_CONTROL),     RTC_CONTROL);
+	CMOS_WRITE(RTC_REF_CLCK_32KHZ | (16 - pwr2),          RTC_FREQ_SELECT);
+	CMOS_WRITE((CMOS_READ(RTC_CONTROL) & 0x8F) | RTC_PIE, RTC_CONTROL);
+	CMOS_READ(RTC_INTR_FLAGS);
+	rtai_sti();
+}
+
+static void rtc_stop(void)
+{
+	rt_release_irq(RTC_IRQ);
+	rtai_cli();
+	CMOS_WRITE(CMOS_READ(RTC_FREQ_SELECT), RTC_FREQ_SELECT);
+	CMOS_WRITE(CMOS_READ(RTC_CONTROL),     RTC_CONTROL);
+	rtai_sti();
+}
 
 static void sup_fun(long none)
 {
@@ -86,13 +154,15 @@ int init_module(void)
 	rt_register(nam2num("HDLMBX"), &mbx, IS_MBX, 0);
         rt_task_init(&sup_task, sup_fun, 0, 2000, 0, 0, 0);
         rt_task_resume(&sup_task);
-	rt_request_timer(timer_tick, imuldiv(PERIOD, FREQ_8254, 1000000000), 0);
+        rt_assign_irq_to_cpu(RTC_IRQ, IRQ_CPU);
+        rtc_start(RTC_FREQ);
 	return 0;
 }
 
 void cleanup_module(void)
 {
-	rt_free_timer();
+        rt_reset_irq_to_sym_mode(RTC_IRQ);
+        rtc_stop();
 	rt_mbx_delete(&mbx);
         rt_task_delete(&sup_task);
 	rt_printk("HANDLER INTERRUPT MODULE REMOVED, OVERUNS %d\n", overuns);
