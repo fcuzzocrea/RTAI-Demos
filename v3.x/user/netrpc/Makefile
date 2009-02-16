@@ -3,6 +3,7 @@ TARGETS = \
 	basetest \
 	resumefromintr \
 	sound \
-	soundmsg
+	soundmsg \
+	poll
 
 include ../../share/recurse.mk
