@@ -21,7 +21,7 @@
 #include <rtai_msg.h>
 #include <rtai_signal.h>
 
-#define NTASKS       4
+#define NTASKS       5
 #define SMLTN        5
 #define CPUMAP       1
 
@@ -31,6 +31,8 @@
 
 #define PERIOD    1000000
 #define WAISTIME  PERIOD/(2*NTASKS)
+
+#define STKSIZ  0
 
 static RT_TASK *mastertask, *task[NTASKS];
 static volatile int endmaster, endtask[NTASKS];
@@ -65,9 +67,10 @@ static void end_sighdl(long signal, RT_TASK *task2end)
 
 static void *task_fun(long taskidx)
 {
-	int loop;
+	unsigned long loop;
 	float f;
-	task[taskidx] = rt_thread_init(rt_get_name(0), NTASKS - taskidx, 0, SCHED_FIFO, CPUMAP);
+	task[taskidx] = rt_thread_init(rt_get_name(0), taskidx, 0, SCHED_FIFO, CPUMAP);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 	rt_request_signal(RESUME_SIGNAL, resume_sighdl);
 	rt_request_signal(END_SIGNAL, end_sighdl);
@@ -92,8 +95,9 @@ static void *task_fun(long taskidx)
 
 static void *master_fun(void *arg)
 {
-	int i, ret;
-	mastertask = rt_thread_init(rt_get_name(0), 0, 0, SCHED_FIFO, CPUMAP);
+	int i;
+	unsigned long ret;
+	mastertask = rt_thread_init(rt_get_name(0), NTASKS, 0, SCHED_FIFO, CPUMAP);
 	rt_make_hard_real_time();
 	rt_request_signal(MASTER_SIGNAL, master_sighdl);
 	rt_sem_wait_barrier(barrier);
@@ -124,9 +128,9 @@ int main (void)
 	barrier = rt_sem_init(rt_get_name(0), NTASKS + 1);
 	rt_set_oneshot_mode();
 	start_rt_timer(0);
-	masterthread = rt_thread_create(master_fun, 0, 0);
+	masterthread = rt_thread_create(master_fun, 0, STKSIZ);
 	for (i = 0; i < NTASKS; i++) {
-		thread[i] = rt_thread_create(task_fun, (void *)i, 0);
+		thread[i] = rt_thread_create(task_fun, (void *)i, STKSIZ);
 	}
 	printf("EXECUTION STARTED\n");
 	endmaster = getchar();
