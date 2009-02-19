@@ -84,7 +84,8 @@ static void *timer_handler(void *args)
 int main(void)
 {
         RT_TASK *maint;
-	int maxcnt, thread;
+	pthread_t thread;
+	int maxcnt;
 
 	printf("GIVE THE NUMBER OF INTERRUPTS YOU WANT TO COUNT: ");
 	scanf("%d", &maxcnt);
