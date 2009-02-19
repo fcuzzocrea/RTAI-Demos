@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_msg.h>
 #include "period.h"
 
-long task[NTASKS];
+pthread_t task[NTASKS];
 
 int ntasks = NTASKS;
 

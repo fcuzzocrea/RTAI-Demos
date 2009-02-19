@@ -264,10 +264,10 @@ end:
 	return 0;
 }
 
-static int Read;
-static int Clock;
-static int Chrono;
-static int Write;
+static pthread_t Read;
+static pthread_t Clock;
+static pthread_t Chrono;
+static pthread_t Write;
 
 int main(int argc, char* argv[])
 {

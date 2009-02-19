@@ -104,7 +104,8 @@ static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
-	unsigned int player, cnt, thread;
+	pthread_t thread;
+	unsigned int player, cnt;
 	unsigned long msg;
 	RT_TASK *mytask;
 	MBX *mbx;

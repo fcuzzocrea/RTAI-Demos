@@ -51,7 +51,7 @@ static void *thread_fun(void *lcb)
 	return 0;
 }
 
-static unsigned long thread;
+static pthread_t thread;
 
 int main(void)
 {
