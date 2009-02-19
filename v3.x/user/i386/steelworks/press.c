@@ -203,7 +203,7 @@ int main(void)
         MBX *mbx;
         RT_TASK *mytask;
 	char start;
-	int thread;
+	pthread_t thread;
 
 	signal(SIGINT, endme);
         if (!(mytask = rt_thread_init(nam2num("MAIN"), 1, 0, SCHED_FIFO, 0xF))) {
