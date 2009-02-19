@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define NR_RT_TASKS 10
 #define taskname(x) (1000 + (x))
 
-static int thread[NR_RT_TASKS];
+static pthread_t thread[NR_RT_TASKS];
 
 static RT_TASK *mytask[NR_RT_TASKS];
 

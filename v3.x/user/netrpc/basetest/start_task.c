@@ -136,7 +136,7 @@ void msleep(int ms)
         select(1, NULL, NULL, NULL, &timout);
 }
 
-static int thread;
+static pthread_t thread;
 
 static int init_module(void)
 {

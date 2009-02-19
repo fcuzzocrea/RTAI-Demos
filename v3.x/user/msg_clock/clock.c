@@ -261,13 +261,13 @@ end:
 	return 0;
 }
 
-static int Read;
-static int Clock;
-static int Chrono;
-static int Write;
-static int Clock_task;
-static int Chrono_task;
-static int Disp_task;
+static pthread_t Read;
+static pthread_t Clock;
+static pthread_t Chrono;
+static pthread_t Write;
+static pthread_t Clock_task;
+static pthread_t Chrono_task;
+static pthread_t Disp_task;
 
 extern int CommandClock_task(void *args);
 extern int CommandChrono_task(void *args);

@@ -127,7 +127,7 @@ printf("TASK_NO %d REL ITS EXEC COMNODE PORT %lx, %d\n", task_no, comnode, srvpo
 	return (void *)0;
 }
 
-static int thread[NUM_TASKS];
+static pthread_t thread[NUM_TASKS];
 
 void msleep(int ms)
 {
