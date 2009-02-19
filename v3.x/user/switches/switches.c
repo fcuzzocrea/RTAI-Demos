@@ -26,13 +26,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <pthread.h>
 #include <sys/time.h>
 #include <sys/poll.h>
 
 #include <rtai_sem.h>
 #include <rtai_msg.h>
 
-#define LOOPS  2000
+#define LOOPS  1000
 #define NR_RT_TASKS 10
 #define taskname(x) (1000 + (x))
 
@@ -51,8 +52,10 @@ static void *thread_fun(void *arg)
 	int mytask_indx;
 	unsigned long msg;
 
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	mytask_indx = ((int *)arg)[0];
- 	if (!(mytask[mytask_indx] = rt_thread_init(taskname(mytask_indx), 0, 0, SCHED_FIFO, 0x1))) {
+	if (!(mytask[mytask_indx] = rt_thread_init(taskname(mytask_indx), 0, 0,
+SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT TASK %u\n", taskname(mytask_indx));
 		exit(1);
 	}
@@ -72,7 +75,6 @@ static void *thread_fun(void *arg)
 				rt_return(rt_receive(NULL, &msg), 0);
 				break;
 		}
-
 	}
 	rt_make_soft_real_time();
 
@@ -95,14 +97,17 @@ int main(void)
 	unsigned long msg;
 
 	printf("\n\nWait for it ...\n");
- 	if (!(mainbuddy = rt_thread_init(nam2num("MASTER"), 1000, 0, SCHED_FIFO, 0x1))) {
+	if (!(mainbuddy = rt_thread_init(nam2num("MASTER"), 1000, 0, SCHED_FIFO, 0x1))) {
 		printf("CANNOT INIT TASK %lu\n", nam2num("MASTER"));
 		exit(1);
 	}
 
+	sem = rt_sem_init(nam2num("SEMAPH"), 1); 
+	change =  0;
+	
 	for (i = 0; i < NR_RT_TASKS; i++) {
 		indx[i] = i;
-		if (!(thread[i] = rt_thread_create(thread_fun, indx + i, 10000))) {
+		if (!(thread[i] = rt_thread_create(thread_fun, indx + i, 0))) {
 			printf("ERROR IN CREATING THREAD %d\n", indx[i]);
 			exit(1);
  		}       
@@ -115,13 +120,8 @@ int main(void)
 			s += hrt[i];
 		}
 	} while (s != NR_RT_TASKS);
-	rt_grow_and_lock_stack(4000);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	
-	sem = rt_sem_init(nam2num("SEMAPH"), 1); 
-	change =  0;
-	
-	printf("\n\nFOR %d TASKS: ", NR_RT_TASKS);
 	rt_make_hard_real_time();
 	tsr = rt_get_cpu_time_ns();
 	for (i = 0; i < LOOPS; i++) {
@@ -149,7 +149,7 @@ int main(void)
 
 	for (k = 0; k < NR_RT_TASKS; k++) {
 		rt_sem_signal(sem);
-	} 
+	}
 
 	tsm = rt_get_cpu_time_ns();
 	for (i = 0; i < LOOPS; i++) {
