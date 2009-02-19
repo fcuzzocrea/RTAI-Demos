@@ -55,11 +55,12 @@ static SEM sem;
 #define pause_io()  \
 	do { asm volatile("outb %%al,$0x80" : : : "memory"); } while (0)
 
-#define CMOS_READ(addr) ({ \
-	outb((addr),RTC_PORT(0)); \
-	pause_io(); \
-	inb(RTC_PORT(1)); \
-})
+static inline unsigned char CMOS_READ(unsigned char addr)
+{
+        outb((addr),RTC_PORT(0));
+        pause_io();
+        return inb(RTC_PORT(1));
+}
 
 #define CMOS_WRITE(val, addr) ({ \
 	outb((addr),RTC_PORT(0)); \

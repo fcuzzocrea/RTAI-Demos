@@ -127,11 +127,12 @@ RTAI_MODULE_PARM(ECHO_PERIOD, int);
 #define pause_io() \
 	do { asm volatile("outb %%al,$0x80" : : : "memory"); } while (0)
 
-#define CMOS_READ(addr) ({ \
-	outb((addr),RTC_PORT(0)); \
-	pause_io(); \
-	inb(RTC_PORT(1)); \
-})
+static inline unsigned char CMOS_READ(unsigned char addr)
+{
+        outb((addr),RTC_PORT(0));
+        pause_io();
+        return inb(RTC_PORT(1));
+}
 
 #define CMOS_WRITE(val, addr) ({ \
 	outb((addr),RTC_PORT(0)); \
@@ -207,8 +208,8 @@ static void rtc_start(long rtc_freq)
 	CMOS_WRITE(CMOS_READ(RTC_CONTROL),     RTC_CONTROL);
 	CMOS_WRITE(RTC_REF_CLCK_32KHZ | (16 - pwr2),          RTC_FREQ_SELECT);
 	CMOS_WRITE((CMOS_READ(RTC_CONTROL) & 0x8F) | RTC_PIE, RTC_CONTROL);
-	CMOS_READ(RTC_INTR_FLAGS);
 	rt_enable_irq(RTC_IRQ);
+	CMOS_READ(RTC_INTR_FLAGS);
 	rtai_sti();
 }
 
