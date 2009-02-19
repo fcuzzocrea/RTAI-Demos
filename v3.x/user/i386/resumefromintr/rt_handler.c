@@ -50,9 +50,8 @@ static char wakeup;
 #define pause_io()  \
 	do { asm volatile("outb %%al,$0x80" : : : "memory"); } while (0)
 
-static inline unsigned char CMOS_READ(addr)
+static inline unsigned char CMOS_READ(unsigned char addr)
 {
-	unsigned char val;
 	outb((addr),RTC_PORT(0));
 	pause_io();
 	return inb(RTC_PORT(1));
