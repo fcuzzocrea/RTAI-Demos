@@ -43,7 +43,7 @@ static void *endme(void *args)
 	return 0;
 }
 
-static int thread;
+static pthread_t thread;
 
 int main(int argc, char *argv[])
 {

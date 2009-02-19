@@ -121,7 +121,7 @@ static void *master_fun(void *arg)
 
 int main (void)
 {
-	long masterthread, thread[NTASKS];
+	pthread_t masterthread, thread[NTASKS];
 	RT_TASK *task;
 	long i;
 	task = rt_thread_init(rt_get_name(0), 1, 0, SCHED_FIFO, CPUMAP);
