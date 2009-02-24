@@ -32,7 +32,7 @@ static char *strs[] = { "Joey ", "Johnny ", "Dee Dee ", "Marky " };
 static char sync_str[] = "sync\n\n";
 #define NUM_TASKS  (sizeof(strs)/sizeof(char *))
 
-static pthread_t start_thread, thread[NUM_TASKS];
+static pthread_t starting_thread, thread[NUM_TASKS];
 
 static sem_t sems[NUM_TASKS], sync_sem, prio_sem;
 static pthread_barrier_t barrier;
@@ -201,7 +201,7 @@ int init_module(void)
 	start_rt_timer(0);
 	pthread_barrier_init(&barrier, 0, NUM_TASKS + 1);
 	attr.priority = 10;
-	pthread_create(&start_thread, &attr, start_task_code, NULL);
+	pthread_create(&starting_thread, &attr, start_task_code, NULL);
 	return 0;
 }
 
