@@ -105,7 +105,7 @@ void event(void *cookie)
                switch_count++;
                switch_tsc = rt_timer_tsc();
 
-               rt_sem_broadcast(&switch_sem);
+               rt_sem_v(&switch_sem);
        }
 }
 
