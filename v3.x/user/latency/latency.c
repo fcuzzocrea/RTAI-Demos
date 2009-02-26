@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <unistd.h>
 #include <fcntl.h>
 #include <sched.h>
+#include <signal.h>
 #include <sys/mman.h>
 #include <asm/io.h>
 #include <math.h>
@@ -33,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/10
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -47,6 +48,9 @@ static double dot(double *a, double *b, int n)
         }
 	return s;
 }
+
+static volatile int end;
+void endme(int sig) { end = 1; }
 
 static int hard_timer_running;
 
@@ -108,12 +112,12 @@ int main(int argc, char *argv[])
 	svt = rt_get_cpu_time_ns();
 	i = 0;
 	samp.ovrn = 0;
-	while (1) {
+	while (!end) {
 		min_diff = 1000000000;
 		max_diff = -1000000000;
 		average = 0;
 
-		for (sample = 0; sample < SMPLSXAVRG; sample++) {
+		for (sample = 0; sample < SMPLSXAVRG && !end; sample++) {
 			expected += period;
 			if (!rt_task_wait_period()) {
 				if (TIMER_MODE) {
@@ -148,7 +152,7 @@ int main(int argc, char *argv[])
 		samp.max = max_diff;
 		samp.index = average/SMPLSXAVRG;
 		rt_mbx_send_if(mbx, &samp, sizeof(samp));
-		if (rt_receive_if(rt_get_adr(nam2num("LATCHK")), (unsigned int *)&average)) {
+		if (rt_receive_if(rt_get_adr(nam2num("LATCHK")), (unsigned int *)&average) || end) {
 			rt_return(rt_get_adr(nam2num("LATCHK")), (unsigned int)average);
 			break;
 		}
