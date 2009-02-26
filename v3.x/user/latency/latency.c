@@ -70,6 +70,9 @@ int main(int argc, char *argv[])
 	struct sample { long long min; long long max; int index, ovrn; } samp;
 	double s, sref;
 
+	signal(SIGKILL, endme);
+	signal(SIGTERM, endme);
+
  	if (!(mbx = rt_mbx_init(nam2num("LATMBX"), 20*sizeof(samp)))) {
 		printf("CANNOT CREATE MAILBOX\n");
 		exit(1);

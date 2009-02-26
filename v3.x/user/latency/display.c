@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <sys/mman.h>
 #include <sys/poll.h>
 
@@ -29,6 +30,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 static RT_TASK *task;
 
+static volatile int end;
+void endme(int sig) { end = 1; }
+
 int main(void)
 {
 	struct pollfd ufds = { 0, POLLIN, };
@@ -36,6 +40,9 @@ int main(void)
 	MBX *mbx;
 	long long max = -1000000000, min = 1000000000;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
+
+	signal(SIGKILL, endme);
+	signal(SIGTERM, endme);
 
  	if (!(task = rt_task_init_schmod(nam2num("LATCHK"), 20, 0, 0, SCHED_OTHER, 0xf))) {
 		printf("CANNOT INIT MASTER TASK\n");
@@ -49,7 +56,7 @@ int main(void)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
-	while (1) {
+	while (!end) {
 #ifdef TEST_POLL
 		struct rt_poll_s polld[2];
 		int retval;
