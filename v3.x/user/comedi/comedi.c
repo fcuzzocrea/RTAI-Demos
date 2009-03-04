@@ -29,9 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_comedi.h>
 
-#define TIMEOUT  200000
-
-#define DATASIZE  64 
+#define TIMEOUT  100000000
 
 #define NCHAN  1
 
@@ -118,7 +116,7 @@ int main(void)
 {
 	RT_TASK *task;
 
-	lsampl_t data[DATASIZE];
+	lsampl_t data[NCHAN];
 	unsigned long val, i;
 	FILE *fp;
 
@@ -127,7 +125,7 @@ int main(void)
 	fp = fopen("rec.dat", "w");
 
 	start_rt_timer(0);
-	task = rt_task_init_schmod(nam2num("MYTASK"), 9, 0, 0, SCHED_FIFO, 0xF);
+	task = rt_thread_init(nam2num("MYTASK"), 0, 0, SCHED_FIFO, 0xF);
 
 	if (init_board()) {;
 		printf("Impossibile inizializzare scheda\n");
