@@ -140,8 +140,7 @@ int main(void)
 	rt_comedi_register_callback(dev, subdev, COMEDI_CB_EOS, NULL, task);
 	do_cmd();
 
-//	while (!end) {
-	for (k = 0; k < 10000; k++) {
+	for (k = 1; k <= 4000000000; k++) {
 #if ONECALL
 
 		val = COMEDI_CB_EOS;
@@ -164,13 +163,13 @@ int main(void)
 #if !ONECALL
 			rt_comedi_command_data_read(dev, subdev, NCHAN, data);
 #endif
-			printf("Data read %d.\n", data[0]);
+			printf("Read %ld: %u.\n", k, data[0]);
 			for (i = 0; i < NCHAN; i++) {
 				fprintf(fp, "%d\t", data[i]);
 			}
 			fprintf(fp, "\n");
 		} else {
-			printf("Rt_comedi_wait_timed timeout %lu.\n", ++cnt);
+			printf("Callback mask does not match: %lu.\n", ++cnt);
 		}
 	}
 
