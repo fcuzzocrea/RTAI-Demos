@@ -32,13 +32,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define ONECALL    1
 #define TIMEDCALL  1
 
-#define TIMEOUT  1000000000
+#define TIMEOUT  100000000
 
 #define NCHAN  1
 
-#define SAMP_TIME  1000000
+#define SAMP_FREQ  10000
+#define RUN_TIME   5
 
 #define AI_RANGE  0
+#define SAMP_TIME  (1000000000/SAMP_FREQ)
 static comedi_t *dev;
 static int subdev;
 static comedi_krange krange;
@@ -119,18 +121,20 @@ int main(void)
 {
 	RT_TASK *task;
 
+	lsampl_t *hist;
 	lsampl_t data[NCHAN] = { 0 };
-	unsigned long val, i, k, cnt = 0, retval = 0;
+	unsigned long val, i, k, n = 0, cnt = 0, retval = 0;
 	FILE *fp;
-
-	printf("COMEDI TEST BEGINS.\n");
 
 	signal(SIGKILL, endme);
 	signal(SIGTERM, endme);
-	fp = fopen("rec.dat", "w");
+	hist = malloc(SAMP_FREQ*RUN_TIME*NCHAN*sizeof(lsampl_t) + 1000);
+	memset(hist, 0, SAMP_FREQ*RUN_TIME*NCHAN*sizeof(lsampl_t) + 1000);
 
 	start_rt_timer(0);
 	task = rt_task_init_schmod(nam2num("MYTASK"), 9, 0, 0, SCHED_FIFO, 0xF);
+	printf("COMEDI TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SAMP_FREQ, RUN_TIME);
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
 	if (init_board()) {;
@@ -140,7 +144,7 @@ int main(void)
 	rt_comedi_register_callback(dev, subdev, COMEDI_CB_EOS, NULL, task);
 	do_cmd();
 
-	for (k = 1; k <= 4000000000; k++) {
+	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
 #if ONECALL
 
 		val = COMEDI_CB_EOS;
@@ -163,23 +167,31 @@ int main(void)
 #if !ONECALL
 			rt_comedi_command_data_read(dev, subdev, NCHAN, data);
 #endif
-			printf("Read %ld: %u.\n", k, data[0]);
+//			printf("Read %ld: %u.\n", k, data[0]);
 			for (i = 0; i < NCHAN; i++) {
-				fprintf(fp, "%d\t", data[i]);
+				 hist[n++] = data[i];
 			}
-			fprintf(fp, "\n");
 		} else {
 			printf("Callback mask does not match: %lu.\n", ++cnt);
 		}
 	}
 
-	if (retval < 0) {
-		printf("rt_comedi_wait_timed overruns: %d\n", abs(retval));
-	}
-	fclose(fp);
 	comedi_cancel(dev, subdev);
 	comedi_close(dev);
 	printf("COMEDI TEST ENDS.\n");
+
+	if (retval < 0) {
+		printf("rt_comedi_wait_timed overruns: %d\n", abs(retval));
+	}
+	fp = fopen("rec.dat", "w");
+	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
+		for (i = 0; i < NCHAN; i++) {
+			fprintf(fp, "%d\t", hist[n++]);
+		}
+		fprintf(fp, "\n");
+	}
+	fclose(fp);
+	free(hist);
 
 	stop_rt_timer();
 	rt_make_soft_real_time();
