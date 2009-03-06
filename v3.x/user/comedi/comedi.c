@@ -29,30 +29,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_comedi.h>
 
-#define TIMEOUT  100000000
+#define ONECALL    1
+#define TIMEDCALL  1
+
+#define TIMEOUT  1000000000
 
 #define NCHAN  1
 
 #define SAMP_TIME  1000000
 
 #define AI_RANGE  0
-comedi_t *dev;
-int subdev;
-comedi_krange krange;
-lsampl_t maxdata;
+static comedi_t *dev;
+static int subdev;
+static comedi_krange krange;
+static lsampl_t maxdata;
 
 static int init_board(void)
 {
 	dev = comedi_open("/dev/comedi1");		
-	printf("Indirizzo dispositivo (6071) %p\n", dev);
+	printf("Comedi device (6071) handle: %p.\n", dev);
 	if (!dev){
-		printf("Dispositivo (6071) non trovato\n");
+		printf("Unable to open (6071) %s.\n", "/dev/comedi1");
 		return 1;
 	}
 	subdev = comedi_find_subdevice_by_type(dev, COMEDI_SUBD_AI, 0);
 	if (subdev < 0) {
 		comedi_close(dev);
-		printf("Subdev (6071) non trovato\n");
+		printf("Subdev (6071) %d not found.\n", COMEDI_SUBD_AI);
 		return 1;
 	}
 	comedi_get_krange(dev, subdev, 0, AI_RANGE, &krange);
@@ -65,7 +68,7 @@ int do_cmd(void)
 	int ret, i;
 	comedi_cmd cmd;
 	unsigned int chanlist[NCHAN];
-	unsigned int buf_read[NCHAN] = { 0 };
+	unsigned int buf_read[NCHAN] = { 2 };
   
 	memset(&cmd, 0, sizeof(cmd));
 	for (i = 0; i < NCHAN; i++) {
@@ -94,17 +97,17 @@ int do_cmd(void)
 	cmd.chanlist_len = NCHAN;
 
 	ret = comedi_command_test(dev, &cmd);
-	printf("1st comedi_command_test returned %d\n", ret);
+	printf("1st comedi_command_test returned: %d.\n", ret);
 	ret = comedi_command_test(dev,&cmd);		
-	printf("2nd comedi_command_test returned %d\n", ret);
+	printf("2nd comedi_command_test returned: %d.\n", ret);
 	printf("CONVERT ARG: %d\n", cmd.convert_arg);
 
 	if (ret) {
 		return ret;
 	}
 
-	ret = comedi_command(dev,&cmd);
-	printf("comedi_command returned %d\n",ret);
+	ret = comedi_command(dev, &cmd);
+	printf("Comedi_command returned: %d.\n", ret);
 
 	return ret;
 }
@@ -116,46 +119,71 @@ int main(void)
 {
 	RT_TASK *task;
 
-	lsampl_t data[NCHAN];
-	unsigned long val, i;
+	lsampl_t data[NCHAN] = { 0 };
+	unsigned long val, i, k, cnt = 0, retval = 0;
 	FILE *fp;
+
+	printf("COMEDI TEST BEGINS.\n");
 
 	signal(SIGKILL, endme);
 	signal(SIGTERM, endme);
 	fp = fopen("rec.dat", "w");
 
 	start_rt_timer(0);
-	task = rt_thread_init(nam2num("MYTASK"), 0, 0, SCHED_FIFO, 0xF);
+	task = rt_task_init_schmod(nam2num("MYTASK"), 9, 0, 0, SCHED_FIFO, 0xF);
+	rt_make_hard_real_time();
 
 	if (init_board()) {;
-		printf("Impossibile inizializzare scheda\n");
+		printf("Board initialization failed.\n");
 		return 1;
 	}
-	comedi_register_callback(dev, subdev, COMEDI_CB_EOS, NULL, task);
+	rt_comedi_register_callback(dev, subdev, COMEDI_CB_EOS, NULL, task);
 	do_cmd();
 
-	while (!end) {
-		val = rt_comedi_wait_timed(nano2count(TIMEOUT));
+//	while (!end) {
+	for (k = 0; k < 10000; k++) {
+#if ONECALL
+
+		val = COMEDI_CB_EOS;
+#if TIMEDCALL
+		retval += rt_comedi_command_data_wread_timed(dev, subdev, NCHAN, data, nano2count(TIMEOUT), &val);
+#else
+		retval += rt_comedi_command_data_wread(dev, subdev, NCHAN, data,&val);
+#endif
+
+#else
+
+#if TIMEDCALL
+		retval += rt_comedi_wait_timed(nano2count(TIMEOUT), &val);
+#else
+		retval += rt_comedi_wait(&val);
+#endif
+
+#endif
 		if (val & COMEDI_CB_EOS) {
-			if (rt_comedi_command_data_read(dev, subdev, NCHAN, data) == NCHAN) {
-				for (i = 0; i < NCHAN; i++) {
-					fprintf(fp, "%d\t", data[i]);
-				}
-				fprintf(fp, "\n");
-			} else {
-				printf("%d channels data not available yet, nothing read\n", NCHAN);
+#if !ONECALL
+			rt_comedi_command_data_read(dev, subdev, NCHAN, data);
+#endif
+			printf("Data read %d.\n", data[0]);
+			for (i = 0; i < NCHAN; i++) {
+				fprintf(fp, "%d\t", data[i]);
 			}
+			fprintf(fp, "\n");
 		} else {
-			printf("rt_comedi_wait_timed timeout\n");
+			printf("Rt_comedi_wait_timed timeout %lu.\n", ++cnt);
 		}
 	}
 
+	if (retval < 0) {
+		printf("rt_comedi_wait_timed overruns: %d\n", abs(retval));
+	}
 	fclose(fp);
 	comedi_cancel(dev, subdev);
 	comedi_close(dev);
-	printf("COMEDI chiusa\n");
+	printf("COMEDI TEST ENDS.\n");
 
 	stop_rt_timer();
+	rt_make_soft_real_time();
 	rt_task_delete(task);
 
 	return 0;
