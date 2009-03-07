@@ -144,7 +144,7 @@ int main(void)
 	rt_comedi_register_callback(dev, subdev, COMEDI_CB_EOS, NULL, task);
 	do_cmd();
 
-	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
+	for (n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
 #if ONECALL
 
 		val = COMEDI_CB_EOS;
