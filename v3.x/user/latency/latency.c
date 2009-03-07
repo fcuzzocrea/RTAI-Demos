@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 {
 	int diff;
 	int sample;
-	int average;
+	unsigned average;
 	int min_diff;
 	int max_diff;
 	int period;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	RTIME t, svt;
 	RTIME expected, exectime[3];
 	MBX *mbx;
-	RT_TASK *task;
+	RT_TASK *task, *latchk;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
 	double s, sref;
 
@@ -155,8 +155,8 @@ int main(int argc, char *argv[])
 		samp.max = max_diff;
 		samp.index = average/SMPLSXAVRG;
 		rt_mbx_send_if(mbx, &samp, sizeof(samp));
-		if (rt_receive_if(rt_get_adr(nam2num("LATCHK")), (unsigned int *)&average) || end) {
-			rt_return(rt_get_adr(nam2num("LATCHK")), (unsigned int)average);
+		if ((latchk = rt_get_adr(nam2num("LATCHK"))) && (rt_receive_if(latchk, &average) || end)) {
+			rt_return(latchk, average);
 			break;
 		}
 	}
