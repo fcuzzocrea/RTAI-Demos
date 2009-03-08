@@ -100,7 +100,7 @@ int do_cmd(void)
 
 	ret = comedi_command_test(dev, &cmd);
 	printf("1st comedi_command_test returned: %d.\n", ret);
-	ret = comedi_command_test(dev,&cmd);		
+	ret = comedi_command_test(dev, &cmd);		
 	printf("2nd comedi_command_test returned: %d.\n", ret);
 	printf("CONVERT ARG: %d\n", cmd.convert_arg);
 
