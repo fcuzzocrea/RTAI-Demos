@@ -18,7 +18,7 @@ cd ../; ./ldmod; cd -
 echo
 echo "Now start the realtime process <enter>:"
 read junk
-$SUDO ./comedi
+$SUDO ./cmd
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk

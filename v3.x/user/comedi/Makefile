@@ -8,12 +8,12 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: comedi
+all: cmd
 
-comedi: comedi.c
+cmd: cmd.c
 	$(CC) -static $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 clean:
-	rm -f *.o comedi
+	rm -f *.o cmd
 
 .PHONY: clean
