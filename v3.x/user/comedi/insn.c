@@ -117,7 +117,7 @@ int main(void)
 				 hist[n++] = data[i];
 			}
 		} else {
-			printf("Comedi insnlist processed only %lu out of %d.\n", retval, NCHAN);
+			printf("Comedi insnlist processed only %lu out of %d instructions.\n", retval, NCHAN);
 			break;
 		}
 		rt_sleep(nano2count(SAMP_TIME));
