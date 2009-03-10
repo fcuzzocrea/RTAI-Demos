@@ -124,7 +124,7 @@ int main(void)
 
 	lsampl_t *hist;
 	lsampl_t data[NCHAN] = { 0 };
-	unsigned long val, i, k, n, cnt = 0, retval = 0;
+	long val, i, k, n, cnt = 0, retval = 0;
 	FILE *fp;
 
 	signal(SIGKILL, endme);
