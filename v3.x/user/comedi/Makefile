@@ -11,10 +11,10 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 all: cmd insn
 
 cmd: cmd.c
-	$(CC) -static $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
 
 insn: insn.c
-	$(CC) -static $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
 
 clean:
 	rm -f *.o cmd insn

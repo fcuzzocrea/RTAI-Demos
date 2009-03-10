@@ -35,7 +35,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define TIMEOUT  100000000
 
-#define NCHAN  5
+#define NICHAN  5
+#define NOCHAN  2
+#define NCHAN   (NICHAN + NICHAN)
 
 #define SAMP_FREQ  10000
 #define RUN_TIME   5
@@ -66,65 +68,18 @@ static int init_board(void)
 	return 0;
 }
 
-int do_cmd(void)
-{
-	int ret, i;
-	comedi_cmd cmd;
-	unsigned int chanlist[NCHAN];
-	unsigned int buf_read[NCHAN] = { 2, 3, 4, 5, 6 };
-  
-	memset(&cmd, 0, sizeof(cmd));
-	for (i = 0; i < NCHAN; i++) {
-		chanlist[i] = CR_PACK(buf_read[i], AI_RANGE, AREF_GROUND);
-	}
-
-	cmd.subdev = subdev;
-	cmd.flags = TRIG_RT|TRIG_WAKE_EOS;
-
-	cmd.start_src = TRIG_NOW;
-	cmd.start_arg = 0;
-
-	cmd.scan_begin_src = TRIG_TIMER;
-	cmd.scan_begin_arg = SAMP_TIME; 
-
-	cmd.convert_src = TRIG_TIMER;
-	cmd.convert_arg = 2000;
-
-	cmd.scan_end_src = TRIG_COUNT;
-	cmd.scan_end_arg = NCHAN;
-
-	cmd.stop_src = TRIG_NONE;
-	cmd.stop_arg = 0;
-	
-	cmd.chanlist = chanlist;
-	cmd.chanlist_len = NCHAN;
-
-	ret = comedi_command_test(dev, &cmd);
-	printf("1st comedi_command_test returned: %d.\n", ret);
-	ret = comedi_command_test(dev, &cmd);		
-	printf("2nd comedi_command_test returned: %d.\n", ret);
-	printf("CONVERT ARG: %d\n", cmd.convert_arg);
-
-	if (ret) {
-		return ret;
-	}
-
-	ret = comedi_command(dev, &cmd);
-	printf("Comedi_command returned: %d.\n", ret);
-
-	return ret;
-}
-
 static volatile int end;
 void endme(int sig) { end = 1; }
 
 int main(void)
 {
 	RT_TASK *task;
-
+	comedi_insn insn[NCHAN];
+        unsigned int read_chan[NICHAN] = { 2, 3, 4, 5, 6 };
+	comedi_insnlist ilist = { NCHAN, insn };
 	lsampl_t *hist;
-	lsampl_t data[NCHAN] = { 0 };
-	unsigned long val, i, k, n, cnt = 0, retval = 0;
+	lsampl_t data[NCHAN];
+	unsigned long i, k, n, retval;
 	FILE *fp;
 
 	signal(SIGKILL, endme);
@@ -134,7 +89,7 @@ int main(void)
 
 	start_rt_timer(0);
 	task = rt_task_init_schmod(nam2num("MYTASK"), 1, 0, 0, SCHED_FIFO, 0xF);
-	printf("COMEDI TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SAMP_FREQ, RUN_TIME);
+	printf("COMEDI INSNLIST TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SAMP_FREQ, RUN_TIME);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
@@ -142,48 +97,31 @@ int main(void)
 		printf("Board initialization failed.\n");
 		return 1;
 	}
-	rt_comedi_register_callback(dev, subdev, COMEDI_CB_EOS, NULL, task);
-	do_cmd();
+
+        for (i = 0; i < NCHAN; i++) {
+		insn[i].insn     = INSN_READ;
+		insn[i].n        = 1;
+	        insn[i].data     = &data[i];
+		insn[i].subdev   = subdev;
+		insn[i].chanspec = CR_PACK(read_chan[i], AI_RANGE, AREF_GROUND);
+        }
+	insn[NICHAN].insn = insn[NICHAN + 1].insn = INSN_READ;
 
 	for (n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
-#if ONECALL
-
-		val = COMEDI_CB_EOS;
-#if TIMEDCALL
-		retval += rt_comedi_command_data_wread_timed(dev, subdev, NCHAN, data, nano2count(TIMEOUT), &val);
-#else
-		retval += rt_comedi_command_data_wread(dev, subdev, NCHAN, data,&val);
-#endif
-
-#else
-
-#if TIMEDCALL
-		retval += rt_comedi_wait_timed(nano2count(TIMEOUT), &val);
-#else
-		retval += rt_comedi_wait(&val);
-#endif
-
-#endif
-		if (val & COMEDI_CB_EOS) {
-#if !ONECALL
-			rt_comedi_command_data_read(dev, subdev, NCHAN, data);
-#endif
-//			printf("Read %ld: %u.\n", k, data[0]);
+		if ((retval = rt_comedi_do_insnlist(dev, &ilist)) < NCHAN) {
 			for (i = 0; i < NCHAN; i++) {
 				 hist[n++] = data[i];
 			}
 		} else {
-			printf("Callback mask does not match: %lu.\n", ++cnt);
+			printf("Comedi insnlist processed only %lu out of %d.\n", retval, NCHAN);
+			break;
 		}
 	}
 
 	comedi_cancel(dev, subdev);
 	comedi_close(dev);
-	printf("COMEDI TEST ENDS.\n");
+	printf("COMEDI INSNLIST ENDS.\n");
 
-	if (retval < 0) {
-		printf("rt_comedi_wait_timed overruns: %d\n", abs(retval));
-	}
 	fp = fopen("rec.dat", "w");
 	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
 		for (i = 0; i < NCHAN; i++) {
