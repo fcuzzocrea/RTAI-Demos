@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define NICHAN  5
 #define NOCHAN  2
-#define NCHAN   (NICHAN + NICHAN)
+#define NCHAN   (NICHAN + NOCHAN)
 
 #define SAMP_FREQ  10000
 #define RUN_TIME   5
