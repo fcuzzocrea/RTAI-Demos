@@ -102,11 +102,11 @@ int main(void)
         for (i = 0; i < NCHAN; i++) {
 		insn[i].insn     = INSN_READ;
 		insn[i].n        = 1;
-	        insn[i].data     = &data[i];
+	        insn[i].data     = data + i;
 		insn[i].subdev   = subdev;
 		insn[i].chanspec = CR_PACK(read_chan[i], AI_RANGE, AREF_GROUND);
         }
-	insn[NICHAN].insn = insn[NICHAN + 1].insn = INSN_READ;
+	insn[NICHAN].insn = insn[NICHAN + 1].insn = INSN_WRITE;
 
 	for (toggle = n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
 		data[NICHAN]     =   toggle;
