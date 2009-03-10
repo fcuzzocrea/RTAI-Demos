@@ -112,7 +112,7 @@ int main(void)
 		data[NICHAN]     =   toggle;
 		data[NICHAN + 1] = - toggle;
 		toggle = 1 - toggle;
-		if ((retval = rt_comedi_do_insnlist(dev, &ilist)) < NCHAN) {
+		if ((retval = rt_comedi_do_insnlist(dev, &ilist)) == NCHAN) {
 			for (i = 0; i < NCHAN; i++) {
 				 hist[n++] = data[i];
 			}
