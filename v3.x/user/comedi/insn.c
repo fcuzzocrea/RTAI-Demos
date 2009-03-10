@@ -80,6 +80,7 @@ int main(void)
 	lsampl_t *hist;
 	lsampl_t data[NCHAN];
 	unsigned long i, k, n, retval;
+	int toggle;
 	FILE *fp;
 
 	signal(SIGKILL, endme);
@@ -107,7 +108,10 @@ int main(void)
         }
 	insn[NICHAN].insn = insn[NICHAN + 1].insn = INSN_READ;
 
-	for (n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
+	for (toggle = n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
+		data[NICHAN]     =   toggle;
+		data[NICHAN + 1] = - toggle;
+		toggle = 1 - toggle;
 		if ((retval = rt_comedi_do_insnlist(dev, &ilist)) < NCHAN) {
 			for (i = 0; i < NCHAN; i++) {
 				 hist[n++] = data[i];
@@ -116,6 +120,7 @@ int main(void)
 			printf("Comedi insnlist processed only %lu out of %d.\n", retval, NCHAN);
 			break;
 		}
+		rt_sleep(nano2count(SAMP_TIME));
 	}
 
 	comedi_cancel(dev, subdev);
