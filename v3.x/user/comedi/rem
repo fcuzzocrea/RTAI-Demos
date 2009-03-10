@@ -1,2 +1,3 @@
-killall comedi
+killall insn
+killall cmd
 ../remod

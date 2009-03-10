@@ -1,4 +1,5 @@
 /*
+COPYRIGHT (C) 2009  Edoardo Vigoni   (vigoni@aero.polimi.it)
 COPYRIGHT (C) 2009  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
@@ -34,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define TIMEOUT  100000000
 
-#define NCHAN  1
+#define NCHAN  5
 
 #define SAMP_FREQ  10000
 #define RUN_TIME   5
@@ -70,7 +71,7 @@ int do_cmd(void)
 	int ret, i;
 	comedi_cmd cmd;
 	unsigned int chanlist[NCHAN];
-	unsigned int buf_read[NCHAN] = { 2 };
+	unsigned int buf_read[NCHAN] = { 2, 3, 4, 5, 6 };
   
 	memset(&cmd, 0, sizeof(cmd));
 	for (i = 0; i < NCHAN; i++) {
