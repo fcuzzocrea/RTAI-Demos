@@ -40,14 +40,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define NCHAN   (NICHAN + NOCHAN)
 
 #define SAMP_FREQ  10000
-#define RUN_TIME   5
+#define RUN_TIME   1
 
 #define AI_RANGE  0
 #define SAMP_TIME  (1000000000/SAMP_FREQ)
 static comedi_t *dev;
-static int subdev;
-static comedi_krange krange;
-static lsampl_t maxdata;
+static int subdevai, subdevao;
+static comedi_krange krangeai, krangeao;
+static lsampl_t maxdatai, maxdatao;
 
 static int init_board(void)
 {
@@ -57,14 +57,22 @@ static int init_board(void)
 		printf("Unable to open (6071) %s.\n", "/dev/comedi1");
 		return 1;
 	}
-	subdev = comedi_find_subdevice_by_type(dev, COMEDI_SUBD_AI, 0);
-	if (subdev < 0) {
+	subdevai = comedi_find_subdevice_by_type(dev, COMEDI_SUBD_AI, 0);
+	if (subdevai < 0) {
 		comedi_close(dev);
-		printf("Subdev (6071) %d not found.\n", COMEDI_SUBD_AI);
+		printf("AI subdev (6071) %d not found.\n", COMEDI_SUBD_AI);
 		return 1;
 	}
-	comedi_get_krange(dev, subdev, 0, AI_RANGE, &krange);
-	maxdata = comedi_get_maxdata(dev, subdev, 0);
+	comedi_get_krange(dev, subdevai, 0, AI_RANGE, &krangeai);
+	maxdatai = comedi_get_maxdata(dev, subdevai, 0);
+	subdevao = comedi_find_subdevice_by_type(dev, COMEDI_SUBD_AO, 0);
+	if (subdevao < 0) {
+		comedi_close(dev);
+		printf("AO subdev (6071) %d not found.\n", COMEDI_SUBD_AO);
+		return 1;
+	}
+	comedi_get_krange(dev, subdevao, 0, AI_RANGE, &krangeao);
+	maxdatao = comedi_get_maxdata(dev, subdevao, 0);
 	return 0;
 }
 
@@ -76,6 +84,7 @@ int main(void)
 	RT_TASK *task;
 	comedi_insn insn[NCHAN];
         unsigned int read_chan[NICHAN] = { 2, 3, 4, 5, 6 };
+        unsigned int write_chan[NICHAN] = { 0, 1 };
 	comedi_insnlist ilist = { NCHAN, insn };
 	lsampl_t *hist;
 	lsampl_t data[NCHAN];
@@ -103,14 +112,17 @@ int main(void)
 		insn[i].insn     = INSN_READ;
 		insn[i].n        = 1;
 	        insn[i].data     = data + i;
-		insn[i].subdev   = subdev;
+		insn[i].subdev   = subdevai;
 		insn[i].chanspec = CR_PACK(read_chan[i], AI_RANGE, AREF_GROUND);
         }
-	insn[NICHAN].insn = insn[NICHAN + 1].insn = INSN_WRITE;
+	insn[NICHAN].insn   = insn[NICHAN + 1].insn     = INSN_WRITE;
+	insn[NICHAN].subdev = insn[NICHAN + 1].subdev   = subdevao;
+	insn[NICHAN].chanspec     = CR_PACK(write_chan[i], AI_RANGE, AREF_GROUND);
+	insn[NICHAN + 1].chanspec = CR_PACK(write_chan[i], AI_RANGE, AREF_GROUND);
 
 	for (toggle = n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
-		data[NICHAN]     =   toggle;
-		data[NICHAN + 1] = - toggle;
+		data[NICHAN]     = toggle*maxdatao/2;
+		data[NICHAN + 1] = (1 - toggle)*maxdatao/2;
 		toggle = 1 - toggle;
 		if ((retval = rt_comedi_do_insnlist(dev, &ilist)) == NCHAN) {
 			for (i = 0; i < NCHAN; i++) {
@@ -123,7 +135,8 @@ int main(void)
 		rt_sleep(nano2count(SAMP_TIME));
 	}
 
-	comedi_cancel(dev, subdev);
+	comedi_cancel(dev, subdevai);
+	comedi_cancel(dev, subdevao);
 	comedi_close(dev);
 	printf("COMEDI INSNLIST ENDS.\n");
 
