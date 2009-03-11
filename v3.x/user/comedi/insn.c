@@ -57,6 +57,7 @@ static int init_board(void)
 		printf("Unable to open (6071) %s.\n", "/dev/comedi1");
 		return 1;
 	}
+
 	subdevai = comedi_find_subdevice_by_type(dev, COMEDI_SUBD_AI, 0);
 	if (subdevai < 0) {
 		comedi_close(dev);
@@ -65,6 +66,7 @@ static int init_board(void)
 	}
 	comedi_get_krange(dev, subdevai, 0, AI_RANGE, &krangeai);
 	maxdatai = comedi_get_maxdata(dev, subdevai, 0);
+
 	subdevao = comedi_find_subdevice_by_type(dev, COMEDI_SUBD_AO, 0);
 	if (subdevao < 0) {
 		comedi_close(dev);
@@ -73,6 +75,7 @@ static int init_board(void)
 	}
 	comedi_get_krange(dev, subdevao, 0, AI_RANGE, &krangeao);
 	maxdatao = comedi_get_maxdata(dev, subdevao, 0);
+
 	return 0;
 }
 
