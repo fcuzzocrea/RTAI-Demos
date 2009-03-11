@@ -28,4 +28,3 @@ else insmod ./wd.o; fi
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-./rem
