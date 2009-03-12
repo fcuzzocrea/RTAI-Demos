@@ -84,8 +84,8 @@ int main(void)
 	RTIME until;
 	RT_TASK *task;
 	comedi_insn insn[NCHAN];
-        unsigned int read_chan[NICHAN] = { 2, 3, 4, 5, 6 };
-        unsigned int write_chan[NICHAN] = { 0, 1 };
+        unsigned int read_chan[NICHAN]  = { 2, 3, 4, 5, 6 };
+        unsigned int write_chan[NOCHAN] = { 0, 1 };
 #if !SINGLE_INSN
 	comedi_insnlist ilist = { NCHAN, insn };
 #endif
@@ -111,17 +111,20 @@ int main(void)
 		return 1;
 	}
 
-        for (i = 0; i < NCHAN; i++) {
+        for (i = 0; i < NICHAN; i++) {
 		insn[i].insn     = INSN_READ;
 		insn[i].n        = 1;
 	        insn[i].data     = data + i;
 		insn[i].subdev   = subdevai;
 		insn[i].chanspec = CR_PACK(read_chan[i], AI_RANGE, AREF_GROUND);
         }
-	insn[NICHAN].insn   = insn[NICHAN + 1].insn     = INSN_WRITE;
-	insn[NICHAN].subdev = insn[NICHAN + 1].subdev   = subdevao;
-	insn[NICHAN].chanspec     = CR_PACK(write_chan[i], AI_RANGE, AREF_GROUND);
-	insn[NICHAN + 1].chanspec = CR_PACK(write_chan[i], AI_RANGE, AREF_GROUND);
+        for (i = NICHAN; i < NCHAN; i++) {
+		insn[i].insn     = INSN_WRITE;
+		insn[i].n        = 1;
+	        insn[i].data     = data + i;
+		insn[i].subdev   = subdevao;
+		insn[i].chanspec = CR_PACK(write_chan[i - NICHAN], AO_RANGE, AREF_GROUND);
+        }
 
 	until = rt_get_time();
 	for (toggle = n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
@@ -152,6 +155,8 @@ int main(void)
 
 	comedi_cancel(dev, subdevai);
 	comedi_cancel(dev, subdevao);
+	comedi_data_write(dev, subdevao, 0, 0, AREF_GROUND, 2048);
+	comedi_data_write(dev, subdevao, 1, 0, AREF_GROUND, 2048);
 	comedi_close(dev);
 	printf("COMEDI INSNLIST ENDS.\n");
 
