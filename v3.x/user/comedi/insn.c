@@ -30,10 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_comedi.h>
 
-#define ONECALL    1
-#define TIMEDCALL  1
-
-#define TIMEOUT  100000000
+#define SINGLE_INSN  1
 
 #define NICHAN  5
 #define NOCHAN  2
@@ -43,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define RUN_TIME   1
 
 #define AI_RANGE  0
+#define AO_RANGE  0
 #define SAMP_TIME  (1000000000/SAMP_FREQ)
 static comedi_t *dev;
 static int subdevai, subdevao;
@@ -73,9 +71,8 @@ static int init_board(void)
 		printf("AO subdev (6071) %d not found.\n", COMEDI_SUBD_AO);
 		return 1;
 	}
-	comedi_get_krange(dev, subdevao, 0, AI_RANGE, &krangeao);
+	comedi_get_krange(dev, subdevao, 0, AO_RANGE, &krangeao);
 	maxdatao = comedi_get_maxdata(dev, subdevao, 0);
-
 	return 0;
 }
 
@@ -84,6 +81,7 @@ void endme(int sig) { end = 1; }
 
 int main(void)
 {
+	RTIME until;
 	RT_TASK *task;
 	comedi_insn insn[NCHAN];
         unsigned int read_chan[NICHAN] = { 2, 3, 4, 5, 6 };
@@ -91,7 +89,7 @@ int main(void)
 	comedi_insnlist ilist = { NCHAN, insn };
 	lsampl_t *hist;
 	lsampl_t data[NCHAN];
-	unsigned long i, k, n, retval;
+	long i, k, n, retval;
 	int toggle;
 	FILE *fp;
 
@@ -102,7 +100,7 @@ int main(void)
 
 	start_rt_timer(0);
 	task = rt_task_init_schmod(nam2num("MYTASK"), 1, 0, 0, SCHED_FIFO, 0xF);
-	printf("COMEDI INSNLIST TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SAMP_FREQ, RUN_TIME);
+	printf("COMEDI INSN%s TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SINGLE_INSN ? "" : "LIST", SAMP_FREQ, RUN_TIME);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
@@ -123,10 +121,21 @@ int main(void)
 	insn[NICHAN].chanspec     = CR_PACK(write_chan[i], AI_RANGE, AREF_GROUND);
 	insn[NICHAN + 1].chanspec = CR_PACK(write_chan[i], AI_RANGE, AREF_GROUND);
 
+	until = rt_get_time();
 	for (toggle = n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
 		data[NICHAN]     = toggle*maxdatao/2;
 		data[NICHAN + 1] = (1 - toggle)*maxdatao/2;
 		toggle = 1 - toggle;
+#if SINGLE_INSN
+		for (i = 0; i < NCHAN; i++) {
+			if ((retval = comedi_do_insn(dev, insn + i)) > 0) {
+				 hist[n++] = data[i];
+			} else {
+				printf("Comedi insn failed # %ld out of %d instructions, retval %ld.\n", i, NCHAN, retval);
+				break;
+			}
+		}
+#else
 		if ((retval = rt_comedi_do_insnlist(dev, &ilist)) == NCHAN) {
 			for (i = 0; i < NCHAN; i++) {
 				 hist[n++] = data[i];
@@ -135,7 +144,8 @@ int main(void)
 			printf("Comedi insnlist processed only %lu out of %d instructions.\n", retval, NCHAN);
 			break;
 		}
-		rt_sleep(nano2count(SAMP_TIME));
+#endif
+		rt_sleep_until(until += nano2count(SAMP_TIME));
 	}
 
 	comedi_cancel(dev, subdevai);

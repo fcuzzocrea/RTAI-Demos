@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define NCHAN  5
 
 #define SAMP_FREQ  10000
-#define RUN_TIME   5
+#define RUN_TIME   1
 
 #define AI_RANGE  0
 #define SAMP_TIME  (1000000000/SAMP_FREQ)
@@ -157,6 +157,7 @@ int main(void)
 
 #else
 
+		val = 0;
 #if TIMEDCALL
 		retval += rt_comedi_wait_timed(nano2count(TIMEOUT), &val);
 #else
