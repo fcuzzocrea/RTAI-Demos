@@ -158,7 +158,7 @@ int main(void)
 	comedi_data_write(dev, subdevao, 0, 0, AREF_GROUND, 2048);
 	comedi_data_write(dev, subdevao, 1, 0, AREF_GROUND, 2048);
 	comedi_close(dev);
-	printf("COMEDI INSNLIST ENDS.\n");
+	printf("COMEDI INSN%s ENDS.\n", SINGLE_INSN ? "" : "LIST");
 
 	fp = fopen("rec.dat", "w");
 	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
