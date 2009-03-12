@@ -86,7 +86,9 @@ int main(void)
 	comedi_insn insn[NCHAN];
         unsigned int read_chan[NICHAN] = { 2, 3, 4, 5, 6 };
         unsigned int write_chan[NICHAN] = { 0, 1 };
+#if !SINGLE_INSN
 	comedi_insnlist ilist = { NCHAN, insn };
+#endif
 	lsampl_t *hist;
 	lsampl_t data[NCHAN];
 	long i, k, n, retval;
