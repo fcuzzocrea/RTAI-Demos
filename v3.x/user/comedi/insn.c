@@ -112,18 +112,10 @@ int main(void)
 	}
 
         for (i = 0; i < NICHAN; i++) {
-		insn[i].insn     = INSN_READ;
-		insn[i].n        = 1;
-	        insn[i].data     = data + i;
-		insn[i].subdev   = subdevai;
-		insn[i].chanspec = CR_PACK(read_chan[i], AI_RANGE, AREF_GROUND);
+		BUILD_AREAD_INSN(insn[i], subdevai, data[i], 1, read_chan[i], AI_RANGE, AREF_GROUND);
         }
-        for (i = NICHAN; i < NCHAN; i++) {
-		insn[i].insn     = INSN_WRITE;
-		insn[i].n        = 1;
-	        insn[i].data     = data + i;
-		insn[i].subdev   = subdevao;
-		insn[i].chanspec = CR_PACK(write_chan[i - NICHAN], AO_RANGE, AREF_GROUND);
+        for (i = 0; i < NOCHAN; i++) {
+		BUILD_AWRITE_INSN(insn[NICHAN + i], subdevao, data[NICHAN + i], 1, write_chan[i], AO_RANGE, AREF_GROUND);
         }
 
 	until = rt_get_time();
