@@ -8,7 +8,7 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: cmd insn
+all: cmd insn aocmd
 
 cmd: cmd.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
@@ -16,7 +16,10 @@ cmd: cmd.c
 insn: insn.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
 
+aocmd: aocmd.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
+
 clean:
-	rm -f *.o cmd insn
+	rm -f *.o cmd insn aocmd
 
 .PHONY: clean
