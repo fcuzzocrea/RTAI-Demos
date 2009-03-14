@@ -74,7 +74,7 @@ int do_cmd(void)
 	}
 
 	cmd.subdev = subdev;
-	cmd.flags = CMDF_WRITE;
+	cmd.flags = RTIG_RT | CMDF_WRITE;
 
 	cmd.start_src = TRIG_INT;
 	cmd.start_arg = 0;

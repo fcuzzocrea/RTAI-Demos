@@ -79,7 +79,7 @@ int do_cmd(void)
 	}
 
 	cmd.subdev = subdev;
-	cmd.flags = TRIG_RT|TRIG_WAKE_EOS;
+	cmd.flags = TRIG_RT | TRIG_WAKE_EOS;
 
 	cmd.start_src = TRIG_NOW;
 	cmd.start_arg = 0;
