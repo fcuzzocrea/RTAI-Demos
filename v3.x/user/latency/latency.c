@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 {
 	int diff;
 	int sample;
-	unsigned average;
+	long average;
 	int min_diff;
 	int max_diff;
 	int period;
