@@ -24,4 +24,4 @@ $SUDO ./display
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-../rem
+./rem
