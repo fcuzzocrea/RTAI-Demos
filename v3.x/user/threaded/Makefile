@@ -10,7 +10,7 @@ LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
 all: threaded
 
-threaded: threaded.c
+threaded: threaded.c period.h
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS)
 
 clean:
