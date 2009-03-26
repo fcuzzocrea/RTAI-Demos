@@ -26,8 +26,8 @@ static pthread_mutex_t print_mtx;
 #define PRINT_LOCK    pthread_mutex_lock(&print_mtx);
 #define PRINT_UNLOCK  pthread_mutex_unlock(&print_mtx);
 
-#define MAX_MSG_SIZE  10
-static MQ_ATTR mqattrs = { NUM_TASKS, MAX_MSG_SIZE, 0, 0};
+#define JMAX_MSG_SIZE  10
+static MQ_ATTR mqattrs = { NUM_TASKS, JMAX_MSG_SIZE, 0, 0};
 
 /*
  *  Each task waits to receive the semaphore, prints its string, and
@@ -37,8 +37,8 @@ static MQ_ATTR mqattrs = { NUM_TASKS, MAX_MSG_SIZE, 0, 0};
  */
 static void *task_code(int task_no)
 {
-	int i;
-	char buf[MAX_MSG_SIZE];
+	unsigned int i;
+	char buf[JMAX_MSG_SIZE];
 	struct timespec t;
 	static mqd_t mq_in, mq_out;
 
@@ -106,9 +106,9 @@ static void *task_code(int task_no)
  */
 static void *start_task_code(void *arg)
 {
-	int i, k;
+	unsigned int i, k;
 	mqd_t mq_in, mq_out;
-	char buf[MAX_MSG_SIZE];
+	char buf[JMAX_MSG_SIZE];
 
 	pthread_setschedparam_np(NUM_TASKS + 10, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 	pthread_mutex_init(&print_mtx, NULL);
