@@ -30,6 +30,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_comedi.h>
 
+#define MINSAMP 1500
+
 #define NCHAN  2
 
 #define SAMP_FREQ  10000
@@ -79,16 +81,16 @@ int do_cmd(void)
 	cmd.start_src = TRIG_INT;
 	cmd.start_arg = 0;
 
-	cmd.scan_begin_src = TRIG_INT;
-	cmd.scan_begin_arg = 0; 
+	cmd.scan_begin_src = TRIG_TIMER;
+	cmd.scan_begin_arg = SAMP_TIME; 
 
-	cmd.convert_src = TRIG_TIMER;
-	cmd.convert_arg = 2000;
+	cmd.convert_src = TRIG_NOW;
+	cmd.convert_arg = 0;
 
 	cmd.scan_end_src = TRIG_COUNT;
 	cmd.scan_end_arg = NCHAN;
 
-	cmd.stop_src = TRIG_INT;
+	cmd.stop_src = TRIG_NONE;
 	cmd.stop_arg = 0;
 	
 	cmd.chanlist = chanlist;
@@ -115,19 +117,13 @@ void endme(int sig) { end = 1; }
 
 int main(void)
 {
-	RTIME until;
 	RT_TASK *task;
 
-	lsampl_t *hist;
 	lsampl_t data[NCHAN];
-	long i, k, n, retval = 0;
-	int toggle;
-	FILE *fp;
+	long k, retval = 0;
 
 	signal(SIGKILL, endme);
 	signal(SIGTERM, endme);
-	hist = malloc(SAMP_FREQ*RUN_TIME*NCHAN*sizeof(lsampl_t) + 1000);
-	memset(hist, 0, SAMP_FREQ*RUN_TIME*NCHAN*sizeof(lsampl_t) + 1000);
 
 	start_rt_timer(0);
 	task = rt_task_init_schmod(nam2num("MYTASK"), 1, 0, 0, SCHED_FIFO, 0xF);
@@ -141,15 +137,15 @@ int main(void)
 	}
 	do_cmd();
 
-	until = rt_get_time();
-	for (toggle = n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
-		data[0] = toggle*maxdata/2;
-		data[1] = (1 - toggle)*maxdata/2;
-		hist[n++] = data[0];
-		hist[n++] = data[1];
-		toggle = 1 - toggle;
-		rt_comedi_command_data_write(dev, subdev, NCHAN, data);
-		rt_sleep_until(until += nano2count(SAMP_TIME));
+	for (k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
+		data[0] = maxdata/2;
+		data[1] = maxdata/2;
+		while (rt_comedi_command_data_write(dev, subdev, NCHAN, data) != NCHAN) {
+			rt_sleep_until(nano2count(SAMP_TIME)/2);
+		}
+		if (k == MINSAMP) {
+			rt_comedi_trigger(dev, subdev);
+		}
 	}
 
 	comedi_cancel(dev, subdev);
@@ -161,15 +157,6 @@ int main(void)
 	if (retval < 0) {
 		printf("rt_comedi_wait_timed overruns: %d\n", abs(retval));
 	}
-	fp = fopen("rec.dat", "w");
-	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
-		for (i = 0; i < NCHAN; i++) {
-			fprintf(fp, "%d\t", hist[n++]);
-		}
-		fprintf(fp, "\n");
-	}
-	fclose(fp);
-	free(hist);
 
 	stop_rt_timer();
 	rt_make_soft_real_time();
