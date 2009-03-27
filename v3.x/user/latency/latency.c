@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 			}
 			average += diff;
 			s = dot(a, b, MAXDIM);
-			if (fabs((s - sref)/sref) > 1.0e-16) {
+			if (fabs((s - sref)/sref) > 1.0e-15) {
 				printf("\nDOT PRODUCT RESULT = %20.16e %20.16e %20.16e\n", s, sref, fabs((s - sref)/sref));
 				return 0;
 			}
