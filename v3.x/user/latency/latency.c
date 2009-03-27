@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sched.h>
 #include <signal.h>
 #include <sys/mman.h>
-#include <asm/io.h>
+#include <sys/io.h>
 #include <math.h>
 
 #include <rtai_mbx.h>
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	MBX *mbx;
 	RT_TASK *task, *latchk;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
-	double s, sref;
+	double s = 0.0, sref;
 
 	signal(SIGKILL, endme);
 	signal(SIGTERM, endme);
@@ -146,8 +146,8 @@ int main(int argc, char *argv[])
 			}
 			average += diff;
 			s = dot(a, b, MAXDIM);
-			if (fabs(s/sref - 1.0) > 1.0e-16) {
-				printf("\nDOT PRODUCT RESULT = %lf %lf %lf\n", s, sref, sref - s);
+			if (fabs((s - sref)/sref) > 1.0e-16) {
+				printf("\nDOT PRODUCT RESULT = %20.16e %20.16e %20.16e\n", s, sref, fabs((s - sref)/sref));
 				return 0;
 			}
 		}
