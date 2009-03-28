@@ -41,6 +41,7 @@ int main(void)
 	long long max = -1000000000, min = 1000000000;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
 
+	signal(SIGINT, endme);
 	signal(SIGKILL, endme);
 	signal(SIGTERM, endme);
 
@@ -53,6 +54,7 @@ int main(void)
 		printf("CANNOT FIND MAILBOX\n");
 		exit(1);
 	}
+	rt_linux_syscall_server_create(NULL);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 

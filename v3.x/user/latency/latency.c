@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/10
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 	struct sample { long long min; long long max; int index, ovrn; } samp;
 	double s = 0.0, sref;
 
+	signal(SIGINT, endme);
 	signal(SIGKILL, endme);
 	signal(SIGTERM, endme);
 
