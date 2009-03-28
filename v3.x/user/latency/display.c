@@ -33,7 +33,7 @@ static RT_TASK *task;
 static volatile int end;
 void endme(int sig) { end = 1; }
 
-int main(void)
+int main(int argc)
 {
 	struct pollfd ufds = { 0, POLLIN, };
 	unsigned int msg, ch;
@@ -54,7 +54,9 @@ int main(void)
 		printf("CANNOT FIND MAILBOX\n");
 		exit(1);
 	}
-	rt_linux_syscall_server_create(NULL);
+	if (argc == 2) {
+		rt_linux_syscall_server_create(NULL);
+	}
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
 
