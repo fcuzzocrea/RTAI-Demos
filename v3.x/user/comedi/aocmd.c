@@ -27,18 +27,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/time.h>
 #include <signal.h>
 #include <pthread.h>
+#include <math.h>
 
 #include <rtai_comedi.h>
 
-#define MINSAMP 1500
-
 #define NCHAN  2
 
-#define SAMP_FREQ  10000
-#define RUN_TIME   1
+#define SIN_FREQ  200
+#define N_PNT     50
+#define RUN_TIME  5
 
 #define AO_RANGE  0
+#define SAMP_FREQ  (SIN_FREQ*N_PNT)
 #define SAMP_TIME  (1000000000/SAMP_FREQ)
+#define TRIGSAMP  2048
+
 static comedi_t *dev;
 static int subdev;
 static comedi_krange krange;
@@ -63,10 +66,10 @@ static int init_board(void)
 	return 0;
 }
 
+	comedi_cmd cmd;
 int do_cmd(void)
 {
 	int ret, i;
-	comedi_cmd cmd;
 	unsigned int chanlist[NCHAN];
 	unsigned int buf_write[NCHAN] = { 0, 1 };
   
@@ -76,7 +79,7 @@ int do_cmd(void)
 	}
 
 	cmd.subdev = subdev;
-	cmd.flags = TRIG_RT | CMDF_WRITE;
+	cmd.flags = TRIG_RT | TRIG_WRITE;
 
 	cmd.start_src = TRIG_INT;
 	cmd.start_arg = 0;
@@ -97,17 +100,13 @@ int do_cmd(void)
 	cmd.chanlist_len = NCHAN;
 
 	ret = comedi_command_test(dev, &cmd);
-	printf("1st comedi_command_test returned: %d.\n", ret);
 	ret = comedi_command_test(dev, &cmd);		
-	printf("2nd comedi_command_test returned: %d.\n", ret);
-	printf("CONVERT ARG: %d\n", cmd.convert_arg);
 
 	if (ret) {
 		return ret;
 	}
 
 	ret = comedi_command(dev, &cmd);
-	printf("Comedi_command returned: %d.\n", ret);
 
 	return ret;
 }
@@ -117,10 +116,12 @@ void endme(int sig) { end = 1; }
 
 int main(void)
 {
+	double omega = (2.0*M_PI*SIN_FREQ*SAMP_TIME)/1.0E9;
+	RTIME until;
 	RT_TASK *task;
 
-	lsampl_t data[NCHAN];
-	long k, retval = 0;
+	lsampl_t data[NCHAN*2];
+	long k, sinewave, retval = 0;
 
 	signal(SIGKILL, endme);
 	signal(SIGTERM, endme);
@@ -128,8 +129,6 @@ int main(void)
 	start_rt_timer(0);
 	task = rt_task_init_schmod(nam2num("MYTASK"), 1, 0, 0, SCHED_FIFO, 0xF);
 	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SAMP_FREQ, RUN_TIME);
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-	rt_make_hard_real_time();
 
 	if (init_board()) {;
 		printf("Board initialization failed.\n");
@@ -137,17 +136,25 @@ int main(void)
 	}
 	do_cmd();
 
+	mlockall(MCL_CURRENT | MCL_FUTURE);
+	rt_make_hard_real_time();
+
+	until = rt_get_cpu_time_ns() + (long long)RUN_TIME*1000000000;
 	for (k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
-		data[0] = maxdata/2;
-		data[1] = maxdata/2;
+		sinewave =  (long)(maxdata/4*sin(k*omega));
+		data[0] = (lsampl_t)(  sinewave + maxdata/2);
+		data[1] = (lsampl_t)(- sinewave + maxdata/2);
 		while (rt_comedi_command_data_write(dev, subdev, NCHAN, data) != NCHAN) {
-			rt_sleep_until(nano2count(SAMP_TIME)/2);
+			rt_sleep(nano2count(SAMP_TIME/2));
 		}
-		if (k == MINSAMP) {
+		if (k == TRIGSAMP) {
 			rt_comedi_trigger(dev, subdev);
 		}
 	}
 
+	while (until > rt_get_cpu_time_ns()) {
+		rt_sleep(nano2count(100000));
+	}
 	comedi_cancel(dev, subdev);
 	comedi_close(dev);
 	comedi_data_write(dev, subdev, 0, 0, AREF_GROUND, 2048);

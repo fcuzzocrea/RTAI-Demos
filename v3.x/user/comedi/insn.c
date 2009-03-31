@@ -27,17 +27,27 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/time.h>
 #include <signal.h>
 #include <pthread.h>
+#include <math.h>
 
 #include <rtai_comedi.h>
 
 #define SINGLE_INSN  1
 
+#define SIN_FREQ  100
+
 #define NICHAN  5
 #define NOCHAN  2
 #define NCHAN   (NICHAN + NOCHAN)
 
-#define SAMP_FREQ  10000
-#define RUN_TIME   1
+#if SIN_FREQ
+#define FREQ   SIN_FREQ
+#define N_PNT  100
+#else
+#define FREQ   10000
+#endif
+
+#define SAMP_FREQ  (FREQ * N_PNT)
+#define RUN_TIME   5
 
 #define AI_RANGE  0
 #define AO_RANGE  0
@@ -89,6 +99,11 @@ int main(void)
 #if !SINGLE_INSN
 	comedi_insnlist ilist = { NCHAN, insn };
 #endif
+#if SIN_FREQ
+	lsampl_t sinewave;
+	double omega = (2.0*M_PI*SIN_FREQ)/1.0E9;
+	double actualtime;
+#endif
 	lsampl_t *hist;
 	lsampl_t data[NCHAN];
 	long i, k, n, retval;
@@ -120,9 +135,17 @@ int main(void)
 
 	until = rt_get_time();
 	for (toggle = n = k = 0; k < SAMP_FREQ*RUN_TIME && !end; k++) {
+#if SIN_FREQ
+		actualtime = count2nano(rt_get_time());
+		sinewave =  (int) (maxdatao/8*sin(omega*actualtime));
+		data[NICHAN]     =  sinewave+maxdatao/2;
+		data[NICHAN + 1] = -sinewave+maxdatao/2;
+#else
 		data[NICHAN]     = toggle*maxdatao/2;
 		data[NICHAN + 1] = (1 - toggle)*maxdatao/2;
 		toggle = 1 - toggle;
+#endif
+		
 #if SINGLE_INSN
 		for (i = 0; i < NCHAN; i++) {
 			if ((retval = comedi_do_insn(dev, insn + i)) > 0) {
