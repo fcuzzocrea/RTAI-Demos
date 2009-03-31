@@ -43,8 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define FREQ   SIN_FREQ
 #define N_PNT  100
 #else
-#define N_PNT  1
 #define FREQ   10000
+#define N_PNT  1
 #endif
 
 #define SAMP_FREQ  (FREQ * N_PNT)
