@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_comedi.h>
 
-#define SINGLE_INSN  1
+#define SINGLE_INSN  0
 
 #define SIN_FREQ  100
 
@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define FREQ   SIN_FREQ
 #define N_PNT  100
 #else
+#define N_PNT  1
 #define FREQ   10000
 #endif
 
