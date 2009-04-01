@@ -2,7 +2,7 @@
 
 libpath=`rtai-config --library-dir`
 
-if test "$libpath" == ""; then
+if test "$libpath" = ""; then
 echo "ERROR: please set your PATH variable to <rtai-install>/bin"
 exit
 fi

@@ -11,14 +11,14 @@ MODULES=$prefix/modules
 
 libpath=`rtai-config --library-dir`
 
-if [ "$libpath" == "" ]; then
+if test "$libpath" = ""; then
 echo "ERROR: please set your PATH variable to <rtai-install>/bin"
 exit
 fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
-if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
+if $UID != 0; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** PREEMPTION CHECK (user) ***"
 echo "Press <enter> to load LXRT modules:"

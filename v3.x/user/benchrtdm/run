@@ -1,14 +1,14 @@
 #!/bin/sh
 prefix=`rtai-config --prefix`
 
-if [ "$prefix" == "" ]; then
+if test "$prefix" = ""; then
 echo "ERROR: please set your PATH variable to <rtai-install>/bin"
 exit
 fi
 
 MODULES=$prefix/modules
 
-if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
+if test $UID != 0; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** A METTLEY OF LATENCY MEASUREMENTs (user, kernel, kernel timers) ***"
 echo "Press <enter> to load modules:"
@@ -25,7 +25,7 @@ echo
 echo "Now start your realtime test of choice <enter>,"
 echo "<ctrl-C> to end it:>"
 read junk
-./latency -p 22 -t $1
+./latency -p 40 -t $1
 sync
 echo
 echo "Done. Press <enter> to remove the modules."
