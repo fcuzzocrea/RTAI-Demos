@@ -18,7 +18,7 @@ fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
-if $UID != 0; then SUDO="sudo "; else SUDO=""; fi
+if test $UID -ne 0; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** PREEMPTION CHECK (user) ***"
 echo "Press <enter> to load LXRT modules:"
