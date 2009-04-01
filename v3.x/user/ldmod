@@ -12,7 +12,7 @@ done
 
 prefix=`rtai-config --prefix`
 
-if [ "$prefix" == "" ]; then
+if test "$prefix" = ""; then
 echo "ERROR: please set your PATH variable to <rtai-install>/bin"
 exit
 fi
