@@ -2,7 +2,7 @@
 
 prefix=`rtai-config --prefix`
 
-if [ "$prefix" == "" ]; then
+if test "$prefix" = ""; then
 echo "ERROR: please set your PATH variable to <rtai-install>/bin"
 exit
 fi
@@ -12,7 +12,6 @@ export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
 MODULES=$prefix/modules
 
-if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** SOUND USING REMOTE INTERTASK MSGes (user) ***"
 echo "Press <enter> to load modules:"
@@ -26,9 +25,9 @@ echo
 echo "Now start the realtime process <enter>,"
 echo "Press <enter> when you want to end it."
 read junk
-$SUDO ./speaker1 &
+./speaker1 &
 until(`ps -a | grep -q speaker1`); do sleep 1; done
-$SUDO ./player SpkNode="127.0.0.1"
+./player SpkNode="127.0.0.1"
 while(`ps -a | grep -q speaker1`); do sleep 1; done
 echo
 echo "Done. Press <enter> to remove the modules."
