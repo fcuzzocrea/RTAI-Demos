@@ -58,6 +58,7 @@ int main(int argc, char* argv[])
 	}
 
 	
+	msglen = 0;
 	pid = rt_Receive(0, 0, 0, &msglen);
 	if (pid) {
 		// handshake to give the proxy to CLT
