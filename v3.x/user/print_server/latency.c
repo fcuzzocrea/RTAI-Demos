@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <sched.h>
 #include <sys/mman.h>
@@ -96,7 +97,7 @@ int main(int argc, char *argv[])
 	SPRT_ADDR.sin_port = htons(5000);
 	SPRT_ADDR.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	fd = open("echo", O_RDWR | O_CREAT | O_TRUNC);
+	fd = open("echo", O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
 
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
