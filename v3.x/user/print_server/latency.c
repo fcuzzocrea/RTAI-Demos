@@ -29,6 +29,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 #include <math.h>
 
 #include <rtai_lxrt.h>
@@ -68,8 +70,8 @@ int main(int argc, char *argv[])
 {
 	int sock;
 	struct sockaddr_in SPRT_ADDR;
-	char buf[1000];
-	int fd;
+	char buf[200];
+	int fd, msgd;
 
 	int diff;
 	int sample;
@@ -98,6 +100,8 @@ int main(int argc, char *argv[])
 	SPRT_ADDR.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	fd = open("echo", O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+
+	msgd = msgget(0xcacca, 0x666 | IPC_CREAT);
 
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
@@ -178,6 +182,7 @@ int main(int argc, char *argv[])
 		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
 		write(1, buf, strlen(buf));
 		write(fd, buf, strlen(buf));
+		msgsnd(msgd, buf, strlen(buf), 0);
 		sendto(sock, buf, strlen(buf), 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 	}
 
