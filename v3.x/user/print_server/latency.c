@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2009  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -175,9 +175,8 @@ int main(int argc, char *argv[])
 		samp.index = average/SMPLSXAVRG;
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
-		printf("* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
-		fflush(stdout);
-		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		write(1, buf, strlen(buf));
 		write(fd, buf, strlen(buf));
 		sendto(sock, buf, strlen(buf), 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 	}
