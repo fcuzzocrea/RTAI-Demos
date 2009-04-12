@@ -29,8 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
+#include <errno.h>
 #include <math.h>
 
 #include <rtai_lxrt.h>
@@ -39,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define PERIOD      100000
 #define TIMER_MODE  0
 
-#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/100
+#define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
 
 #define MAXDIM 10
 static double a[MAXDIM], b[MAXDIM];
@@ -61,6 +60,10 @@ static volatile int end;
 static void async_callback(long syscall_nr, long retval)
 {
 	struct pollfd ufds = { 0, POLLIN, };
+	printf("SYSCALL %ld, RETVAL %ld, ERRNO %d\n", syscall_nr, retval, retval < 0 ? errno : 0);
+	if (retval < 0) {
+		perror(NULL);	
+	}
 	if (poll(&ufds, 1, 1)) {
 		end = 1;
 	}
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
 	int sock;
 	struct sockaddr_in SPRT_ADDR;
 	char buf[200];
-	int fd, msgd;
+	int fd;
 
 	int diff;
 	int sample;
@@ -99,9 +102,7 @@ int main(int argc, char *argv[])
 	SPRT_ADDR.sin_port = htons(5000);
 	SPRT_ADDR.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	fd = open("echo", O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-
-	msgd = msgget(0xcacca, 0x666 | IPC_CREAT);
+	fd = open("echo", O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
 	printf("\n## RTAI latency calibration tool ##\n");
 	printf("# period = %i (ns) \n", PERIOD);
@@ -179,10 +180,11 @@ int main(int argc, char *argv[])
 		samp.index = average/SMPLSXAVRG;
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
-		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <Hit [RETURN] to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
-		write(1, buf, strlen(buf));
+		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <RET to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		write(STDOUT_FILENO, buf, strlen(buf));
+		fdatasync(1/*STDOUT_FILENO*/);
 		write(fd, buf, strlen(buf));
-		msgsnd(msgd, buf, strlen(buf), 0);
+		fsync(fd);
 		sendto(sock, buf, strlen(buf), 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 	}
 

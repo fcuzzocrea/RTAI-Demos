@@ -17,9 +17,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 
+
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -28,12 +32,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
 
 int main(void)
 {
-	int sock, msgd, fd;
+	int sock;
 	struct sockaddr_in SPRT_ADDR;
 	char buf[200];
 
@@ -44,17 +46,10 @@ int main(void)
         SPRT_ADDR.sin_addr.s_addr = htonl(INADDR_ANY);
 	bind(sock, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 
-	msgd = msgget(0xcacca, 0x666);
-
-	fd = open("echo", O_RDWR);
-
 	while (1) {
-		recvfrom(sock, buf, sizeof(buf), 0, NULL, NULL);
-		printf("SOK: %s", buf);
-		msgrcv(msgd, buf, sizeof(buf), 1, 0);
-		printf("IPC: %s", buf);
-		read(fd, buf, sizeof(buf));
-		printf("RED: %s", buf);
+		if (recvfrom(sock, buf, sizeof(buf), 0, NULL, NULL) > 0) {
+			printf("SOCK %s", buf);
+		}
 	}
 	close(sock);
 	return 0;
