@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_lxrt.h>
 
 #define AVRGTIME    1
-#define PERIOD      50000
+#define PERIOD      100000
 #define TIMER_MODE  0
 
 #define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/10
