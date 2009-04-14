@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_lxrt.h>
 
 #define AVRGTIME    1
-#define PERIOD      100000
+#define PERIOD      50000
 #define TIMER_MODE  0
 
 #define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/10
@@ -180,9 +180,11 @@ int main(int argc, char *argv[])
 		samp.index = average/SMPLSXAVRG;
 		if (max < samp.max) max = samp.max;
 		if (min > samp.min) min = samp.min;
-		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <RET to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		printf("* %d - min: %lld/%lld, max: %lld/%lld average: %d <RET to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
+		fflush(stdout);
+		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <RET to stop> %d *\n", cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
 		write(STDOUT_FILENO, buf, strlen(buf));
-		fdatasync(1/*STDOUT_FILENO*/);
+		fdatasync(STDOUT_FILENO);
 		write(fd, buf, strlen(buf));
 		fsync(fd);
 		sendto(sock, buf, strlen(buf), 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
