@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 int main(void)
 {
-	int sock;
+	int sock, n;
 	struct sockaddr_in SPRT_ADDR;
 	char buf[200];
 
@@ -45,9 +45,9 @@ int main(void)
 	SPRT_ADDR.sin_port = htons(5000);
         SPRT_ADDR.sin_addr.s_addr = htonl(INADDR_ANY);
 	bind(sock, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
-
 	while (1) {
-		if (recvfrom(sock, buf, sizeof(buf), 0, NULL, NULL) > 0) {
+		if ((n = recvfrom(sock, buf, sizeof(buf), 0, NULL, NULL)) > 0) {
+			buf[n] = '\0';
 			printf("SOCK %s", buf);
 		}
 	}
