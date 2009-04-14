@@ -182,9 +182,9 @@ int main(int argc, char *argv[])
 		if (min > samp.min) min = samp.min;
 		printf("* %d - min: %lld/%lld, max: %lld/%lld average: %d <RET to stop> %d *\n", ++cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
 		sprintf(buf, "* %d - min: %lld/%lld, max: %lld/%lld average: %d <RET to stop> %d *\n", cnt, samp.min, min, samp.max, max, samp.index, samp.ovrn);
-		write(STDOUT_FILENO, buf, strlen(buf));
+		i = write(STDOUT_FILENO, buf, strlen(buf));
 		fdatasync(STDOUT_FILENO);
-		write(fd, buf, strlen(buf));
+		i = write(fd, buf, strlen(buf));
 		fsync(fd);
 		sendto(sock, buf, strlen(buf), 0, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
 	}
