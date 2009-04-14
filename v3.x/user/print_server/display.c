@@ -35,6 +35,7 @@ int main(void)
 	int sock, n;
 	struct sockaddr_in SPRT_ADDR;
 	char buf[200];
+	FILE *fd;
 	struct pollfd ufds = { 0, POLLIN, };
 
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -43,15 +44,20 @@ int main(void)
 	SPRT_ADDR.sin_port = htons(5000);
         SPRT_ADDR.sin_addr.s_addr = htonl(INADDR_ANY);
 	bind(sock, (struct sockaddr *)&SPRT_ADDR, sizeof(struct sockaddr_in));
+	fd = fopen("echo", "r");
 	while (1) {
 		if ((n = recvfrom(sock, buf, sizeof(buf), 0, NULL, NULL)) > 0) {
 			buf[n] = '\0';
-			printf("SOCK %s", buf);
+			printf("> SOCK %s", buf);
+		}
+		if ((fgets(buf, sizeof(buf), fd)) > 0) {
+			printf("> STRM %s", buf);
 		}
 		if (poll(&ufds, 1, 1)) {
 			break;
 		}
 	}
 	close(sock);
+	fclose(fd);
 	return 0;
 }
