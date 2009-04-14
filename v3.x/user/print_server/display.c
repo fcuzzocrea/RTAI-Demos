@@ -51,7 +51,7 @@ int main(void)
 			printf("> SOCK %s", buf);
 		}
 		if ((fgets(buf, sizeof(buf), fd)) > 0) {
-			printf("> STRM %s", buf);
+			printf("> FILE %s", buf);
 		}
 		if (poll(&ufds, 1, 1)) {
 			break;
