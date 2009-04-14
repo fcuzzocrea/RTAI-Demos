@@ -35,6 +35,7 @@ int main(void)
 	int sock, n;
 	struct sockaddr_in SPRT_ADDR;
 	char buf[200];
+	struct pollfd ufds = { 0, POLLIN, };
 
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 	bzero(&SPRT_ADDR, sizeof(struct sockaddr_in));
@@ -46,6 +47,9 @@ int main(void)
 		if ((n = recvfrom(sock, buf, sizeof(buf), 0, NULL, NULL)) > 0) {
 			buf[n] = '\0';
 			printf("SOCK %s", buf);
+		}
+		if (poll(&ufds, 1, 1)) {
+			break;
 		}
 	}
 	close(sock);
