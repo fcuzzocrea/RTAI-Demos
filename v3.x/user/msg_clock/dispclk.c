@@ -121,7 +121,7 @@ void Display_PutHour(MenageHmsh_tChain11 chain)
 	}
 	hours = chain;
 	hours.chain[0] = 'h';
-	rt_send_if(rt_get_adr(nam2num("DSPTSK")), (unsigned int)hours.chain);
+	rt_send_if(rt_get_adr(nam2num("DSPTSK")), (unsigned long)hours.chain);
 }
 
 void Display_PutTimes(MenageHmsh_tChain11 chain)
@@ -136,7 +136,7 @@ void Display_PutTimes(MenageHmsh_tChain11 chain)
 	}
 	times = chain;
 	times.chain[0] = 't';
-	rt_send_if(rt_get_adr(nam2num("DSPTSK")), (unsigned int)times.chain);
+	rt_send_if(rt_get_adr(nam2num("DSPTSK")), (unsigned long)times.chain);
 }
 
 void Display_Get(MenageHmsh_tChain11 *chain, Display_tDest *receiver)
