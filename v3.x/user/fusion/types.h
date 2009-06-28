@@ -20,6 +20,7 @@
 #ifndef _RTAI_FUSION_TYPES_H
 #define _RTAI_FUSION_TYPES_H
 
+#include <rtai_config.h>
 #include <errno.h>
 
 #define SEM_ERR     (0xFFFF)
