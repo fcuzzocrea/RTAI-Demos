@@ -9,11 +9,8 @@ fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
-if test x$UID != x0 ; then
-	SUDO="sudo "
-else
-	SUDO=""
-fi
+if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
+
 echo
 echo "*** INTERTASK MSG BASED DIGITAL CLOCK (user) ***"
 echo "Press <enter> to load LXRT modules:"
