@@ -25,19 +25,19 @@ MODULE_LICENSE("GPL");
 #define DELAY 50000
 
 rtdm_task_t stask1, stask2;
-rtdm_sem_t sem;
+rtdm_sem_t sem1, sem2;
 rtdm_mutex_t mutex;
 
 void task1(void *cookie)
 {
 	rtdm_mutex_lock(&mutex);
-	rtdm_sem_down(&sem);
+	rtdm_sem_down(&sem1);
 	rtdm_mutex_unlock(&mutex);
-	rtdm_sem_up(&sem);
-	rtdm_sem_down(&sem);
+	rtdm_sem_up(&sem2);
+	rtdm_sem_down(&sem1);
 	while (1) {
 		rtdm_mutex_lock(&mutex);
-		if (rtdm_sem_down(&sem)) {
+		if (rtdm_sem_down(&sem1)) {
 			break;
 		}
 		rtdm_mutex_unlock(&mutex);
@@ -80,8 +80,8 @@ void task2(void *cookie)
 	}
 
 	rt_printk("TESTING SUCCEEDING TRY LOCK ...");
-	rtdm_sem_up(&sem);
-	rtdm_sem_down(&sem);
+	rtdm_sem_up(&sem1);
+	rtdm_sem_down(&sem2);
 	for (i = 0; i < LOOPS; i++) {
 		if (!rtdm_mutex_timedlock(&mutex, RTDM_TIMEOUT_NONE, NULL)) {
 			rtdm_mutex_unlock(&mutex);
@@ -96,9 +96,9 @@ void task2(void *cookie)
 	}
 
 	rt_printk("TESTING LOCK/UNLOCK ...");
-	rtdm_sem_up(&sem);
+	rtdm_sem_up(&sem1);
 	for (i = 0; i < LOOPS; i++) {
-		rtdm_sem_up(&sem);
+		rtdm_sem_up(&sem1);
 		if (rtdm_mutex_lock(&mutex)) {
 			break;
 		}
@@ -112,7 +112,7 @@ void task2(void *cookie)
 
 	rt_printk("TESTING NOT TIMING OUT TIMEDLOCK ...");
 	for (i = 0; i < LOOPS; i++) {
-		rtdm_sem_up(&sem);
+		rtdm_sem_up(&sem1);
 		if (rtdm_mutex_timedlock(&mutex, DELAY, NULL)) {
 			break;
 		}
@@ -130,7 +130,8 @@ int init_module(void)
 {
 	printk("TESTING RTDM MUTEXes [LOOPs %d, TIMEOUTs %d (ns)].\n", LOOPS, DELAY);
 	start_rt_timer(0);
-	rtdm_sem_init(&sem, 0);    
+	rtdm_sem_init(&sem1, 0);    
+	rtdm_sem_init(&sem2, 0);    
 	rtdm_mutex_init(&mutex);    
 	rtdm_task_init(&stask1, "task1", task1, NULL, 0, 0);
 	rtdm_task_init(&stask2, "task2", task2, NULL, 1, 0);
@@ -142,7 +143,8 @@ void cleanup_module(void)
 {
 	rtdm_task_destroy(&stask1);
 	rtdm_task_destroy(&stask2);
-	rtdm_sem_destroy(&sem);    
+	rtdm_sem_destroy(&sem1);    
+	rtdm_sem_destroy(&sem2);    
 	rtdm_mutex_destroy(&mutex);    
 	stop_rt_timer();
 }
