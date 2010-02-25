@@ -36,6 +36,7 @@ void task1(void *cookie)
 	rtdm_mutex_lock(&mutex);
 	rtdm_sem_down(&sem);
 	rtdm_mutex_unlock(&mutex);
+	rtdm_sem_up(&sem);
 	rtdm_sem_down(&sem);
 	while (1) {
 		rtdm_mutex_lock(&mutex);
@@ -103,6 +104,7 @@ void task2(void *cookie)
 
 	rt_printk("TESTING LOCK/UNLOCK ...");
 	rtdm_sem_up(&sem);
+	rtdm_sem_down(&sem);
 	for (i = 0; i < LOOPS; i++) {
 		if (rtdm_mutex_lock(&mutex)) {
 			break;
