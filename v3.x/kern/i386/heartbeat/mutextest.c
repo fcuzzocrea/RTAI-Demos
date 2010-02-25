@@ -21,15 +21,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define LOOPS 20000
-#define DELAY 50000
+#define LOOPS    20000
+#define DELAY    50000
+#define TIMEOUT  25000
 
 rtdm_task_t stask1, stask2;
 rtdm_sem_t sem1, sem2;
 rtdm_mutex_t mutex;
+long var = 0;
 
 void task1(void *cookie)
 {
+	long varl;
 	rtdm_mutex_lock(&mutex);
 	rtdm_sem_down(&sem1);
 	rtdm_mutex_unlock(&mutex);
@@ -37,16 +40,15 @@ void task1(void *cookie)
 	rtdm_sem_down(&sem1);
 	while (1) {
 		rtdm_mutex_lock(&mutex);
-		if (rtdm_sem_down(&sem1)) {
-			break;
-		}
+		varl = ++var;
 		rtdm_mutex_unlock(&mutex);
+		while( varl == var) rt_sleep(nano2count(TIMEOUT));
 	}
 }
 
 void task2(void *cookie)
 {
-	long i, max;
+	long i, max, varl;
 	nanosecs_abs_t t, dt;
 
 	rt_printk("TESTING TIMING OUT TIMEDLOCK ...");
@@ -98,11 +100,12 @@ void task2(void *cookie)
 	rt_printk("TESTING LOCK/UNLOCK ...");
 	rtdm_sem_up(&sem1);
 	for (i = 0; i < LOOPS; i++) {
-		rtdm_sem_up(&sem1);
 		if (rtdm_mutex_lock(&mutex)) {
 			break;
 		}
+		varl = ++var;
 		rtdm_mutex_unlock(&mutex);
+		while( varl == var) rt_sleep(nano2count(TIMEOUT));
 	}
 	if (i == LOOPS) {
 		rt_printk(" OK.\n");
@@ -112,11 +115,12 @@ void task2(void *cookie)
 
 	rt_printk("TESTING NOT TIMING OUT TIMEDLOCK ...");
 	for (i = 0; i < LOOPS; i++) {
-		rtdm_sem_up(&sem1);
 		if (rtdm_mutex_timedlock(&mutex, DELAY, NULL)) {
 			break;
 		}
+		varl = ++var;
 		rtdm_mutex_unlock(&mutex);
+		while( varl == var) rt_sleep(nano2count(TIMEOUT));
 	}
 	if (i == LOOPS) {
 		rt_printk(" OK.\n");
@@ -133,8 +137,8 @@ int init_module(void)
 	rtdm_sem_init(&sem1, 0);    
 	rtdm_sem_init(&sem2, 0);    
 	rtdm_mutex_init(&mutex);    
-	rtdm_task_init(&stask1, "task1", task1, NULL, 0, 0);
-	rtdm_task_init(&stask2, "task2", task2, NULL, 1, 0);
+	rtdm_task_init_cpuid(&stask1, "task1", task1, NULL, 0, 0, 0);
+	rtdm_task_init_cpuid(&stask2, "task2", task2, NULL, 1, 0, 0);
 	return 0;
 }
 
