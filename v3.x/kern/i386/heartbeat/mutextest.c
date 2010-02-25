@@ -39,7 +39,9 @@ void task1(void *cookie)
 	rtdm_sem_down(&sem);
 	while (1) {
 		rtdm_mutex_lock(&mutex);
+		rtdm_mutex_lock(&mutex);
 		varl = ++var;
+		rtdm_mutex_unlock(&mutex);
 		rtdm_mutex_unlock(&mutex);
 		while(varl == var) rt_sleep(nano2count(TIMEOUT));
 		if ((var - varl) != 1) {
@@ -106,6 +108,10 @@ void task2(void *cookie)
 			break;
 		}
 		varl = ++var;
+		if (rtdm_mutex_lock(&mutex)) {
+			break;
+		}
+		rtdm_mutex_unlock(&mutex);
 		rtdm_mutex_unlock(&mutex);
 		while(varl == var) rt_sleep(nano2count(TIMEOUT));
 		if ((var - varl) != 1) {
@@ -124,7 +130,11 @@ void task2(void *cookie)
 		if (rtdm_mutex_timedlock(&mutex, DELAY, NULL)) {
 			break;
 		}
+		if (rtdm_mutex_lock(&mutex)) {
+			break;
+		}
 		varl = ++var;
+		rtdm_mutex_unlock(&mutex);
 		rtdm_mutex_unlock(&mutex);
 		while(varl == var) rt_sleep(nano2count(TIMEOUT));
 		if ((var - varl) != 1) {
