@@ -26,23 +26,26 @@ MODULE_LICENSE("GPL");
 #define TIMEOUT  25000
 
 rtdm_task_t stask1, stask2;
-rtdm_sem_t sem1, sem2;
+rtdm_sem_t sem;
 rtdm_mutex_t mutex;
-long var = 0;
+volatile long var = 0;
 
 void task1(void *cookie)
 {
 	long varl;
 	rtdm_mutex_lock(&mutex);
-	rtdm_sem_down(&sem1);
+	rtdm_sem_down(&sem);
 	rtdm_mutex_unlock(&mutex);
-	rtdm_sem_up(&sem2);
-	rtdm_sem_down(&sem1);
+	rtdm_sem_down(&sem);
 	while (1) {
 		rtdm_mutex_lock(&mutex);
 		varl = ++var;
 		rtdm_mutex_unlock(&mutex);
-		while( varl == var) rt_sleep(nano2count(TIMEOUT));
+		while(varl == var) rt_sleep(nano2count(TIMEOUT));
+		if ((var - varl) != 1) {
+			rt_printk("WRONG INCREMENT OF VARIABLE IN TASK1\n");
+			break;
+		}
 	}
 }
 
@@ -82,8 +85,7 @@ void task2(void *cookie)
 	}
 
 	rt_printk("TESTING SUCCEEDING TRY LOCK ...");
-	rtdm_sem_up(&sem1);
-	rtdm_sem_down(&sem2);
+	rtdm_sem_up(&sem);
 	for (i = 0; i < LOOPS; i++) {
 		if (!rtdm_mutex_timedlock(&mutex, RTDM_TIMEOUT_NONE, NULL)) {
 			rtdm_mutex_unlock(&mutex);
@@ -98,14 +100,18 @@ void task2(void *cookie)
 	}
 
 	rt_printk("TESTING LOCK/UNLOCK ...");
-	rtdm_sem_up(&sem1);
+	rtdm_sem_up(&sem);
 	for (i = 0; i < LOOPS; i++) {
 		if (rtdm_mutex_lock(&mutex)) {
 			break;
 		}
 		varl = ++var;
 		rtdm_mutex_unlock(&mutex);
-		while( varl == var) rt_sleep(nano2count(TIMEOUT));
+		while(varl == var) rt_sleep(nano2count(TIMEOUT));
+		if ((var - varl) != 1) {
+			rt_printk("WRONG INCREMENT OF VARIABLE IN TASK2\n");
+			break;
+		}
 	}
 	if (i == LOOPS) {
 		rt_printk(" OK.\n");
@@ -120,7 +126,11 @@ void task2(void *cookie)
 		}
 		varl = ++var;
 		rtdm_mutex_unlock(&mutex);
-		while( varl == var) rt_sleep(nano2count(TIMEOUT));
+		while(varl == var) rt_sleep(nano2count(TIMEOUT));
+		if ((var - varl) != 1) {
+			rt_printk("WRONG INCREMENT OF VARIABLE IN TASK2\n");
+			break;
+		}
 	}
 	if (i == LOOPS) {
 		rt_printk(" OK.\n");
@@ -134,8 +144,7 @@ int init_module(void)
 {
 	printk("TESTING RTDM MUTEXes [LOOPs %d, TIMEOUTs %d (ns)].\n", LOOPS, DELAY);
 	start_rt_timer(0);
-	rtdm_sem_init(&sem1, 0);    
-	rtdm_sem_init(&sem2, 0);    
+	rtdm_sem_init(&sem, 0);    
 	rtdm_mutex_init(&mutex);    
 	rtdm_task_init_cpuid(&stask1, "task1", task1, NULL, 0, 0, 0);
 	rtdm_task_init_cpuid(&stask2, "task2", task2, NULL, 1, 0, 0);
@@ -147,8 +156,7 @@ void cleanup_module(void)
 {
 	rtdm_task_destroy(&stask1);
 	rtdm_task_destroy(&stask2);
-	rtdm_sem_destroy(&sem1);    
-	rtdm_sem_destroy(&sem2);    
+	rtdm_sem_destroy(&sem);    
 	rtdm_mutex_destroy(&mutex);    
 	stop_rt_timer();
 }
