@@ -1,5 +1,5 @@
-cd user
+cd kern
 ./test_suite
-cd ../kern
+cd ../user
 ./test_suite
 cd -
