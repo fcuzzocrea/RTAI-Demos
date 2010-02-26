@@ -105,7 +105,7 @@ static void *child_func(void *arg)
 
 static pthread_t parent_thread, child_thread;
 
-static int cleanup;
+static volatile int cleanup;
 
 static void *parent_func(void *arg)
 {
