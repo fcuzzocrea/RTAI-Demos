@@ -140,7 +140,7 @@ static void *task_func4(void *dummy)
 	return 0;
 }
 
-static int cleanup;
+static volatile int cleanup;
 
 static void *join_task(void *dummy)
 {
@@ -192,5 +192,4 @@ void cleanup_module(void)
 	pthread_cancel(task4);
 	pthread_cancel(jtask);
 	printk("Conditional semaphore test program removed.\n");
-
 }
