@@ -38,7 +38,7 @@ int init_module(void)
 	for (i = 1; i < SIZE; i++) {
 		vm[i] = km[i] = ka[i] = kd[i] = gh[i] = s += i;
 	}
-	printk("SIZEs in KERNEL %d.\n", SIZE);
+	printk("< SIZEs in KERNEL %d >\n", SIZE);
 	return 0;
 }
 
