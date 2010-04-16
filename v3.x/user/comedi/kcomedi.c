@@ -21,6 +21,13 @@
 #define RANGE_MIN   -99
 #define RANGE_MAX   +99
 #define RANGE_FLAGS 0
+#define MAXDATA     978
+#define N_RANGES    3
+#define N_CHANNELS  5
+#define SUBDEV_TYPE 6
+#define FIND_SUBDEV 7
+#define BOARD_NAME  "BOARD_NAME"
+#define DRIVER_NAME "DRIVER_NAME"
 
 /**
  * This file is a simple test support to verify the RTAI interface
@@ -334,55 +341,52 @@ static RTAI_SYSCALL_MODE int _comedi_get_version_code(void *dev)
 
 RTAI_SYSCALL_MODE char *rt_comedi_get_driver_name(void *dev, char *name)
 {
-	const char *kname;
 	rt_printk("GET DRIVER NAME, dev = %x.\n", dev);
-	strcpy(name, "test_driver_NAME");
-	return 0;
-	if ((kname = comedi_get_driver_name((void *)dev)) != 0) {
-		strncpy(name, kname, COMEDI_NAMELEN);
-		return name;
-	};
-	return NULL;
+	strncpy(name, DRIVER_NAME, COMEDI_NAMELEN);
+	rt_printk("GET DRIVER NAME RETURNS %s.\n", DRIVER_NAME);
+	return name;
 }
 
 RTAI_SYSCALL_MODE char *rt_comedi_get_board_name(void *dev, char *name)
 {
-	const char *kname;
-	if ((kname = comedi_get_board_name((void *)dev)) != 0) {
-		strncpy(name, kname, COMEDI_NAMELEN);
-		return name;
-	}
-	return NULL;
+	rt_printk("GET BOARD NAME, dev = %p.\n", dev);
+	strncpy(name, BOARD_NAME, COMEDI_NAMELEN);
+	rt_printk("GET BOARD NAME RETURNS %s.\n", BOARD_NAME);
+	return name;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_get_subdevice_type(void *dev, unsigned int subdev)
 {
-	return comedi_get_subdevice_type(dev, subdev);
+	rt_printk("GET SUBDEV BY TYPE, dev = %p, subdev = %u.\n", dev, subdev);
+	rt_printk("GET SUBDEV BY TYPE RETURNS: %u\n", SUBDEV_TYPE);
+	return SUBDEV_TYPE;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_find_subdevice_by_type(void *dev, int type, unsigned int start_subdevice)
 {
-	rt_printk("SUBDEV BY TYPE, dev = %p, type = %d, start_subdevice = %u\n", dev, type, start_subdevice);
-	rt_printk("SUBDEV BY TYPE RETURNS: %u\n", SUBDEV);
-	return SUBDEV;
-	return comedi_find_subdevice_by_type(dev, type, start_subdevice);
+	rt_printk("FIND SUBDEV BY TYPE, dev = %p, type = %d, start_subdevice = %u\n", dev, type, start_subdevice);
+	rt_printk("FIND SUBDEV BY TYPE RETURNS: %u\n", FIND_SUBDEV);
+	return FIND_SUBDEV;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_get_n_channels(void *dev, unsigned int subdev)
 {
-	return comedi_get_n_channels(dev, subdev);
+	rt_printk("COMEDI GET N RANGES, dev = %p, subdev = %u.\n", dev, subdev);
+	return N_CHANNELS;
 }
 
 static RTAI_SYSCALL_MODE lsampl_t _comedi_get_maxdata(void *dev, unsigned int subdev, unsigned int chan)
 {
 	rt_printk("GET MAXDATA, dev = %p, subdev = %u, chan = %u\n", dev, subdev, chan);
-	rt_printk("GET MAXDATA RETURNS: 987\n");
-	return 987;
+	rt_printk("GET MAXDATA RETURNS: %u7\n", MAXDATA);
+	return MAXDATA;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_get_n_ranges(void *dev, unsigned int subdev, unsigned int chan)
 {
-	return comedi_get_n_ranges(dev, subdev, chan);
+	rt_printk("COMEDI GET N RANGES, dev = %p, subdev = %u, chan = %u.\n", dev, subdev, chan);
+	rt_printk("COMEDI GET N RANGES RETURNS: %u\n", N_RANGES);
+	return N_RANGES;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_do_insn(void *dev, comedi_insn *insnin)
@@ -472,7 +476,7 @@ static RTAI_SYSCALL_MODE int _comedi_get_krange(void *dev, unsigned int subdev, 
 {
 	rt_printk("GET KRANGE, dev = %p, subdev = %u, chan = %u, range = %u\n", dev, subdev, chan, range);
 	rt_printk("SUBDEV BY TYPE RETURNS: %d, %d, %u.\n", RANGE_MIN, RANGE_MAX, RANGE_FLAGS);
-	*krange = (comedi_krange){ -99, 99, 0};
+	*krange = (comedi_krange){ RANGE_MIN, RANGE_MAX, RANGE_FLAGS};
 	return 0;
 }
 
@@ -555,6 +559,7 @@ RTAI_SYSCALL_MODE long rt_comedi_wait(unsigned int *cbmask)
 
 RTAI_SYSCALL_MODE long rt_comedi_wait_if(unsigned int *cbmask)
 { 
+	rt_printk("COMEDI WAIT IF, cbmask = %x.\n", *cbmask);
 	return __rt_comedi_wait((RTIME)0, cbmask, WAITIF);
 }
 
