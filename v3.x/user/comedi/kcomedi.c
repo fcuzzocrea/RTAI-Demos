@@ -199,7 +199,6 @@ RTAI_SYSCALL_MODE long rt_comedi_command_data_wread(void *dev, unsigned int subd
 	*cbmask = 0xcacca;
 	rt_printk("COMMAND WREAD, returns cbmask = %x\n", *cbmask);
 	return 0;
-	return __rt_comedi_command_data_wread(dev, subdev, nchans, data, (RTIME)0, cbmask, WAIT);
 }
 
 RTAI_SYSCALL_MODE long rt_comedi_command_data_wread_if(void *dev, unsigned int subdev, long nchans, lsampl_t *data, unsigned int *cbmask)
