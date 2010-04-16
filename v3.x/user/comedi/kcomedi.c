@@ -465,6 +465,7 @@ static inline int _rt_comedi_trigger(void *dev, unsigned int subdev)
 
 RTAI_SYSCALL_MODE int rt_comedi_trigger(void *dev, unsigned int subdev)
 {
+	rt_printk("COMEDI TRIGGER, dev = %p, subdev = %u.\n", dev, subdev);
         return _rt_comedi_trigger(dev, subdev);
 }
 
@@ -472,16 +473,18 @@ static RTAI_SYSCALL_MODE int _comedi_poll(void *dev, unsigned int subdev)
 {
 	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
-	retval = comedi_poll(dev, subdev);
+	rt_printk("COMEDI POLL, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 33;
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return retval;
 }
 
-static RTAI_SYSCALL_MODE unsigned int _comedi_get_subdevice_flags(void *dev,unsigned int subdev)
+static RTAI_SYSCALL_MODE unsigned int _comedi_get_subdevice_flags(void *dev, unsigned int subdev)
 {
 	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
-	retval = comedi_get_subdevice_flags(dev, subdev);
+	rt_printk("COMEDI GET SUBDEV FLAGS, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 0xabcdef;
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return retval;
 }
@@ -498,7 +501,8 @@ static RTAI_SYSCALL_MODE int _comedi_get_buf_head_pos(void * dev, unsigned int s
 {
 	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
-	retval = comedi_get_buf_head_pos(dev, subdev);
+	rt_printk("COMEDI GET BUF HEAD POS, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 556677;
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return retval;
 }
@@ -507,7 +511,8 @@ static RTAI_SYSCALL_MODE int _comedi_set_user_int_count(void *dev, unsigned int 
 {
 	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
-	retval = comedi_set_user_int_count(dev, subdev, buf_user_count);
+	rt_printk("COMEDI SET USER INT COUNT, dev = %p, subdev = %u, buf_user_count = %u.\n", dev, subdev, buf_user_count);
+	retval = 0;
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return retval;
 }
@@ -516,7 +521,8 @@ static RTAI_SYSCALL_MODE int _comedi_map(void *dev, unsigned int subdev, void *p
 {
 	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
-	retval = comedi_map(dev, subdev, ptr);
+	rt_printk("COMEDI MAP, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 0;
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return retval;
 }
@@ -525,7 +531,8 @@ static RTAI_SYSCALL_MODE int _comedi_unmap(void *dev, unsigned int subdev)
 {
 	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
-	retval = comedi_unmap(dev, subdev);
+	rt_printk("COMEDI UNMAP, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 0;
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return retval;
 }

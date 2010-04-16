@@ -1,7 +1,9 @@
 killall cmd
 killall insn
 /usr/local/sbin/comedi_config -r /dev/comedi1
-/sbin/rmmod rtai_comedi.ko
-/sbin/modprobe -r kcomedilib
-/sbin/modprobe -r ni_pcimio
+rmmod kcomedi_rt
+rmmod kcomedilib
+rmmod comedi_fc
+rmmod comedi
+rmmod rtai_netrpc
 ../remod
