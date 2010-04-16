@@ -1,35 +1,6 @@
-prefix := $(shell rtai-config --prefix)
+EXTRA_CFLAGS += $(shell rtai-config --module-cflags)
+EXTRA_CFLAGS += -I/usr/include
 
-ifeq ($(prefix),)
-$(error Please add <rtai-install>/bin to your PATH variable)
-endif
+obj-m += kcomedi_rt.o
 
-CC = $(shell rtai-config --cc)
-LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
-LXRT_CFLAGS += -D_GNU_SOURCE
-LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
-
-all: cmd insn aocmd rminsn rmcmd rmtest
-
-cmd: cmd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
-
-insn: insn.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
-
-aocmd: aocmd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
-
-rminsn: rminsn.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
-
-rmcmd: rmcmd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
-
-rmtest: rmtest.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
-
-clean:
-	rm -f *.o cmd insn aocmd rminsn rmcmd rmtest
-
-.PHONY: clean
+kcomedi_rt-objs := kcomedi.o
