@@ -55,6 +55,6 @@ rmtest: rmtest.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 clean::
-	rm -f *.o cmd insn aocmd rminsn rmcmd rmtest modules.order Module.symvers
+	rm -f *.o cmd insn aocmd rminsn rmcmd rmtest
 
 .PHONY: clean
