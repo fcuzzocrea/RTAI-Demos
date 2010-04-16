@@ -30,14 +30,8 @@
 
 #include <linux/module.h>
 #include <linux/version.h>
-#include <linux/delay.h>
-#include <asm/uaccess.h>
 
 #include <rtai_schedcore.h>
-#include <rtai_sched.h>
-#include <rtai_lxrt.h>
-#include <rtai_shm.h>
-#include <rtai_msg.h>
 #include <rtai_comedi.h>
 
 #define MODULE_NAME "kcomedi_rt.ko"
@@ -45,19 +39,10 @@ MODULE_DESCRIPTION("Test to verify the RTAI interface to COMEDI");
 MODULE_AUTHOR("Paolo Mantegazza");
 MODULE_LICENSE("GPL");
 
-#ifdef CONFIG_RTAI_USE_COMEDI_LOCK
-
 #define RTAI_COMEDI_LOCK(dev, subdev) \
 	do { _comedi_lock(dev, subdev); } while (0)
 #define RTAI_COMEDI_UNLOCK(dev, subdev) \
 	do { _comedi_unlock(dev, subdev); } while (0)
-
-#else
-
-#define RTAI_COMEDI_LOCK(dev, subdev)    do { } while (0)
-#define RTAI_COMEDI_UNLOCK(dev, subdev)  do { } while (0)
-
-#endif
 
 #define KSPACE(adr) ((unsigned long)adr > PAGE_OFFSET)
 
@@ -393,7 +378,6 @@ static RTAI_SYSCALL_MODE lsampl_t _comedi_get_maxdata(void *dev, unsigned int su
 	rt_printk("GET MAXDATA, dev = %p, subdev = %u, chan = %u\n", dev, subdev, chan);
 	rt_printk("GET MAXDATA RETURNS: 987\n");
 	return 987;
-	return comedi_get_maxdata(dev, subdev, chan);
 }
 
 static RTAI_SYSCALL_MODE int _comedi_get_n_ranges(void *dev, unsigned int subdev, unsigned int chan)
@@ -410,12 +394,7 @@ static RTAI_SYSCALL_MODE int _comedi_do_insn(void *dev, comedi_insn *insnin)
 	for (i = 0; i < insn.n; i++) {
 		insn.data[i] = 0xcacca0 + i;
 	}
-	return 1000000 + insn.n;
-#if 0
-	RTAI_COMEDI_LOCK(dev, insn->subdev);
-	retval = comedi_do_insn(dev, insn);
-	RTAI_COMEDI_UNLOCK(dev, insn->subdev);
-#endif
+	retval = 1000000 + insn.n;
 	return retval;
 }
 
@@ -610,14 +589,6 @@ RTAI_SYSCALL_MODE long rt_comedi_command_data_write(void *dev, unsigned int subd
 		ofstf += sizeof(sampl_t);
 	}
 	comedi_mark_buffer_written(dev, subdev, ofstf - ofsti);
-#if 0
-	if (!avbs) {
-		int retval;
-		if ((retval = _rt_comedi_trigger(dev, subdev)) < 0) {
-			return retval;
-		}
-	}
-#endif
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return nchans;
 }
@@ -652,9 +623,6 @@ static struct rt_fun_entry rtai_comedi_fun[] = {
  ,[_KCOMEDI_DO_INSN]               = { 0, _comedi_do_insn }
  ,[_KCOMEDI_DO_INSN_LIST]          = { 0, rt_comedi_do_insnlist }
  ,[_KCOMEDI_POLL]                  = { 0, _comedi_poll }
-/*
- ,[_KCOMEDI_GET_RANGETYPE]         = { 0, _comedi_get_rangetype }
-*/
  ,[_KCOMEDI_GET_SUBDEVICE_FLAGS]   = { 0, _comedi_get_subdevice_flags }
  ,[_KCOMEDI_GET_KRANGE]            = { 0, _comedi_get_krange }
  ,[_KCOMEDI_GET_BUF_HEAD_POS]      = { 0, _comedi_get_buf_head_pos }
@@ -676,80 +644,17 @@ static struct rt_fun_entry rtai_comedi_fun[] = {
  ,[_RT_KCOMEDI_COMD_DATA_WREAD]    = { 0, RT_comedi_command_data_wread }
 };
 
-#ifdef CONFIG_RTAI_USE_LINUX_COMEDI
-
-extern void *rt_comedi_request_irq;
-extern void *rt_comedi_release_irq;
-extern void *rt_comedi_busy_sleep;
-
-#define RTAI_NR_IRQS  IPIPE_NR_XIRQS
-static int (*comedi_irq_handler_p[RTAI_NR_IRQS])(unsigned int, void *);
-
-static int comedi_irq_handler(unsigned int irq, void *dev_id)
-{
-	comedi_irq_handler_p[irq](irq, dev_id);
-	rt_enable_irq(irq);
-	return IRQ_HANDLED;
-}
-
-static int comedi_request_irq(unsigned int irq, int (*handler)(unsigned int irq, void *dev_id), unsigned long flags, const char *name, void *dev)
-{
-	int retval;
-	if (comedi_irq_handler_p[irq]) {
-		return -EBUSY;
-	}
-	if ((retval = rt_request_irq(irq, comedi_irq_handler, dev, 0))) {
-		return retval;
-	}
-	comedi_irq_handler_p[irq] = handler;
-	rt_startup_irq(irq);
-	return 0;
-}
-
-static void comedi_release_irq(unsigned int irq, void *dev)
-{
-	rt_shutdown_irq(irq);
-	rt_release_irq(irq);
-}
-
-static int us2tsc;
-void comedi_busy_sleep(int us)
-{
-	RTIME break_time;
-	break_time = rtai_rdtsc() + us*us2tsc;
-	while (rtai_rdtsc() < break_time);
-}
-
-#endif /* CONFIG_RTAI_USE_LINUX_COMEDI) */
-
 int __rtai_comedi_init(void)
 {
 	if( set_rt_fun_ext_index(rtai_comedi_fun, FUN_COMEDI_LXRT_INDX) ) {
 		printk("Recompile your module with a different index\n");
 		return -EACCES;
 	}
-#ifdef CONFIG_RTAI_USE_LINUX_COMEDI
-	us2tsc = tuned.cpu_freq/1000000;
-	rt_comedi_request_irq = comedi_request_irq;
-	rt_comedi_release_irq = comedi_release_irq;
-	rt_comedi_busy_sleep  = comedi_busy_sleep;
-#endif
 	return 0;
 }
 
 void __rtai_comedi_exit(void)
 {
-#ifdef CONFIG_RTAI_USE_LINUX_COMEDI
-	int irq;
-	for (irq = 0; irq < RTAI_NR_IRQS; irq++) {
-		if (comedi_irq_handler_p[irq]) {
-			comedi_release_irq(irq, NULL);
-		}
-	}
-	rt_comedi_request_irq = rt_request_irq;
-	rt_comedi_release_irq = rt_release_irq;
-	rt_comedi_busy_sleep  = __udelay;
-#endif
 	reset_rt_fun_ext_index(rtai_comedi_fun, FUN_COMEDI_LXRT_INDX);
 }
 
