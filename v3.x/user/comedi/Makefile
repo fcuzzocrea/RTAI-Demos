@@ -9,7 +9,7 @@ LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_CFLAGS += -D_GNU_SOURCE
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all: cmd insn aocmd
+all: cmd insn aocmd rminsn rmcmd
 
 cmd: cmd.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
@@ -20,7 +20,13 @@ insn: insn.c
 aocmd: aocmd.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
+rminsn: rminsn.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+
+rmcmd: rmcmd.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+
 clean:
-	rm -f *.o cmd insn aocmd
+	rm -f *.o cmd insn aocmd rminsn rmcmd
 
 .PHONY: clean
