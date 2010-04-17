@@ -9,7 +9,7 @@ LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_CFLAGS += -D_GNU_SOURCE
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
-all:: cmd insn aocmd rminsn rmcmd rmtest
+all:: cmd insn aocmd rminsn rmcmd rmaocmd rmtest
 
 ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)),)
 
@@ -51,10 +51,13 @@ rminsn: rminsn.c
 rmcmd: rmcmd.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
+rmaocmd: rmaocmd.c
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+
 rmtest: rmtest.c
 	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 clean::
-	rm -f *.o cmd insn aocmd rminsn rmcmd rmtest
+	rm -f *.o cmd insn aocmd rminsn rmcmd rmaocmd rmtest modules.order Module.symvers
 
 .PHONY: clean
