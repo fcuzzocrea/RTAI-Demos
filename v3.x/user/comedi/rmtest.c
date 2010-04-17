@@ -35,7 +35,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 //#define LOCAL_EXEC
 
-#define TIMEOUT  2000000000
+#define PRINT printf
+
+#define TIMEOUT  2000000000LL
+
+#define DATA_READ_DELAY  2000000000
 
 #define NICHAN  5
 #define NOCHAN  2
@@ -55,24 +59,24 @@ static unsigned int daqnode, daqport;
 static int test_init_board(void)
 {
 	dev = RT_comedi_open(daqnode, daqport, "/dev/comedi1");		
-	printf("Comedi device handle: %p.\n", dev);
+	PRINT("Comedi device handle: %p.\n", dev);
 
 	subdevai = RT_comedi_find_subdevice_by_type(daqnode, daqport, dev, COMEDI_SUBD_AI, 0);
-	printf("Comedi anolog input subdevice: %u.\n", subdevai);
+	PRINT("Comedi anolog input subdevice: %u.\n", subdevai);
 	RT_comedi_get_krange(daqnode, daqport, dev, subdevai, 0, AI_RANGE, &krangeai);
-	printf("Comedi analog input krange: %d %d %u.\n", krangeai.min, krangeai.max, krangeai.flags);
+	PRINT("Comedi analog input krange: %d %d %u.\n", krangeai.min, krangeai.max, krangeai.flags);
 	maxdatai = RT_comedi_get_maxdata(daqnode, daqport, dev, subdevai, 0);
-	printf("Comedi analog input maxdata: %d.\n", maxdatai);
+	PRINT("Comedi analog input maxdata: %d.\n", maxdatai);
 
 	subdevao = RT_comedi_find_subdevice_by_type(daqnode, daqport, dev, COMEDI_SUBD_AO, 0);
-	printf("Comedi anolog output subdevice: %u.\n", subdevao);
+	PRINT("Comedi anolog output subdevice: %u.\n", subdevao);
 	RT_comedi_get_krange(daqnode, daqport, dev, subdevao, 0, AO_RANGE, &krangeao);
-	printf("Comedi analog input krange: %d %d %u.\n", krangeao.min, krangeao.max, krangeao.flags);
+	PRINT("Comedi analog input krange: %d %d %u.\n", krangeao.min, krangeao.max, krangeao.flags);
 	maxdatao = RT_comedi_get_maxdata(daqnode, daqport, dev, subdevao, 0);
-	printf("Comedi analog output maxdata: %d.\n", maxdatao);
+	PRINT("Comedi analog output maxdata: %d.\n", maxdatao);
 
 	subdevdg = RT_comedi_find_subdevice_by_type(daqnode, daqport, dev, COMEDI_SUBD_AO, 0);
-	printf("Comedi digital IO subdevice: %u.\n", subdevdg);
+	PRINT("Comedi digital IO subdevice: %u.\n", subdevdg);
 	return 0;
 }
 
@@ -109,9 +113,9 @@ int test_cmd(void)
 	cmd.chanlist = chanlist;
 	cmd.chanlist_len = NCHAN;
 
-	printf("SENT COMMAND, subdev = %u, flags = %u, start_src = %u, start_arg = %u, scan_begin_src = %u, scan_begin_arg = %u, convert_src = %u, convert_arg = %u, scan_end_src = %u, scan_end_arg = %u, stop_src = %u, stop_arg = %u, chanlist_len = %u.\n", cmd.subdev, cmd.flags, cmd.start_src, cmd.start_arg, cmd.scan_begin_src, cmd.scan_begin_arg, cmd.convert_src, cmd.convert_arg, cmd.scan_end_src, cmd.scan_end_arg, cmd.stop_src, cmd.stop_arg, cmd.chanlist_len);
+	PRINT("SENT COMMAND, subdev = %u, flags = %u, start_src = %u, start_arg = %u, scan_begin_src = %u, scan_begin_arg = %u, convert_src = %u, convert_arg = %u, scan_end_src = %u, scan_end_arg = %u, stop_src = %u, stop_arg = %u, chanlist_len = %u.\n", cmd.subdev, cmd.flags, cmd.start_src, cmd.start_arg, cmd.scan_begin_src, cmd.scan_begin_arg, cmd.convert_src, cmd.convert_arg, cmd.scan_end_src, cmd.scan_end_arg, cmd.stop_src, cmd.stop_arg, cmd.chanlist_len);
 	for (i = 0; i < NCHAN; i++) {
-		printf("CHALIST, # %d, val = %u.\n", i, chanlist[i]);
+		PRINT("CHALIST, # %d, val = %u.\n", i, chanlist[i]);
 	}
 
 	cmd.scan_begin_src = TRIG_TIMER;
@@ -130,9 +134,9 @@ int test_cmd(void)
 	cmd.chanlist_len = NCHAN;
 
 	ret = RT_comedi_command_test(daqnode, daqport, dev, &cmd);
-	printf("Comedi_command_test returned: %d.\n", ret);
+	PRINT("Comedi_command_test returned: %d.\n", ret);
 	ret = RT_comedi_command(daqnode, daqport, dev, &cmd);
-	printf("Comedi_command returned: %d.\n", ret);
+	PRINT("Comedi_command returned: %d.\n", ret);
 
 	return 0;
 }
@@ -143,7 +147,7 @@ void endme(int sig) { end = 1; }
 int main(int argc, char *argv[])
 {
 	RT_TASK *task;
-
+	RTIME timeout;
 	lsampl_t data[NCHAN] = { 0 };
 	unsigned int val;
 	long i;
@@ -162,7 +166,10 @@ int main(int argc, char *argv[])
 	task = rt_task_init_schmod(nam2num("MYTASK"), 1, 0, 0, SCHED_FIFO, 0xF);
 
 	daqnode = 0;
-#ifndef LOCAL_EXEC
+#ifdef LOCAL_EXEC
+	timeout = nano2count(TIMEOUT);
+#else
+	timeout = TIMEOUT;
 	if (argc == 2 && strstr(argv[1], "DaqNode=")) {
 		inet_aton(argv[1] + 8, &addr.sin_addr);
 		daqnode = addr.sin_addr.s_addr;
@@ -171,96 +178,94 @@ int main(int argc, char *argv[])
 		inet_aton("127.0.0.1", &addr.sin_addr);
 		daqnode = addr.sin_addr.s_addr;
 	}
-
         while ((daqport = rt_request_port(daqnode)) <= 0 && daqport != -EINVAL);
 #endif
 
 	test_init_board();
 
 	RT_comedi_register_callback(daqnode, daqport, dev, subdevai, COMEDI_CB_EOS, NULL, task);
-	printf("Comedi analog input registered a call back.\n");
+	PRINT("Comedi analog input registered a call back.\n");
 	
 	test_cmd();
 
 	val = COMEDI_CB_EOS;
-	RT_comedi_command_data_wread_timed(daqnode, daqport, dev, subdevai, NCHAN, data, TIMEOUT, &val);
-	printf("COMMAND WREAD TIMED, val = %x\n", val);
+	PRINT("COMMAND WREAD TIMED with a %lld (ns) timeout.\n", TIMEOUT);
+	RT_comedi_command_data_wread_timed(daqnode, daqport, dev, subdevai, NCHAN, data, timeout, &val);
+	PRINT("COMMAND WREAD TIMED, val = %x.\n", val);
 	for (i = 0; i < NCHAN; i++) {
-		printf("CHAN # %ld, data = %x.\n", i, data[i]);
+		PRINT("CHAN # %ld, data = %x.\n", i, data[i]);
 	}
 	RT_comedi_get_driver_name(daqnode, daqport, dev, (char *)data);
-	printf("GET DRIVER NAME returned %s\n", (char *)data);
+	PRINT("GET DRIVER NAME returned %s.\n", (char *)data);
 	RT_comedi_command_data_wread(daqnode, daqport, dev, subdevai, NCHAN, data, &val);
-	printf("COMMAND WREAD, val = %x\n", val);
+	PRINT("COMMAND WREAD, val = %x.\n", val);
 	for (i = 0; i < NCHAN; i++) {
-		printf("CHAN # %ld, data = %x.\n", i, data[i]);
+		PRINT("CHAN # %ld, data = %x.\n", i, data[i]);
 	}
-	RT_comedi_wait_timed(daqnode, daqport, TIMEOUT, &val);
-	printf("COMEDI WAIT TIMED, val = %x\n", val);
+	PRINT("COMMAND WAIT TIMED with a %lld (ns) timeout.\n", TIMEOUT);
+	RT_comedi_wait_timed(daqnode, daqport, timeout, &val);
+	PRINT("COMEDI WAIT TIMED, val = %x.\n", val);
 	RT_comedi_wait(daqnode, daqport, &val);
-	printf("COMEDI WAIT, val = %x\n", val);
+	PRINT("COMEDI WAIT, val = %x.\n", val);
 	RT_comedi_command_data_read(daqnode, daqport, dev, subdevai, NCHAN, data);
-	printf("COMMAND READ.\n");
+	PRINT("COMMAND READ.\n");
 	for (i = 0; i < NCHAN; i++) {
-		printf("CHAN # %ld, data = %x.\n", i, data[i]);
+		PRINT("CHAN # %ld, data = %x.\n", i, data[i]);
 	}
 
-	printf("1 COMMAND WRITE\n");
+	PRINT("COMMAND WRITE.\n");
 	for (i = 0; i < NCHAN; i++) {
 		data[i] = 0xcba + i;
-		printf("CHAN # %ld, data = %x.\n", i, data[i]);
+		PRINT("CHAN # %ld, data = %x.\n", i, data[i]);
 	}
 	rt_comedi_command_data_write(dev, subdevao, NCHAN, data);
-	printf("2 COMMAND WRITE\n");
-	printf("1 COMMAND TRIGGER\n");
+	PRINT("COMMAND TRIGGER.\n");
 	rt_comedi_trigger(dev, subdevai);
-	printf("2 COMMAND TRIGGER\n");
-
 
 	RT_comedi_data_write(daqnode, daqport, dev, subdevai, 0, 0, AREF_GROUND, 2048);
-	printf("DATA WRITE: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %u.\n", dev, subdevai, 0, 0, AREF_GROUND, 2048);
+	PRINT("DATA WRITE: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %u.\n", dev, subdevai, 0, 0, AREF_GROUND, 2048);
 	RT_comedi_data_read(daqnode, daqport, dev, subdevai, 0, 0, AREF_GROUND, data);
-	printf("DATA READ: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %x.\n", dev, subdevao, 0, 0, AREF_GROUND, data[0]);
-	printf("1 DATA READ DELAYED: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %x.\n", dev, subdevao, 0, 0, AREF_GROUND, data[0]);
-	RT_comedi_data_read_delayed(daqnode, daqport, dev, subdevai, 0, 0, AREF_GROUND, data, 2000000000);
-	printf("2 DATA READ DELAYED: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %x.\n", dev, subdevao, 0, 0, AREF_GROUND, data[0]);
+	PRINT("DATA READ: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %x.\n", dev, subdevao, 0, 0, AREF_GROUND, data[0]);
+	PRINT("DATA READING DELAYED: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %x, delay = %u (ns).\n", dev, subdevao, 0, 0, AREF_GROUND, data[0], DATA_READ_DELAY);
+	RT_comedi_data_read_delayed(daqnode, daqport, dev, subdevai, 0, 0, AREF_GROUND, data, DATA_READ_DELAY);
+	PRINT("DATA READ DELAYED: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, data = %x.\n", dev, subdevao, 0, 0, AREF_GROUND, data[0]);
 
 	data[0] = 0x77777777;
 	data[1] = 0x77777777;
-	printf("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdevdg, data[1], data[0]);
+	PRINT("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdevdg, data[1], data[0]);
 	RT_comedi_dio_bitfield(daqnode, daqport, dev, subdevdg, data[1], data);
-	printf("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdevdg, data[1], data[0]);
+	PRINT("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdevdg, data[1], data[0]);
 
         for (i = 0; i < NICHAN; i++) {
 		data[i] = 1000 + i;
 		BUILD_AREAD_INSN(insn[i], subdevai, data[i], 1, read_chan[i], AI_RANGE, AREF_GROUND);
-		printf("READ INSN: insn = %u, n = %u, data = %u, subdev = %u, chanspec %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
+		PRINT("READ INSN: insn = %u, n = %u, data = %u, subdev = %u, chanspec %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
         }
 
         for (i = 0; i < NOCHAN; i++) {
 		data[NICHAN + i] = 1000 + i;
 		BUILD_AWRITE_INSN(insn[NICHAN + i], subdevao, data[NICHAN + i], 1, write_chan[i], AO_RANGE, AREF_GROUND);
-		printf("WRIT INSN: insn = %u, n = %u, data = %u, subdev = %u, chanspec = %u.\n", insn[NICHAN + i].insn, insn[NICHAN + i].n, insn[NICHAN + i].data[0], insn[NICHAN + i].subdev, insn[NICHAN + i].chanspec);
+		PRINT("WRIT INSN: insn = %u, n = %u, data = %u, subdev = %u, chanspec = %u.\n", insn[NICHAN + i].insn, insn[NICHAN + i].n, insn[NICHAN + i].data[0], insn[NICHAN + i].subdev, insn[NICHAN + i].chanspec);
         }
 
 	for (i = 0; i < NCHAN; i++) {
-		printf("1 COMEDI INST: insn = %u, n = %u, data = %u, subdev = %u, chanspec = %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
-		printf("COMEDI INST: %d\n", RT_comedi_do_insn(daqnode, daqport, dev, insn + i));
-		printf("2 COMEDI INST: insn = %u, n = %u, data = %x, subdev = %u, chanspec = %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
+		PRINT("1 COMEDI INST: insn = %u, n = %u, data = %u, subdev = %u, chanspec = %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
+		PRINT("COMEDI INST: %d.\n", RT_comedi_do_insn(daqnode, daqport, dev, insn + i));
+		PRINT("2 COMEDI INST: insn = %u, n = %u, data = %x, subdev = %u, chanspec = %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
 		insn[i].n = 1;
 		insn[i].data[0] = 999999;
 	}
-	printf("COMEDI INSTLST: %d\n", RT_comedi_do_insnlist(daqnode, daqport, dev, &ilist));
+	PRINT("COMEDI INSTLST: %d.\n", RT_comedi_do_insnlist(daqnode, daqport, dev, &ilist));
 	for (i = 0; i < NCHAN; i++) {
-		printf("COMEDI INSTLST: insn = %u, n = %u, data = %x, subdev = %u, chanspec = %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
+		PRINT("COMEDI INSTLST: insn = %u, n = %u, data = %x, subdev = %u, chanspec = %u.\n", insn[i].insn, insn[i].n, insn[i].data[0], insn[i].subdev, insn[i].chanspec);
 	}
 
 	RT_comedi_cancel(daqnode, daqport, dev, subdevai);
 	RT_comedi_cancel(daqnode, daqport, dev, subdevao);
 	RT_comedi_cancel(daqnode, daqport, dev, subdevdg);
-	printf("COMEDI CANCELs DONE.\n");
+	PRINT("COMEDI CANCELs DONE.\n");
 	RT_comedi_close(daqnode, daqport, dev);
-	printf("COMEDI CLOSE.\n");
+	PRINT("COMEDI CLOSE.\n");
 
 	stop_rt_timer();
 	rt_task_delete(task);
