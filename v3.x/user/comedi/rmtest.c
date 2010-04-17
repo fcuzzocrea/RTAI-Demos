@@ -107,7 +107,7 @@ int test_cmd(void)
 	cmd.chanlist = chanlist;
 	cmd.chanlist_len = NCHAN;
 
-	printf("SENT COMMAND, subdev = %u, flgas = %u, start_src = %u, start_arg = %u, scan_begin_src = %u, scan_begin_arg = %u, convert_src = %u, convert_arg = %u, scan_end_src = %u, scan_end_arg = %u, stop_src = %u, stop_arg = %u, chanlist_len = %u.\n", cmd.subdev, cmd.flags, cmd.start_src, cmd.start_arg, cmd.scan_begin_src, cmd.scan_begin_arg, cmd.convert_src, cmd.convert_arg, cmd.scan_end_src, cmd.scan_end_arg, cmd.stop_src, cmd.stop_arg, cmd.chanlist_len);
+	printf("SENT COMMAND, subdev = %u, flags = %u, start_src = %u, start_arg = %u, scan_begin_src = %u, scan_begin_arg = %u, convert_src = %u, convert_arg = %u, scan_end_src = %u, scan_end_arg = %u, stop_src = %u, stop_arg = %u, chanlist_len = %u.\n", cmd.subdev, cmd.flags, cmd.start_src, cmd.start_arg, cmd.scan_begin_src, cmd.scan_begin_arg, cmd.convert_src, cmd.convert_arg, cmd.scan_end_src, cmd.scan_end_arg, cmd.stop_src, cmd.stop_arg, cmd.chanlist_len);
 	for (i = 0; i < NCHAN; i++) {
 		printf("CHALIST, # %d, val = %u.\n", i, chanlist[i]);
 	}
@@ -202,6 +202,10 @@ int main(int argc, char *argv[])
 	}
 
 	printf("1 COMMAND WRITE\n");
+	for (i = 0; i < NCHAN; i++) {
+		data[i] = 0xcba + i;
+		printf("CHAN # %ld, data = %x.\n", i, data[i]);
+	}
 	rt_comedi_command_data_write(dev, subdevao, NCHAN, data);
 	printf("2 COMMAND WRITE\n");
 	printf("1 COMMAND TRIGGER\n");
