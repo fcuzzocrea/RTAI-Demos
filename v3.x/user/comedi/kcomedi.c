@@ -202,13 +202,13 @@ RTAI_SYSCALL_MODE long rt_comedi_command_data_wread_if(void *dev, unsigned int s
 
 RTAI_SYSCALL_MODE long _rt_comedi_command_data_wread_until(void *dev, unsigned int subdev, long nchans, lsampl_t *data, unsigned int *cbmask, RTIME until)
 {
-	rt_printk("COMMAND READ UNTIL, dev = %p, subdev = %u, nchans = %u, cbmask = %u, until = %lld\n", dev, subdev, nchans, *cbmask, until);
+	rt_printk("COMMAND WREAD UNTIL, dev = %p, subdev = %u, nchans = %u, cbmask = %u, until = %lld\n", dev, subdev, nchans, *cbmask, until);
 	return __rt_comedi_command_data_wread(dev, subdev, nchans, data, until, cbmask, WAITUNTIL);
 }
 
 RTAI_SYSCALL_MODE long _rt_comedi_command_data_wread_timed(void *dev, unsigned int subdev, long nchans, lsampl_t *data, unsigned int *cbmask, RTIME delay)
 {
-	rt_printk("COMMAND READ TIMED, dev = %p, subdev = %u, nchans = %u, cbmask = %u, until = %lld\n", dev, subdev, nchans, *cbmask, delay);
+	rt_printk("COMMAND WREAD TIMED, dev = %p, subdev = %u, nchans = %u, cbmask = %u, until = %lld\n", dev, subdev, nchans, *cbmask, delay);
 	return _rt_comedi_command_data_wread_until(dev, subdev, nchans, data, cbmask, rt_get_time() + delay);
 }
 
@@ -221,10 +221,13 @@ RTAI_SYSCALL_MODE long RT_comedi_command_data_wread(void *dev, unsigned int subd
 			return rt_comedi_command_data_wread(dev, subdev, nchans, data, cbmask);
 			return __rt_comedi_command_data_wread(dev, subdev, nchans, data, (RTIME)0, cbmask, WAIT);
 		case 1: 
+			return rt_comedi_command_data_wread_if(dev, subdev, nchans, data, cbmask);
 			return __rt_comedi_command_data_wread(dev, subdev, nchans, data, (RTIME)0, cbmask, WAITIF);
 		case 2: 
+			return _rt_comedi_command_data_wread_until(dev, subdev, nchans, data, cbmask, time);
 			return __rt_comedi_command_data_wread(dev, subdev, nchans, data, time, cbmask, WAITUNTIL);
 		case 3: 
+			return _rt_comedi_command_data_wread_timed(dev, subdev, nchans, data, cbmask, time);
 			return _rt_comedi_command_data_wread_until(dev, subdev, nchans, data, cbmask, rt_get_time() + time);
 	}
 	return 0;
