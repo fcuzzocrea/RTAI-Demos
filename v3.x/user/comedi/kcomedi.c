@@ -375,7 +375,7 @@ static RTAI_SYSCALL_MODE int _comedi_do_insn(void *dev, comedi_insn *insnin)
 		insn.data[i] = 0xcacca0 + i;
 		rt_printk("# = %d, %data = %u.\n", i, insn.data[i]);
 	}
-	retval = 1000000 + insn.n;
+	retval = insn.n;
 	rt_printk("COMEDI DO INST RETURNS %d.\n", retval);
 	return retval;
 }

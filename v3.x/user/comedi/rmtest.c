@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <rtai_comedi.h>
 
+//#define LOCAL_EXEC
+
 #define TIMEOUT  2000000000
 
 #define NICHAN  5
@@ -160,6 +162,7 @@ int main(int argc, char *argv[])
 	task = rt_task_init_schmod(nam2num("MYTASK"), 1, 0, 0, SCHED_FIFO, 0xF);
 
 	daqnode = 0;
+#ifndef LOCAL_EXEC
 	if (argc == 2 && strstr(argv[1], "DaqNode=")) {
 		inet_aton(argv[1] + 8, &addr.sin_addr);
 		daqnode = addr.sin_addr.s_addr;
@@ -170,6 +173,7 @@ int main(int argc, char *argv[])
 	}
 
         while ((daqport = rt_request_port(daqnode)) <= 0 && daqport != -EINVAL);
+#endif
 
 	test_init_board();
 
