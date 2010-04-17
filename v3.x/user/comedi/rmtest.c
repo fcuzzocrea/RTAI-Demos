@@ -147,7 +147,6 @@ void endme(int sig) { end = 1; }
 int main(int argc, char *argv[])
 {
 	RT_TASK *task;
-	RTIME timeout;
 	lsampl_t data[NCHAN] = { 0 };
 	unsigned int val;
 	long i;
@@ -167,9 +166,7 @@ int main(int argc, char *argv[])
 
 	daqnode = 0;
 #ifdef LOCAL_EXEC
-	timeout = nano2count(TIMEOUT);
 #else
-	timeout = TIMEOUT;
 	if (argc == 2 && strstr(argv[1], "DaqNode=")) {
 		inet_aton(argv[1] + 8, &addr.sin_addr);
 		daqnode = addr.sin_addr.s_addr;
@@ -190,7 +187,7 @@ int main(int argc, char *argv[])
 
 	val = COMEDI_CB_EOS;
 	PRINT("COMMAND WREAD TIMED with a %lld (ns) timeout.\n", TIMEOUT);
-	RT_comedi_command_data_wread_timed(daqnode, daqport, dev, subdevai, NCHAN, data, timeout, &val);
+	RT_comedi_command_data_wread_timed(daqnode, daqport, dev, subdevai, NCHAN, data, TIMEOUT, &val);
 	PRINT("COMMAND WREAD TIMED, val = %x.\n", val);
 	for (i = 0; i < NCHAN; i++) {
 		PRINT("CHAN # %ld, data = %x.\n", i, data[i]);
@@ -203,7 +200,7 @@ int main(int argc, char *argv[])
 		PRINT("CHAN # %ld, data = %x.\n", i, data[i]);
 	}
 	PRINT("COMMAND WAIT TIMED with a %lld (ns) timeout.\n", TIMEOUT);
-	RT_comedi_wait_timed(daqnode, daqport, timeout, &val);
+	RT_comedi_wait_timed(daqnode, daqport, TIMEOUT, &val);
 	PRINT("COMEDI WAIT TIMED, val = %x.\n", val);
 	RT_comedi_wait(daqnode, daqport, &val);
 	PRINT("COMEDI WAIT, val = %x.\n", val);
