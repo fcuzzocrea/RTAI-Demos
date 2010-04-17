@@ -87,16 +87,14 @@ static RTAI_SYSCALL_MODE int _comedi_cancel(void *dev, unsigned int subdev)
 
 RTAI_SYSCALL_MODE int rt_comedi_register_callback(void *dev, unsigned int subdev, unsigned int mask, int (*callback)(unsigned int, void *), void *task)
 {
-	int retval;
 	if (task == NULL) {
 		task = rt_whoami();
 	}
 	((RT_TASK *)task)->resumsg = 0;
 	RTAI_COMEDI_LOCK(dev, subdev);
 	rt_printk("REGISTER CALL BACK, dev = %p, subdev = %u, mask = %u, callback = %p, task = %p\n", dev, subdev, mask, callback, task);
-	retval = 0;
 	RTAI_COMEDI_UNLOCK(dev, subdev);
-	return retval;
+	return 0;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_command(void *dev, comedi_cmd *cmdin)
@@ -246,6 +244,7 @@ static RTAI_SYSCALL_MODE int _comedi_data_read(void *dev, unsigned int subdev, u
 	RTAI_COMEDI_LOCK(dev, subdev);
 	rt_printk("DATA READ: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x.\n", dev, subdev, chan, range, aref);
 	data[0] = 0xabcdea;
+	rt_printk("DATA READ RETURNS %x.\n", data[0]);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return 1;
 }
@@ -254,8 +253,9 @@ static RTAI_SYSCALL_MODE int _comedi_data_read_delayed(void *dev, unsigned int s
 {
 	RTAI_COMEDI_LOCK(dev, subdev);
 	rt_printk("DATA READ DELAYED: dev = %p, subdev = %u, chan = %u, range = %u, aref = %x, nanosec = %u.\n", dev, subdev, chan, range, aref, nanosec);
-	data[0] = 0xcaccae;
 	rt_sleep(nano2count(nanosec));
+	data[0] = 0xcaccae;
+	rt_printk("DATA READ DELAYED RETURNS %x.\n", data[0]);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return 1;
 }
@@ -280,7 +280,8 @@ static RTAI_SYSCALL_MODE int _comedi_dio_read(void *dev, unsigned int subdev, un
 {
 	RTAI_COMEDI_LOCK(dev, subdev);
 	rt_printk("DIO READ: dev = %p, subdev = %u, chan = %x.\n", dev, subdev, chan);
-	*val = 0xFFFFFFFF;
+	val[0] = 0xFFFFFFFF;
+	rt_printk("DIO READ RETURNS %u.\n", val[0]);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return 1;
 }
@@ -296,8 +297,9 @@ static RTAI_SYSCALL_MODE int _comedi_dio_write(void *dev, unsigned int subdev, u
 static RTAI_SYSCALL_MODE int _comedi_dio_bitfield(void *dev, unsigned int subdev, unsigned int write_mask, unsigned int *bits)
 {
 	RTAI_COMEDI_LOCK(dev, subdev);
-	rt_printk("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdev, write_mask, *bits);
-	*bits |= 0xFFFFFFFF;
+	rt_printk("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdev, write_mask, bits[0]);
+	bits[0] |= 0xFFFFFFFF;
+	rt_printk("DIO BITFIELD RETURNS %x.\n", bits[0]);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return 1;
 }
@@ -346,14 +348,15 @@ static RTAI_SYSCALL_MODE int _comedi_find_subdevice_by_type(void *dev, int type,
 
 static RTAI_SYSCALL_MODE int _comedi_get_n_channels(void *dev, unsigned int subdev)
 {
-	rt_printk("COMEDI GET N RANGES, dev = %p, subdev = %u.\n", dev, subdev);
+	rt_printk("COMEDI GET N CHANNELS, dev = %p, subdev = %u.\n", dev, subdev);
+	rt_printk("COMEDI GET N CHANNELS RETURNS: %u\n", N_CHANNELS);
 	return N_CHANNELS;
 }
 
 static RTAI_SYSCALL_MODE lsampl_t _comedi_get_maxdata(void *dev, unsigned int subdev, unsigned int chan)
 {
 	rt_printk("GET MAXDATA, dev = %p, subdev = %u, chan = %u\n", dev, subdev, chan);
-	rt_printk("GET MAXDATA RETURNS: %u7\n", MAXDATA);
+	rt_printk("GET MAXDATA RETURNS: %u\n", MAXDATA);
 	return MAXDATA;
 }
 
@@ -372,8 +375,10 @@ static RTAI_SYSCALL_MODE int _comedi_do_insn(void *dev, comedi_insn *insnin)
 	rt_printk("COMEDI INST: insn = %u, n = %u, data = %u, subdev = %u, chanspec = %u.\n", insn.insn, insn.n, insn.data[0], insn.subdev, insn.chanspec);
 	for (i = 0; i < insn.n; i++) {
 		insn.data[i] = 0xcacca0 + i;
+		rt_printk("# = %d, %data = %u.\n", i, insn.data[i]);
 	}
 	retval = 1000000 + insn.n;
+	rt_printk("COMEDI INST RETURNS %d.\n", retval);
 	return retval;
 }
 
@@ -429,34 +434,43 @@ RTAI_SYSCALL_MODE int rt_comedi_trigger(void *dev, unsigned int subdev)
 
 static RTAI_SYSCALL_MODE int _comedi_poll(void *dev, unsigned int subdev)
 {
+	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
 	rt_printk("COMEDI POLL, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 33;
+	rt_printk("COMEDI POLL RETURNS %d.\n", retval);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
-	return 33;
+	return retval;
 }
 
 static RTAI_SYSCALL_MODE unsigned int _comedi_get_subdevice_flags(void *dev, unsigned int subdev)
 {
+	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
 	rt_printk("COMEDI GET SUBDEV FLAGS, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 0x77777777;
+	rt_printk("COMEDI GET SUBDEV FLAGS RETURNS %d.\n", retval);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
-	return 0x77777777;
+	return retval;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_get_krange(void *dev, unsigned int subdev, unsigned int chan, unsigned int range, comedi_krange *krange)
 {
 	rt_printk("GET KRANGE, dev = %p, subdev = %u, chan = %u, range = %u\n", dev, subdev, chan, range);
-	rt_printk("SUBDEV BY TYPE RETURNS: %d, %d, %u.\n", RANGE_MIN, RANGE_MAX, RANGE_FLAGS);
+	rt_printk("GET KRANGE RETURNS: %d, %d, %u.\n", RANGE_MIN, RANGE_MAX, RANGE_FLAGS);
 	*krange = (comedi_krange){ RANGE_MIN, RANGE_MAX, RANGE_FLAGS};
 	return 0;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_get_buf_head_pos(void * dev, unsigned int subdev)
 {
+	int retval;
 	RTAI_COMEDI_LOCK(dev, subdev);
 	rt_printk("COMEDI GET BUF HEAD POS, dev = %p, subdev = %u.\n", dev, subdev);
+	retval = 123456789;
+	rt_printk("COMEDI GET BUF HEAD POS RETURNS %d.\n", retval);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
-	return 123456789;
+	return retval;
 }
 
 static RTAI_SYSCALL_MODE int _comedi_set_user_int_count(void *dev, unsigned int subdev, unsigned int buf_user_count)
