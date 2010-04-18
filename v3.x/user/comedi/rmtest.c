@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 {
 	RT_TASK *task;
 	lsampl_t data[NCHAN] = { 0 };
-	unsigned int val;
+	unsigned int val, chan;
 	long i;
 
 	comedi_insn insn[NCHAN];
@@ -182,6 +182,7 @@ int main(int argc, char *argv[])
 	}
         while ((daqport = rt_request_port(daqnode)) <= 0 && daqport != -EINVAL);
 #endif
+	printf("REMOTE COMEDI TEST BEGINS:  NODE = %x, PORT = %d.\n", daqnode, daqport);
 
 	test_init_board();
 
@@ -237,6 +238,16 @@ int main(int argc, char *argv[])
 	PRINT("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdevdg, data[1], data[0]);
 	RT_comedi_dio_bitfield(daqnode, daqport, dev, subdevdg, data[1], data);
 	PRINT("DIO BITFIELD: dev = %p, subdev = %u, write_mask = %x, bits = %x.\n", dev, subdevdg, data[1], data[0]);
+
+	val = 0x77777777;
+	chan = 57;
+	PRINT("DIO WRITE: dev = %p, subdev = %u, chan = %u, val= %x.\n", dev, subdevdg, chan, val);
+	RT_comedi_dio_write(daqnode, daqport, dev, subdevdg, chan, val);
+	PRINT("DIO WRITE: dev = %p, subdev = %u, chan = %u, val= %x.\n", dev, subdevdg, chan, val);
+
+	PRINT("DIO READ: dev = %p, subdev = %u, chan = %u.\n", dev, subdevdg, chan);
+	RT_comedi_dio_read(daqnode, daqport, dev, subdevdg, chan, &val);
+	PRINT("DIO READ: dev = %p, subdev = %u, chan = %u, val= %x.\n", dev, subdevdg, chan, val);
 
         for (i = 0; i < NICHAN; i++) {
 		data[i] = 1000 + i;

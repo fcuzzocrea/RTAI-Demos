@@ -214,16 +214,12 @@ RTAI_SYSCALL_MODE long RT_comedi_command_data_wread(void *dev, unsigned int subd
 	switch (nchans & 0x3) {
 		case 0: 
 			return rt_comedi_command_data_wread(dev, subdev, nchans >> 2, data, cbmask);
-			return __rt_comedi_command_data_wread(dev, subdev, nchans, data, (RTIME)0, cbmask, WAIT);
 		case 1: 
 			return rt_comedi_command_data_wread_if(dev, subdev, nchans >> 2, data, cbmask);
-			return __rt_comedi_command_data_wread(dev, subdev, nchans, data, (RTIME)0, cbmask, WAITIF);
 		case 2: 
 			return _rt_comedi_command_data_wread_until(dev, subdev, nchans >> 2, data, cbmask, time);
-			return __rt_comedi_command_data_wread(dev, subdev, nchans, data, time, cbmask, WAITUNTIL);
 		case 3: 
 			return _rt_comedi_command_data_wread_timed(dev, subdev, nchans >> 2, data, cbmask, time);
-			return _rt_comedi_command_data_wread_until(dev, subdev, nchans, data, cbmask, rt_get_time() + time);
 	}
 	return 0;
 }
