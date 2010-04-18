@@ -30,10 +30,9 @@
 #define CBMASK      0xFFFFFFFF
 #define COMEDI_VERS 999
 
-/**
- * This file is a simple test support to verify the RTAI netrpc interface
- * to COMEDI services in terms of passing call and return parameters. 
- * It will be compiled into the kernel module kcomedi_rt.ko.
+/*
+ * This module serves to verify the RTAI netrpc interface to COMEDI
+ * services in terms of passing call and return parameters. 
  */
 
 #include <linux/module.h>
