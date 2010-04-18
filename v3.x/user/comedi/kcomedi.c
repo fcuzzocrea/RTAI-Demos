@@ -276,9 +276,9 @@ static RTAI_SYSCALL_MODE int _comedi_dio_config(void *dev, unsigned int subdev, 
 static RTAI_SYSCALL_MODE int _comedi_dio_read(void *dev, unsigned int subdev, unsigned int chan, unsigned int *val)
 {
 	RTAI_COMEDI_LOCK(dev, subdev);
-	rt_printk("COMEDI DIO READ: dev = %p, subdev = %u, chan = %x.\n", dev, subdev, chan);
+	rt_printk("COMEDI DIO READ: dev = %p, subdev = %u, chan = %u.\n", dev, subdev, chan);
 	val[0] = 0xFFFFFFFF;
-	rt_printk("COMEDI DIO READ RETURNS %u.\n", val[0]);
+	rt_printk("COMEDI DIO READ RETURNS %x.\n", val[0]);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return 1;
 }
@@ -286,7 +286,7 @@ static RTAI_SYSCALL_MODE int _comedi_dio_read(void *dev, unsigned int subdev, un
 static RTAI_SYSCALL_MODE int _comedi_dio_write(void *dev, unsigned int subdev, unsigned int chan, unsigned int val)
 {
 	RTAI_COMEDI_LOCK(dev, subdev);
-	rt_printk("COMEDI DIO WRITE: dev = %p, subdev = %u, chan = %x, val = %x.\n", dev, subdev, chan, val);
+	rt_printk("COMEDI DIO WRITE: dev = %p, subdev = %u, chan = %u, val = %x.\n", dev, subdev, chan, val);
 	RTAI_COMEDI_UNLOCK(dev, subdev);
 	return 1;
 }
