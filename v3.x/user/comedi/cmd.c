@@ -188,6 +188,7 @@ int main(void)
 	}
 	fp = fopen("rec.dat", "w");
 	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
+		fprintf(fp, "# %ld: ", k);
 		for (i = 0; i < NCHAN; i++) {
 			fprintf(fp, "%d\t", hist[n++]);
 		}
