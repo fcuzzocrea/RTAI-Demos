@@ -9,6 +9,10 @@ fi
 
 MODULES=$prefix/modules
 
+comedi_dir=`rtai-config --comedi-dir`
+
+COMEDI=$comedi_dir
+
 libpath=`rtai-config --library-dir`
 
 if [ "$libpath" == "" ]; then
@@ -20,13 +24,18 @@ export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
-echo "*** COMEDI ASYNC AI TEST (user) ***"
+echo "*** COMEDI ASYNC AO TEST (user) ***"
 echo "Press <enter> to load LXRT modules:"
 read junk
+insmod $COMEDI/comedi.ko
+insmod $COMEDI/kcomedilib/kcomedilib.ko
+insmod $COMEDI/drivers/comedi_fc.ko
+insmod $COMEDI/drivers/mite.ko
+insmod $COMEDI/drivers/ni_tio.ko
+insmod $COMEDI/drivers/ni_tiocmd.ko
+insmod $COMEDI/drivers/ni_pcimio.ko
 cd ../; ./ldmod; cd -
-/sbin/modprobe ni_pcimio
-/sbin/modprobe kcomedilib
-/sbin/insmod $MODULES/rtai_comedi.ko
+insmod $MODULES/rtai_comedi.ko
 /usr/local/sbin/comedi_config /dev/comedi1 ni_pcimio
 /usr/local/bin/comedi_calibrate -f /dev/comedi1
 echo
