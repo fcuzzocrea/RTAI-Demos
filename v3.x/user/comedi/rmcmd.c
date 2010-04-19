@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define NCHAN  5
 
 #define SAMP_FREQ  10000
-#define RUN_TIME   1
+#define RUN_TIME   3
 
 #define AI_RANGE  0
 #define SAMP_TIME  (1000000000/SAMP_FREQ)
@@ -54,10 +54,10 @@ unsigned int daqnode, daqport;
 
 static int init_board(void)
 {
-	dev = RT_comedi_open(daqnode, daqport, "/dev/comedi1");		
+	dev = RT_comedi_open(daqnode, daqport, "/dev/comedi0");		
 	printf("Comedi device (6071) handle: %p.\n", dev);
 	if (!dev){
-		printf("Unable to open (6071) %s.\n", "/dev/comedi1");
+		printf("Unable to open (6071) %s.\n", "/dev/comedi0");
 		return 1;
 	}
 	subdev = RT_comedi_find_subdevice_by_type(daqnode, daqport, dev, COMEDI_SUBD_AI, 0);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
         while ((daqport = rt_request_port(daqnode)) <= 0 && daqport != -EINVAL);
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SAMP_FREQ, RUN_TIME);
+	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d, NODE: %x, PORT: %d.\n", SAMP_FREQ, RUN_TIME, daqnode, daqport);
 	rt_make_hard_real_time();
 
 	if (init_board()) {;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 
 		val = COMEDI_CB_EOS;
 #if TIMEDCALL
-		retval += RT_comedi_command_data_wread_timed(daqnode, daqport, dev, subdev, NCHAN, data, nano2count(TIMEOUT), &val);
+		retval += RT_comedi_command_data_wread_timed(daqnode, daqport, dev, subdev, NCHAN, data, TIMEOUT, &val);
 #else
 		retval += RT_comedi_command_data_wread(daqnode, daqport, dev, subdev, NCHAN, data,&val);
 #endif
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 
 		val = 0;
 #if TIMEDCALL
-		retval += RT_comedi_wait_timed(daqnode, daqport, nano2count(TIMEOUT), &val);
+		retval += RT_comedi_wait_timed(daqnode, daqport, TIMEOUT, &val);
 #else
 		retval += RT_comedi_wait(daqnode, daqport, &val);
 #endif
@@ -207,6 +207,7 @@ int main(int argc, char *argv[])
 	}
 	fp = fopen("rec.dat", "w");
 	for (n = k = 0; k < SAMP_FREQ*RUN_TIME; k++) {
+		fprintf(fp, "# %ld: ", k);
 		for (i = 0; i < NCHAN; i++) {
 			fprintf(fp, "%d\t", hist[n++]);
 		}

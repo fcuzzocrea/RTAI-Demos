@@ -54,10 +54,10 @@ unsigned int daqnode, daqport;
 
 static int init_board(void)
 {
-	dev = RT_comedi_open(daqnode, daqport, "/dev/comedi1");		
+	dev = RT_comedi_open(daqnode, daqport, "/dev/comedi0");		
 	printf("Comedi device (6071) handle: %p.\n", dev);
 	if (!dev){
-		printf("Unable to open (6071) %s.\n", "/dev/comedi1");
+		printf("Unable to open (6071) %s.\n", "/dev/comedi0");
 		return 1;
 	}
 	subdev = RT_comedi_find_subdevice_by_type(daqnode, daqport, dev, COMEDI_SUBD_AO, 0);
@@ -147,7 +147,8 @@ int main(int argc, char *argv[])
         while ((daqport = rt_request_port(daqnode)) <= 0 && daqport != -EINVAL);
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d.\n", SAMP_FREQ, RUN_TIME);
+	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d, NODE: %x, PORT: %d.\n", SAMP_FREQ, RUN_TIME, daqnode, daqport);
+	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d, NODE: %x, PORT: %d.\n", SAMP_FREQ, RUN_TIME, daqnode, daqport);
 	rt_make_hard_real_time();
 
 	if (init_board()) {;
