@@ -63,7 +63,7 @@ static unsigned int daqnode, daqport;
 
 static int test_init_board(void)
 {
-	dev = RT_comedi_open(daqnode, daqport, "/dev/comedi1");		
+	dev = RT_comedi_open(daqnode, daqport, "/dev/comedi");		
 	PRINT("Comedi device handle: %p.\n", dev);
 
 	subdevai = RT_comedi_find_subdevice_by_type(daqnode, daqport, dev, COMEDI_SUBD_AI, 0);
