@@ -11,7 +11,7 @@ MODULES=$prefix/modules
 
 comedi_dir=`rtai-config --comedi-dir`
 
-COMEDI_DIR=$comedi_dir
+COMEDI=$comedi_dir
 
 libpath=`rtai-config --library-dir`
 
@@ -27,16 +27,21 @@ echo
 echo "*** COMEDI INSTRUCTION (LIST) TEST (user) ***"
 echo "Press <enter> to load LXRT modules:"
 read junk
-#insmod $COMEDI_DIR/comedi.ko
-#insmod $COMEDI_DIR/kcomedilib/kcomedilib.ko
-#insmod $COMEDI_DIR/drivers/comedi_fc.ko
+insmod $COMEDI/comedi.ko
+insmod $COMEDI/kcomedilib/kcomedilib.ko
+insmod $COMEDI/drivers/comedi_fc.ko
+insmod $COMEDI/drivers/mite.ko
+insmod $COMEDI/drivers/ni_tio.ko
+insmod $COMEDI/drivers/ni_tiocmd.ko
+insmod $COMEDI/drivers/ni_pcimio.ko
 cd ../; ./ldmod; cd -
-insmod $MODULES/rtai_netrpc.ko ThisNode="127.0.0.1";
-insmod kcomedi_rt.ko
+insmod $MODULES/rtai_comedi.ko
+/usr/local/sbin/comedi_config /dev/comedi0 ni_pcimio
+/usr/local/bin/comedi_calibrate -f /dev/comedi0
 echo
 echo "Now start the realtime process <enter>:"
 read junk
-$SUDO ./rmtest
+$SUDO ./rmaocmd
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
