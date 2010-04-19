@@ -338,6 +338,7 @@ int main(int argc, char* argv[])
 	rt_mbx_delete(Keyboard);
 	rt_mbx_delete(Screen);
 	rt_task_delete(mytask);
+	rt_sem_delete(sync_sem);
 	printf("\nEND MASTER TASK %p.\n", mytask);
 	rt_thread_join(Chrono);
 	rt_thread_join(Clock);
