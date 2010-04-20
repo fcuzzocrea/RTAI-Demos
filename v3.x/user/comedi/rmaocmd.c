@@ -148,7 +148,6 @@ int main(int argc, char *argv[])
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d, NODE: %x, PORT: %d.\n", SAMP_FREQ, RUN_TIME, daqnode, daqport);
-	printf("COMEDI CMD TEST BEGINS: SAMPLING FREQ: %d, RUN TIME: %d, NODE: %x, PORT: %d.\n", SAMP_FREQ, RUN_TIME, daqnode, daqport);
 	rt_make_hard_real_time();
 
 	if (init_board()) {;

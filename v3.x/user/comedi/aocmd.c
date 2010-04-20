@@ -49,10 +49,10 @@ static lsampl_t maxdata;
 
 static int init_board(void)
 {
-	dev = comedi_open("/dev/comedi1");		
+	dev = comedi_open("/dev/comedi0");		
 	printf("Comedi device (6071) handle: %p.\n", dev);
 	if (!dev){
-		printf("Unable to open (6071) %s.\n", "/dev/comedi1");
+		printf("Unable to open (6071) %s.\n", "/dev/comedi0");
 		return 1;
 	}
 	subdev = comedi_find_subdevice_by_type(dev, COMEDI_SUBD_AO, 0);

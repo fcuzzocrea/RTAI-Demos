@@ -30,14 +30,14 @@ read junk
 insmod $COMEDI_DIR/comedi.ko
 insmod $COMEDI_DIR/kcomedilib/kcomedilib.ko
 insmod $COMEDI_DIR/drivers/comedi_fc.ko
+cd ../; ./ldmod; cd -
+insmod $MODULES/rtai_comedi.ko
 insmod $COMEDI_DIR/drivers/mite.ko
 insmod $COMEDI_DIR/drivers/ni_tio.ko
 insmod $COMEDI_DIR/drivers/ni_tiocmd.ko
 insmod $COMEDI_DIR/drivers/ni_pcimio.ko
-/usr/local/sbin/comedi_config /dev/comedi1 ni_pcimio
-/usr/local/bin/comedi_calibrate -f /dev/comedi1
-cd ../; ./ldmod; cd -
-insmod $MODULES/rtai_comedi.ko
+/usr/local/sbin/comedi_config /dev/comedi0 ni_pcimio
+/usr/local/bin/comedi_calibrate -f /dev/comedi0
 echo
 echo "Now start the realtime process <enter>:"
 read junk
