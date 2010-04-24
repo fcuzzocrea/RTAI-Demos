@@ -327,26 +327,26 @@ static inline void rt_task_join(const char *name)
 }
 
 typedef struct rt_task_mcb {
-	unsigned long flowid;
-	long opcode;
+	int flowid;
+	int opcode;
 	void *data;
-	long size;
+	size_t size;
 } RT_TASK_MCB;
 
 static inline int rt_task_send(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
 {
 	if (timeout == TM_INFINITE) {
-		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; } arg = { task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size };
-		if (rtai_lxrt(BIDX, SIZARG, RPCX, &arg).v[LOW] == MSG_ERR) {
+		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; } arg = { task->task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size };
+		if ((void *)rtai_lxrt(BIDX, SIZARG, RPCX, &arg).v[LOW] <= MSG_ERR) {
 			return -EIDRM;
 		}
 	} else if (timeout == TM_NONBLOCK) {
-		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; } arg = { task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size };
+		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; } arg = { task->task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size };
 		if ((void *)(task = rtai_lxrt(BIDX, SIZARG, RPCX_IF, &arg).v[LOW]) <= MSG_ERR) {
 			return !task ? -EWOULDBLOCK : -EIDRM;
 		}
 	} else {
-		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; RTIME timeout; } arg = { task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size, rt_timer_ns2tsc(timeout) };
+		struct { void *task; void *smsg; void *rmsg; long ssize; long rsize; RTIME timeout; } arg = { task->task, mcb_s->data, mcb_r->data, mcb_s->size, mcb_r->size, rt_timer_ns2tsc(timeout) };
 		if ((void *)(task = rtai_lxrt(BIDX, SIZARG, RPCX_TIMED, &arg).v[LOW]) <= MSG_ERR) {
 			return !task ? -EINTR : -EIDRM;
 		}
@@ -354,32 +354,32 @@ static inline int rt_task_send(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *m
 	return mcb_r->size;
 }
 
-unsigned long rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
+static inline int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 {
 	int len;
 	void *task = NULL;
 	if (timeout == TM_INFINITE) {
-		struct { void *task; void *rmsg; long rsize; int *len; } arg = { task, mcb_r->data, mcb_r->size, &len };
+		struct { void *task; void *rmsg; long rsize; int *len; } arg = { NULL, mcb_r->data, mcb_r->size, &len };
 		if ((task = rtai_lxrt(BIDX, SIZARG, RECEIVEX, &arg).v[LOW]) <= MSG_ERR) {
 			return -EIDRM;
 		}
 	} else if (timeout == TM_NONBLOCK) {
-		struct { void *task; void *rmsg; long rsize; int *len; } arg = { task, mcb_r->data, mcb_r->size, &len };
+		struct { void *task; void *rmsg; long rsize; int *len; } arg = { NULL, mcb_r->data, mcb_r->size, &len };
 		if ((task = rtai_lxrt(BIDX, SIZARG, RECEIVEX_IF, &arg).v[LOW]) <= MSG_ERR) {
 			return !task ? -EWOULDBLOCK : -EIDRM;
 		}
 	} else {
-		struct { void *task; void *rmsg; long rsize; int *len; RTIME timeout; } arg = { task, mcb_r->data, mcb_r->size, &len, rt_timer_ns2tsc(timeout) };
+		struct { void *task; void *rmsg; long rsize; int *len; RTIME timeout; } arg = { NULL, mcb_r->data, mcb_r->size, &len, rt_timer_ns2tsc(timeout) };
 		if ((task = rtai_lxrt(BIDX, SIZARG, RECEIVEX_TIMED, &arg).v[LOW]) <= MSG_ERR) {
-			return !task ? -EINTR : -EIDRM;
+			return mcb_r->flowid = !task ? -EINTR : -EIDRM;
 		}
 	}
-	return mcb_r->flowid = (unsigned long)task;
+	return mcb_r->flowid = (int)((unsigned long)task & 0x7FFFFFFFLL);
 }
 
-int rt_task_reply(unsigned long flowid, RT_TASK_MCB *mcb_s)
+static inline int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 {
-	struct { struct rt_task_struct *task; void *msg; long size; } arg = { (void *)flowid, mcb_s->data, mcb_s->size, };
+	struct { struct rt_task_struct *task; void *msg; long size; } arg = { (void *)(unsigned long)((unsigned long)flowid | 0xFFFFFFFF80000000ULL), mcb_s->data, mcb_s->size };
 	return rtai_lxrt(BIDX, SIZARG, RETURNX, &arg).v[LOW] <= MSG_ERR ? -EIDRM: 0; 
 }
 
