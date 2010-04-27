@@ -52,7 +52,7 @@
 #define USESEL    1
 #define USEMBX    1
 #define CPUMAP    0xF
-#define WORKCYCLE 1000000LL
+#define WORKCYCLE 10000000LL
 #define TIMEOUT   (WORKCYCLE*25)/100
 
 #define ECHO rt_printk
@@ -136,6 +136,7 @@ static void *receiver(void *arg)
 		printf("Cannot initialise the receiver task\n");
 		exit(1);
 	}
+
 	if (((sock = rt_dev_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))) == -1) {
 		printf("Error opening UDP/IP socket: %lu\n", sock);
 		exit(1);
