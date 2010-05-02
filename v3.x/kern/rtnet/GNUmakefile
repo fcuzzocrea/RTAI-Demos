@@ -7,6 +7,7 @@ endif
 CC = $(shell rtai-config --cc)
 
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
+LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
 
 all:: display
 
@@ -37,7 +38,7 @@ clean::
 endif
 
 display: display.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< -lpthread
+	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lpthread
 
 clean::
 	$(RM) display
