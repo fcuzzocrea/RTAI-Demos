@@ -199,7 +199,7 @@ int demo_close_rt(struct rtdm_dev_context   *context,
 /**********************************************************/
 int demo_ioctl_rt(struct rtdm_dev_context   *context,
                   rtdm_user_info_t          *user_info,
-                  int                       request,
+                  unsigned int              request,
                   void                      *arg)
 {
     struct demodrv_context  *my_context;

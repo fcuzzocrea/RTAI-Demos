@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <linux/autoconf.h>
+//#include <linux/autoconf.h>
 
 #include <rtdm/rtdm.h>
 #include "inc.h"
