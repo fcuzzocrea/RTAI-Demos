@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define AVRGTIME    1
 #define PERIOD      100000
 #define TIMER_MODE  0
+#define ALONE       0
 
 #define SMPLSXAVRG ((1000000000*AVRGTIME)/PERIOD)/1
 
@@ -69,6 +70,7 @@ int main(int argc, char *argv[])
 	RT_TASK *task, *latchk;
 	struct sample { long long min; long long max; int index, ovrn; } samp;
 	double s = 0.0, sref;
+	long long max = -1000000000, min = 1000000000;
 
 	signal(SIGINT, endme);
 	signal(SIGKILL, endme);
@@ -155,11 +157,17 @@ int main(int argc, char *argv[])
 		samp.min = min_diff;
 		samp.max = max_diff;
 		samp.index = average/SMPLSXAVRG;
+#if ALONE
+		if (max < samp.max) max = samp.max;
+		if (min > samp.min) min = samp.min;
+		rt_printk("* min: %lld/%lld, max: %lld/%lld average: %d (%d) <Hit [RETURN] to stop> *\n", samp.min, min, samp.max, max, samp.index, samp.ovrn);
+#else
 		rt_mbx_send_if(mbx, &samp, sizeof(samp));
 		if ((latchk = rt_get_adr(nam2num("LATCHK"))) && (rt_receive_if(latchk, &average) || end)) {
 			rt_return(latchk, average);
 			break;
 		}
+#endif
 	}
 
 	while (rt_get_adr(nam2num("LATCHK"))) {

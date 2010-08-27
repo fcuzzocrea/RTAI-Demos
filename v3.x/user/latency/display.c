@@ -33,7 +33,7 @@ static RT_TASK *task;
 static volatile int end;
 void endme(int sig) { end = 1; }
 
-int main(int argc)
+int main(int argc, char *argv[])
 {
 	struct pollfd ufds = { 0, POLLIN, };
 	unsigned int msg, ch;
