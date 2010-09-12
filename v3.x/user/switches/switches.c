@@ -72,6 +72,9 @@ SCHED_FIFO, 0x1))) {
 				rt_sem_wait(sem);
 				break;
 			case 2:
+				rt_receive(NULL, &msg);
+				break;
+			case 3:
 				rt_return(rt_receive(NULL, &msg), 0);
 				break;
 		}
@@ -91,7 +94,7 @@ static void msleep(int ms)
 
 int main(void)
 {
-	RTIME tsr, tss, tsm;
+	RTIME tsr, tss, tsm, trpc;
 	RT_TASK *mainbuddy;
 	int i, k, s;       
 	unsigned long msg;
@@ -154,10 +157,24 @@ int main(void)
 	tsm = rt_get_cpu_time_ns();
 	for (i = 0; i < LOOPS; i++) {
 		for (k = 0; k < NR_RT_TASKS; k++) {
-			rt_rpc(mytask[k], 0, &msg);
+			rt_send(mytask[k], 0);
 		}
 	}
 	tsm = rt_get_cpu_time_ns() - tsm;
+
+	change = 3;
+
+	for (k = 0; k < NR_RT_TASKS; k++) {
+		rt_send(mytask[k], 0);
+	}
+
+	trpc = rt_get_cpu_time_ns();
+	for (i = 0; i < LOOPS; i++) {
+		for (k = 0; k < NR_RT_TASKS; k++) {
+			rt_rpc(mytask[k], 0, &msg);
+		}
+	}
+	trpc = rt_get_cpu_time_ns() - trpc;
 
 	rt_make_soft_real_time();
 
@@ -170,8 +187,12 @@ int main(void)
 	printf("SWITCH TIME %d (ns)\n", (int)(tss/(2*NR_RT_TASKS*LOOPS)));
 
 	printf("\nFOR %d TASKS: ", NR_RT_TASKS);
+	printf("TIME %d (ms), SEND/RCV SWITCHES %d, ", (int)(tsm/1000000), 2*NR_RT_TASKS*LOOPS);
+	printf("SWITCH TIME %d (ns)\n", (int)(tsm/(2*NR_RT_TASKS*LOOPS)));
+
+	printf("\nFOR %d TASKS: ", NR_RT_TASKS);
 	printf("TIME %d (ms), RPC/RCV-RET SWITCHES %d, ", (int)(tsm/1000000), 2*NR_RT_TASKS*LOOPS);
-	printf("SWITCH TIME %d (ns)\n\n", (int)(tsm/(2*NR_RT_TASKS*LOOPS)));
+	printf("SWITCH TIME %d (ns)\n\n", (int)(trpc/(2*NR_RT_TASKS*LOOPS)));
 
 	fflush(stdout);
 
