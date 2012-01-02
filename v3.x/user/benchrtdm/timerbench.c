@@ -17,7 +17,7 @@
  */
 
 #include <linux/module.h>
-#include <asm/semaphore.h>
+//#include <asm/semaphore.h>
 #ifdef CONFIG_IPIPE_TRACE
 #include <linux/ipipe_trace.h>
 #endif /* CONFIG_IPIPE_TRACE */
@@ -191,7 +191,8 @@ static int rt_tmbench_open(struct rtdm_dev_context *context,
 	ctx = (struct rt_tmbench_context *)context->dev_private;
 
 	ctx->mode = -1;
-	init_MUTEX(&ctx->nrt_mutex);
+//	init_MUTEX(&ctx->nrt_mutex);
+	sema_init(&ctx->nrt_mutex, 1);
 
 	return 0;
 }
