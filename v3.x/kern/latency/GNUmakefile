@@ -10,7 +10,7 @@ LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 
 all:: display
 
-ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)),)
+ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)) || $(findstring 3.,$(shell rtai-config --linux-version 3>/dev/null)),)
 
 LINUX_DIR = $(shell rtai-config --linux-dir)
 
