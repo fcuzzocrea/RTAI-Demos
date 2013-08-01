@@ -98,7 +98,7 @@ static void fun(long thread) {
 	int average;
 	int min_diff;
 	int max_diff;
-	RTIME svt, t;
+	RTIME svt;
 
 	min_diff = 1000000000;
 	max_diff = -1000000000;
