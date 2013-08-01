@@ -24,6 +24,7 @@ then
 insmod $MODULES/rtai_hal.ko;
 insmod ./lnxshintr_rt.ko;
 else 
+insmod $MODULES/rtai_hal.o;
 insmod ./lnxshintr.o;
 fi
 
