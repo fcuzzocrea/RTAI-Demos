@@ -18,9 +18,6 @@ echo "*** A PROCESS BASED USER SPACE INTERRUPT HANDLER ***"
 echo "Press <enter> to load modules:"
 read junk
 cd ../..; ./ldmod; cd -
-if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod $MODULES/rtai_tasklets.ko; insmod $MODULES/rtai_usi.ko;
-else insmod $MODULES/rtai_tasklets.o; insmod $MODULES/rtai_usi.o; fi
 echo
 echo "Now start the realtime process <enter>."
 read junk
