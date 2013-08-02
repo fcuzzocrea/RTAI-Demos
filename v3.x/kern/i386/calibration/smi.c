@@ -150,7 +150,7 @@ void rthal_smi_disable(void)
 	}
 }
 
-static unsigned short __devinit get_smi_en_addr(struct pci_dev *dev)
+static unsigned short get_smi_en_addr(struct pci_dev *dev)
 {
 	u_int8_t byte0, byte1;
 
@@ -159,7 +159,7 @@ static unsigned short __devinit get_smi_en_addr(struct pci_dev *dev)
 	return SMI_CTRL_ADDR + (((byte1 << 1) | (byte0 >> 7)) << 7); //bits 7-15
 }
 
-int __devinit rthal_smi_init(void)
+int rthal_smi_init(void)
 {
 	struct pci_dev *dev = NULL;
 	struct pci_device_id *id;
