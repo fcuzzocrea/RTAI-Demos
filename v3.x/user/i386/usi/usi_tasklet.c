@@ -58,7 +58,7 @@ static void timer_handler(unsigned long data)
 		}
 	}
 	/* normal processing goes here */
-	intcnt++;
+	++intcnt;
 	rtc_enable_irq(TIMER_IRQ, TIMER_FRQ);
 	rt_sem_signal(dspsem);
 }
