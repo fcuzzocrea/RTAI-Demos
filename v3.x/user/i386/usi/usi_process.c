@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2002-2008  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2002-2013  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -46,7 +46,7 @@ static void *timer_handler(void *args)
 {
 	RT_TASK *handler;
 
- 	if (!(handler = rt_task_init_schmod(nam2num("HANDLR"), 0, 0, 0, SCHED_FIFO, 0xF))) {
+ 	if (!(handler = rt_thread_init(nam2num("HANDLR"), 0, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT HANDLER TASK > HANDLR <\n");
 		exit(1);
 	}
