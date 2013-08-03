@@ -67,8 +67,10 @@ static void *timer_handler(void *args)
 				/* overrun processing, if any, goes here */
 				rt_sem_signal(dspsem);
 			}
+			do {
 			/* normal processing goes here */
-			++intcnt;
+				++intcnt;
+			} while(0);
 			rt_sem_signal(dspsem);
 		} while (ovr > 0);
 		rtc_enable_irq(TIMER_IRQ, TIMER_FRQ);
