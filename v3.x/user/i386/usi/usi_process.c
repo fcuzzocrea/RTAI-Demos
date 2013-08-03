@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define TIMEOUT    100000000  // to watch, or not to watch, overruns (MP only)
 
 static SEM *dspsem;
-static volatile int ovr, intcnt;
+static volatile int ovr, intcnt, maxcnt;
 
 #include "check_flags.h"
 
@@ -58,7 +58,7 @@ static void *timer_handler(void *args)
 	rtc_start(TIMER_FRQ);
 	rtc_enable_irq(TIMER_IRQ, TIMER_FRQ);
 	rtai_cli();
-	while (ovr != RT_IRQ_TASK_ERR) {
+	while (ovr != RT_IRQ_TASK_ERR && intcnt < maxcnt) {
 		CHECK_FLAGS();
 		do {
 			ovr = rt_irq_wait_timed(TIMER_IRQ, nano2count(TIMEOUT));
@@ -85,7 +85,6 @@ int main(void)
 {
         RT_TASK *maint;
 	pthread_t thread;
-	int maxcnt;
 
 	printf("GIVE THE NUMBER OF INTERRUPTS YOU WANT TO COUNT: ");
 	scanf("%d", &maxcnt);
@@ -105,8 +104,6 @@ int main(void)
 		rt_sem_wait(dspsem);
 		printf("OVERRUNS %d, INTERRUPT COUNT %d\n", ovr, intcnt);
 	}
-	rtc_stop();
-	rt_release_irq_task(TIMER_IRQ);
 	rt_thread_join(thread);
 	rt_task_delete(maint);
 	rt_sem_delete(dspsem);
