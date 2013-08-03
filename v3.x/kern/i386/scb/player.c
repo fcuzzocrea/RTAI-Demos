@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <rtai_nam2num.h>
 #include <rtai_scb.h>
 
 #define BUFSIZE 512
