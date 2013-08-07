@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2005  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2005-2013  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 
-#include <linux/config.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/module.h>
@@ -47,7 +46,7 @@ static double randu(void)
 	return (-1.0 + (double)(i + i)/2796203.0);
 }
 
-static void mfun(int t)
+static void mfun(long t)
 {
 	char tname[6] = "MFUN", mname[6] = "RMBX";
 	RT_MSGQ *smbx, *rmbx;
@@ -90,7 +89,7 @@ prem:
 	rt_printk("TASK %d ENDS.\n", t);
 }
 
-static void bfun(int t)
+static void bfun(long t)
 {
 	RT_MSGQ *smbx, **rmbx;
 	int *msg, mtype, i, n;
@@ -128,8 +127,6 @@ prem:
 
 static RT_MSGQ *smbx, *rmbx[NTASKS];
 static RT_TASK bthread, mthread[NTASKS];
-
-extern int rt_kthread_init(RT_TASK *, void *, int, int, int, int, int);
 
 int init_module(void)
 {
