@@ -35,7 +35,7 @@ MODULE_LICENSE("GPL");
 #define RESUME_SIGNAL  0
 #define END_SIGNAL     1
 
-#define NLOOP     10
+#define NLOOP     10000
 #define PERIOD    1000000
 #define WAISTIME  PERIOD/(2*NTASKS)
 #define STKSZ     4000
