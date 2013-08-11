@@ -728,6 +728,8 @@ void *timerthread(void *param)
 	cpu_set_t mask;
 	pthread_t thread;
 
+	pthread_setschedparam_np(99 - par->prio, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
+
 	/* if we're running in numa mode, set our memory node */
 	if (par->node != -1)
 		rt_numa_set_numa_run_on_node(par->node, par->cpu);
@@ -763,8 +765,6 @@ void *timerthread(void *param)
 	schedp.sched_priority = par->prio;
 	if (setscheduler(0, par->policy, &schedp))
 		fatal("timerthread%d: failed to set priority to %d\n", par->cpu, par->prio);
-
-	pthread_setschedparam_np(99 - par->prio, SCHED_FIFO, 0, 0xF, PTHREAD_HARD_REAL_TIME_NP);
 
 	/* Get current time */
 	clock_gettime(par->clock, &now);
@@ -1531,7 +1531,9 @@ int main(int argc, char **argv)
 	int i, ret = -1;
 	int status;
 
+	pthread_setschedparam_np(99, SCHED_FIFO, 0, 0xF, PTHREAD_SOFT_REAL_TIME_NP);
 	start_rt_timer(0);
+
 	process_options(argc, argv);
 
 	if (check_privs())
