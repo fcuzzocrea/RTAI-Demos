@@ -192,10 +192,12 @@ static int _init(void)
 		goto close_socks;
 	}
 
+#if 1
 	if (rt_task_resume(&rx_task) < 0) {
 		rt_printk("RtnetTest: Can't start the receiver task");
 		goto close_socks;
 	}
+#endif
 
 	rt_printk("RtnetTest: Module initialisation completed\n");
 	return 0;
