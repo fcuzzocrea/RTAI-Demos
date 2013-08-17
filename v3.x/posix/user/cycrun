@@ -19,7 +19,7 @@ cd ../; ./ldmod; cd -
 echo
 echo "Now start the realtime process <enter>:"
 read junk
-$SUDO ./cyclictest -n -t4 -p99 -c1 -i100
+$SUDO ./cyclictest -n -Q -d0 -t10 -p99 -c1 -i100
 #$SUDO ./cyclictest  --h
 echo
 echo "Done. Press <enter> to remove the modules."

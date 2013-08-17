@@ -34,10 +34,10 @@
 #include <sys/resource.h>
 #include <sys/utsname.h>
 #include <sys/mman.h>
+#include <sys/io.h>
+
 #include "rt_numa.h"
-
 #include "rt-utils.h"
-
 #include "error.c"
 #include "rt-utils.c"
 
@@ -113,6 +113,24 @@ extern int clock_nanosleep(clockid_t __clock_id, int __flags,
 #define KVALUELEN		32
 
 int enable_events;
+
+#define MAXDIM 10
+static double a[MAXDIM], b[MAXDIM];
+#define MAXIO 3
+
+static double dot(double *a, double *b, int n)
+{
+	int k = n - 1;
+	double s = 0.0;
+	for(; k >= 0; k--) s = s + a[k]*b[k];
+	return s;
+}
+
+static void do_some_io(void)
+{
+	int k = MAXIO;
+	for(; k >= 0; k--) outb(1, 0x378);
+}
 
 static char *policyname(int policy);
 
@@ -808,7 +826,10 @@ void *timerthread(void *param)
 
 		uint64_t diff;
 		int sigs, ret;
-
+		double s;
+ 
+		s = dot(a, b, MAXDIM);
+		do_some_io();
 		/* Wait for next period */
 		switch (par->mode) {
 #ifdef EXTRA_SUPPORT
@@ -1530,6 +1551,8 @@ int main(int argc, char **argv)
 	int max_cpus = sysconf(_SC_NPROCESSORS_CONF);
 	int i, ret = -1;
 	int status;
+
+	for(i = 0; i < MAXDIM; i++) a[i] = b[i] = 3.141592;
 
 	pthread_setschedparam_np(99, SCHED_FIFO, 0, 0xF, PTHREAD_SOFT_REAL_TIME_NP);
 	start_rt_timer(0);
