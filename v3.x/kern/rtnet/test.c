@@ -36,13 +36,9 @@
 #define CPU 1
 #define STKSIZ 8192
 
-#ifndef __FD_ZERO__
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 #define __FD_ZERO__ __FD_ZERO
-#endif
-#ifndef __FD_SET__
 #define __FD_SET__ __FD_SET
-#endif
-#ifndef __FD_ISSET__
 #define __FD_ISSET__ __FD_ISSET
 #endif
 
