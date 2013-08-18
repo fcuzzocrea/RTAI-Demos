@@ -4,6 +4,9 @@
  * (C) 2008-2012 Clark Williams <williams@redhat.com>
  * (C) 2005-2007 Thomas Gleixner <tglx@linutronix.de>
  *
+ * Modified by Paolo Mantegazza <mantegazza@aero.polimi.it>, with the addition
+ * of something to do, floating point operations and outbs.
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License Version
  * 2 as published by the Free Software Foundation.
