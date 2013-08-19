@@ -43,7 +43,6 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-//	rt_set_oneshot_mode();
 	period = nano2count(1000000);
 	start_rt_timer(period);
 	rt_make_hard_real_time();
