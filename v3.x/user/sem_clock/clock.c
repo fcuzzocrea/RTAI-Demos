@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
 	init_cmdcrn();
 	init_dispclk();
 
- 	if (!(mytask = rt_task_init(nam2num("MASTER"), 1, 0, 0))) {
+	if (!(mytask = rt_thread_init(nam2num("MASTER"), 1, 0, SCHED_FIFO, 0xF))) {
 		printf("CANNOT INIT MASTER TASK\n");
 		exit(1);
 	}

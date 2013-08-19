@@ -246,7 +246,7 @@ int main(void)
 	rt_make_hard_real_time();
 
 #if USEMBX
-	while (!end) {
+	while(!end) {
 		if (!(misd = rt_mbx_receive(mbx, (void *)&frombx, sizeof(frombx)))) {
 			ECHO("MAIN FROM MBX %lu-%lu %lld %lld\n", ++cnt, frombx.cnt, frombx.tx/1000, frombx.rx/1000);
 		} else {
