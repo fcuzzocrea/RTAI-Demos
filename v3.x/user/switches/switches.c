@@ -33,8 +33,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_sem.h>
 #include <rtai_msg.h>
 
-#define LOOPS  1000
-#define NR_RT_TASKS 10
+#define LOOPS  2000
+#define NR_RT_TASKS 20
+#define CPUMSK 0x1
 #define taskname(x) (1000 + (x))
 
 static pthread_t thread[NR_RT_TASKS];
@@ -55,7 +56,7 @@ static void *thread_fun(void *arg)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	mytask_indx = ((int *)arg)[0];
 	if (!(mytask[mytask_indx] = rt_thread_init(taskname(mytask_indx), 0, 0,
-SCHED_FIFO, 0x1))) {
+SCHED_FIFO, CPUMSK))) {
 		printf("CANNOT INIT TASK %u\n", taskname(mytask_indx));
 		exit(1);
 	}
@@ -100,7 +101,7 @@ int main(void)
 	unsigned long msg;
 
 	printf("\n\nWait for it ...\n");
-	if (!(mainbuddy = rt_thread_init(nam2num("MASTER"), 1000, 0, SCHED_FIFO, 0x1))) {
+	if (!(mainbuddy = rt_thread_init(nam2num("MASTER"), 1000, 0, SCHED_FIFO, CPUMSK))) {
 		printf("CANNOT INIT TASK %lu\n", nam2num("MASTER"));
 		exit(1);
 	}
