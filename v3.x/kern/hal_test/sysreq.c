@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define TIMER_FREQ 1000 // !!! 0 < TIMER_FREQ < HZ !!!
+#define LINUX_TIMER_FREQ 1000 // !!! 0 < LINUX_TIMER_FREQ < HZ !!!
 
 static int srq, scount;
 
@@ -37,11 +37,12 @@ static DECLARE_MUTEX_LOCKED(sem);
 
 static long long user_srq_handler(unsigned long whatever)
 {
+	int semret, cpyret;
 	long long time;
 
 //printk("WHATEVER %lu\n", whatever);
 	if (whatever == 1) {
-		return (long long)((TIMER_FREQ)/HZ);
+		return (long long)((LINUX_TIMER_FREQ)/HZ);
 	}
 
 	if (whatever == 2) {
@@ -54,12 +55,12 @@ static long long user_srq_handler(unsigned long whatever)
 		return (long long)scount;
 	}
 
-	down_interruptible(&sem);
+	semret = down_interruptible(&sem);
 
 // let's show how to communicate. Copy to and from user shall allow any kind of
 // data interchange and service.
 	time = llimd(rtai_rdtsc(), 1000000, CPU_FREQ);
-	copy_to_user((long long *)whatever, &time, sizeof(long long));
+	cpyret = copy_to_user((long long *)whatever, &time, sizeof(long long));
 	return time;
 }
 
@@ -78,7 +79,7 @@ static void rt_timer_handler(unsigned long none)
 	rt_printk("TIMER TICK: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
 #endif
 	rt_pend_linux_srq(srq);
-	mod_timer(&timer, jiffies + (HZ/TIMER_FREQ));
+	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
 	return;
 }
 
@@ -98,7 +99,7 @@ int init_module(void)
 	srq = rt_request_srq(0xcacca, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_timer_handler;
-	mod_timer(&timer, jiffies + (HZ/TIMER_FREQ));
+	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
 #ifdef CONFIG_SMP
 	rt_request_irq(SCHED_IPI, (void *)sched_ipi_handler, NULL, 0);
 #endif
