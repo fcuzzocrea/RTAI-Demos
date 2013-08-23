@@ -1,2 +1,2 @@
-Basic tests for hal and scheduler (irqs, srqs, timers and ipis).
-Found useful for checking basic things with new kernels and patches.
+Basic tests for the HAL, irqs, srqs, timers and ipis.
+Useful for checking basic things with new kernels and patches.

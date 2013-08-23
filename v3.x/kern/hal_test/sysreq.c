@@ -29,15 +29,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define DIAGSRQ 0  // diagnose srq arg values
-#define DIAGTMR 0  // diagnose if LINUX time is running
-#define DIAGIPI 0  // diagnose if IPIs are received
+#define DIAGSRQ  0  // diagnose srq arg values
+#define DIAGSLTMR 0  // diagnose if LINUX time is running
+#define DIAGIPI  0  // diagnose if IPIs are received
+#define DIAGHLTMR 0  // diagnose if RTAI time is running
 
 #define LINUX_HZ_PERCENT 100 // !!! 1 to 100 !!!
 
 #define LINUX_TIMER_FREQ ((HZ*LINUX_HZ_PERCENT)/100)
 
-static int srq, scount;
+static int srq, ipi_count, ltmr_count;
 
 static DECLARE_MUTEX_LOCKED(sem);
 
@@ -57,6 +58,9 @@ static long long user_srq_handler(unsigned long req)
 			return (long long)(HZ);
 		}
 		case 3: {
+			return (long long)ltmr_count;
+		}
+		case 4: {
 #ifdef CONFIG_SMP
 			int cpuid = rtai_cpuid();
 #if DIAGIPI
@@ -66,7 +70,7 @@ static long long user_srq_handler(unsigned long req)
 	                send_sched_ipi(cpuid ? 1 : 2);
         	        rtai_sti();
 #endif
-			return (long long)scount;
+			return (long long)ipi_count;
 		}
 	}
 
@@ -86,9 +90,9 @@ static void rtai_srq_handler(void)
 
 static struct timer_list timer;
 
-static void rt_timer_handler(unsigned long none)
+static void rt_soft_linux_timer_handler(unsigned long none)
 {
-#if DIAGTMR
+#if DIAGSLTMR
 	static int cnt[NR_RT_CPUS];
 	int cpuid = rtai_cpuid();
 	rt_printk("LINUX TIMER TICK: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
@@ -98,6 +102,17 @@ static void rt_timer_handler(unsigned long none)
 	return;
 }
 
+static void rt_hard_linux_timer_handler(int irq)
+{
+#if DIAGHLTMR
+        static int cnt[NR_RT_CPUS];
+        int cpuid = rtai_cpuid();
+	printk("RECVD LINUX IRQ AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", cpuid, ++cnt[cpuid], rtai_rdtsc());
+#endif
+	hal_pend_uncond(irq, cpuid);
+	++ltmr_count;
+}
+
 static void sched_ipi_handler(void)
 {
 #if DIAGIPI
@@ -105,15 +120,17 @@ static void sched_ipi_handler(void)
         int cpuid = rtai_cpuid();
 	printk("RECVD IPI AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", cpuid, ++cnt[cpuid], rtai_rdtsc());
 #endif
-	++scount;
+	++ipi_count;
 }
 
 int init_module(void)
 {
+	printk("RTAI_APIC_TIMER_VECTOR %d, RTAI_APIC_TIMER_IPI %d, LOCAL_TIMER_IPI %d\n", RTAI_APIC_TIMER_VECTOR, RTAI_APIC_TIMER_IPI, LOCAL_TIMER_IPI);
 	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
-        timer.function = rt_timer_handler;
+        timer.function = rt_soft_linux_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
+	rt_request_irq(LOCAL_TIMER_IPI, (void *)rt_hard_linux_timer_handler, NULL, 0);
 #ifdef CONFIG_SMP
 	rt_request_irq(SCHED_IPI, (void *)sched_ipi_handler, NULL, 0);
 #endif
@@ -122,6 +139,7 @@ int init_module(void)
 
 void cleanup_module(void)
 {
+	rt_release_irq(LOCAL_TIMER_IPI);
         del_timer(&timer);
 	rt_free_srq(srq);
 #ifdef CONFIG_SMP

@@ -37,7 +37,7 @@ int main(void)
 {
 	struct pollfd kbrd = { 0, POLLIN };
 	int srq, jtick;
-	int tcount = 0, tnextcount = 0, trepeat, scount = 0;
+	int tcount = 0, tnextcount = 0, trepeat, ipi_count = 0, tmr_count = 0;
 	struct sched_param mysched;
 	long long time0, time, dt;
 
@@ -60,15 +60,19 @@ int main(void)
 
 	trepeat = trepeat;
 	while (!end) {
-		scount = rtai_srq(srq, 3);
+		tmr_count = rtai_srq(srq, 3);
+		ipi_count = rtai_srq(srq, 4);
 		rtai_srq(srq, (unsigned long)&time);
 		tcount += jtick;
 		if (tcount > tnextcount) {
 			tnextcount += trepeat;
 			printf("# %d > JIFFIES TICK: %d, TIME: %lld (us), TIME DIFF: %lld (us);\n", tnextcount, jtick, time - time0, time - dt);
 			dt = time;
-			if (scount) {
-				printf("SCHED IPIs %d.\n", scount+trepeat);
+			if (ipi_count) {
+				printf("SCHED IPIs %d.\n", ipi_count+trepeat);
+			}
+			if (tmr_count) {
+				printf("LINUX TIMER IRQs %d.\n", tmr_count+trepeat);
 			}
 		}
 		if (poll(&kbrd, 1, 0)) {
