@@ -110,7 +110,7 @@ static void sched_ipi_handler(void)
 
 int init_module(void)
 {
-	srq = rt_request_srq(0xcacca, rtai_srq_handler, user_srq_handler);
+	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));

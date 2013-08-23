@@ -52,7 +52,7 @@ int main(void)
 		exit( 0 );
  	}       
 
-	srq = rtai_open_srq(0xcacca);
+	srq = rtai_open_srq(0xbeffa);
 	rtai_srq(srq, (unsigned long)&time0);
 	jtick    = rtai_srq(srq, 1);
 	tnextcount = trepeat  = (rtai_srq(srq, 2)*PRINT_PERCENT_OF_HZ)/100;
