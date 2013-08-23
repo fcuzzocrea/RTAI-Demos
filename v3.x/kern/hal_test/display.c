@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <fcntl.h>
 #include <sched.h>
 #include <signal.h>
+#include <sys/poll.h>
 
 #include <asm/rtai_srq.h>
 
@@ -34,6 +35,7 @@ static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
+	struct pollfd kbrd = { 0, POLLIN };
 	int srq, jtick;
 	int tcount = 0, tnextcount = 0, trepeat, scount = 0;
 	struct sched_param mysched;
@@ -53,9 +55,10 @@ int main(void)
 	srq = rtai_open_srq(0xcacca);
 	rtai_srq(srq, (unsigned long)&time0);
 	jtick    = rtai_srq(srq, 1);
-	trepeat  = (rtai_srq(srq, 2)*PRINT_PERCENT_OF_HZ)/100;
+	tnextcount = trepeat  = (rtai_srq(srq, 2)*PRINT_PERCENT_OF_HZ)/100;
 	dt = time0;
 
+	trepeat = trepeat;
 	while (!end) {
 		scount = rtai_srq(srq, 3);
 		rtai_srq(srq, (unsigned long)&time);
@@ -67,6 +70,9 @@ int main(void)
 			if (scount) {
 				printf("SCHED IPIs %d.\n", scount+trepeat);
 			}
+		}
+		if (poll(&kbrd, 1, 0)) {
+			break;
 		}
 	}
 	return 0;

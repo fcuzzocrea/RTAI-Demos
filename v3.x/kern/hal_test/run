@@ -18,6 +18,7 @@ echo "Press <enter> to load modules:"
 #read junk
 echo
 echo "Now start the realtime process <enter>, <ctrl-C> to end it."
+echo "Press <enter> to remove the modules."
 read junk
 sync
 insmod $MODULES/rtai_hal.ko; 
@@ -25,7 +26,4 @@ insmod $MODULES/rtai_hal.ko;
 insmod ./sysreq_rt.ko;
 insmod ./lnxshintr_rt.ko;
 ./display
-echo
-echo "Done. Press <enter> to remove the modules."
-read junk
 ./rem
