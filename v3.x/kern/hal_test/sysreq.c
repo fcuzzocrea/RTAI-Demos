@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 1999-2013 Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2013 Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -29,30 +29,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define LINUX_TIMER_FREQ 1000 // !!! 0 < LINUX_TIMER_FREQ < HZ !!!
+#define DIAGSRQ 0  // diagnose srq arg values
+#define DIAGTMR 0  // diagnose if LINUX time is running
+#define DIAGIPI 0  // diagnose if IPIs are received
+
+#define LINUX_HZ_PERCENT 100 // !!! 1 to 100 !!!
+
+#define LINUX_TIMER_FREQ ((HZ*LINUX_HZ_PERCENT)/100)
 
 static int srq, scount;
 
 static DECLARE_MUTEX_LOCKED(sem);
 
-static long long user_srq_handler(unsigned long whatever)
+static long long user_srq_handler(unsigned long req)
 {
 	int semret, cpyret;
 	long long time;
 
-//printk("WHATEVER %lu\n", whatever);
-	if (whatever == 1) {
-		return (long long)((LINUX_TIMER_FREQ)/HZ);
-	}
-
-	if (whatever == 2) {
-#ifdef CONFIG_SMP
-		printk("> %d %lld\n", rtai_cpuid(), rtai_rdtsc());
-                rtai_cli();
-                send_sched_ipi(rtai_cpuid() ? 1 : 2);
-                rtai_sti();
+#if DIAGSRQ
+	printk("WHATEVER %lu\n", req);
 #endif
-		return (long long)scount;
+	switch (req) {
+		case 1: {
+			return (long long)(HZ/LINUX_TIMER_FREQ);
+		}
+		case 2: {
+			return (long long)(HZ);
+		}
+		case 3: {
+#ifdef CONFIG_SMP
+			int cpuid = rtai_cpuid();
+#if DIAGIPI
+			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", cpuid, cpuid ? 0 : 1, rtai_rdtsc());
+#endif
+                	rtai_cli();
+	                send_sched_ipi(cpuid ? 1 : 2);
+        	        rtai_sti();
+#endif
+			return (long long)scount;
+		}
 	}
 
 	semret = down_interruptible(&sem);
@@ -60,7 +75,7 @@ static long long user_srq_handler(unsigned long whatever)
 // let's show how to communicate. Copy to and from user shall allow any kind of
 // data interchange and service.
 	time = llimd(rtai_rdtsc(), 1000000, CPU_FREQ);
-	cpyret = copy_to_user((long long *)whatever, &time, sizeof(long long));
+	cpyret = copy_to_user((long long *)req, &time, sizeof(long long));
 	return time;
 }
 
@@ -73,10 +88,10 @@ static struct timer_list timer;
 
 static void rt_timer_handler(unsigned long none)
 {
-#if 0 // diagnose and see if interrupts are coming in
+#if DIAGTMR
 	static int cnt[NR_RT_CPUS];
 	int cpuid = rtai_cpuid();
-	rt_printk("TIMER TICK: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
+	rt_printk("LINUX TIMER TICK: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
 #endif
 	rt_pend_linux_srq(srq);
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
@@ -85,12 +100,11 @@ static void rt_timer_handler(unsigned long none)
 
 static void sched_ipi_handler(void)
 {
-#if 0 // diagnose to see if interrupts are coming in
+#if DIAGIPI
         static int cnt[NR_RT_CPUS];
         int cpuid = rtai_cpuid();
-        rt_printk("IPIed CPU: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
+	printk("RECVD IPI AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", cpuid, ++cnt[cpuid], rtai_rdtsc());
 #endif
-	printk("< %d %lld\n", rtai_cpuid(), rtai_rdtsc());
 	++scount;
 }
 

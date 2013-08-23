@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 1999  Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2113  Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <asm/rtai_srq.h>
 
-#define PRINT_FREQ 100
-
 static volatile int end;
+
+#define PRINT_PERCENT_OF_HZ 10 // !!! 1 to 100 !!!
 
 static void endme(int dummy) { end = 1; }
 
 int main(void)
 {
-	int srq, tick;
+	int srq, jtick;
 	int tcount = 0, tnextcount = 0, trepeat, scount = 0;
 	struct sched_param mysched;
 	long long time0, time, dt;
@@ -52,20 +52,21 @@ int main(void)
 
 	srq = rtai_open_srq(0xcacca);
 	rtai_srq(srq, (unsigned long)&time0);
-	tick = rtai_srq(srq, 1);
-	trepeat = 1000/(tick*PRINT_FREQ);
+	jtick    = rtai_srq(srq, 1);
+	trepeat  = (rtai_srq(srq, 2)*PRINT_PERCENT_OF_HZ)/100;
 	dt = time0;
 printf("REPEAT %d\n", trepeat);
 
 	while (!end) {
-		scount = rtai_srq(srq, 2);
+		scount = rtai_srq(srq, 3);
 		rtai_srq(srq, (unsigned long)&time);
-		if (++tcount > tnextcount) {
+		tcount += jtick;
+		if (tcount > tnextcount) {
 			tnextcount += trepeat;
-			printf("# %d > TICK: %d, TIME: %lld, DTOT: %lld;\n", tnextcount, tick, time - time0, time - dt);
+			printf("# %d > JIFFIES TICK: %d, TIME: %lld (us), TIME DIFF: %lld (us);\n", tnextcount, jtick, time - time0, time - dt);
 			dt = time;
 			if (scount) {
-				printf("SCHED IPIs %d.\n", scount);
+				printf("SCHED IPIs %d.\n", scount+trepeat);
 			}
 		}
 	}

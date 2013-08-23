@@ -1,5 +1,5 @@
 sync
 rmmod lnxshintr_rt
 rmmod sysreq_rt
-rmmod rtai_lxrt
+rmmod rtai_sched
 rmmod rtai_hal

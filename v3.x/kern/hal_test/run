@@ -1,4 +1,5 @@
 #!/bin/sh
+./rem
 
 prefix=`rtai-config --prefix`
 arch=`rtai-config --arch`
