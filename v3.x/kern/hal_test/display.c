@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 static volatile int end;
 
-#define PRINT_PERCENT_OF_HZ 10 // !!! 1 to 100 !!!
+#define PRINT_PERCENT_OF_HZ 20 // !!! 1 to 100 !!!
 
 static void endme(int dummy) { end = 1; }
 
@@ -55,7 +55,6 @@ int main(void)
 	jtick    = rtai_srq(srq, 1);
 	trepeat  = (rtai_srq(srq, 2)*PRINT_PERCENT_OF_HZ)/100;
 	dt = time0;
-printf("REPEAT %d\n", trepeat);
 
 	while (!end) {
 		scount = rtai_srq(srq, 3);
