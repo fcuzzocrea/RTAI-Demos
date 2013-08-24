@@ -27,9 +27,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <asm/rtai_srq.h>
 
-static volatile int end;
-
 #define PRINT_PERCENT_OF_HZ 20 // !!! 1 to 100 !!!
+
+static volatile int end;
 
 static void endme(int dummy) { end = 1; }
 
@@ -72,7 +72,7 @@ int main(void)
 				printf("SCHED IPIs %d.\n", ipi_count+trepeat);
 			}
 			if (tmr_count) {
-				printf("LINUX TIMER IRQs %d.\n", tmr_count+trepeat);
+				printf("RTAIorLINUX TIMERs IRQs %d.\n", tmr_count+trepeat);
 			}
 		}
 		if (poll(&kbrd, 1, 0)) {
