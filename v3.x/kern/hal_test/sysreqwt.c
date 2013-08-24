@@ -127,6 +127,7 @@ static void rt_rtai_timer_handler(int irq)
 	++tmr_count;
 }
 
+#ifdef CONFIG_SMP
 static void sched_ipi_handler(void)
 {
 #if DIAGIPI
@@ -136,6 +137,7 @@ static void sched_ipi_handler(void)
 #endif
 	++ipi_count;
 }
+#endif
 
 int init_module(void)
 {
@@ -156,7 +158,7 @@ do {
 	rt_request_apic_timers((void *)rt_rtai_timer_handler, setup_data);
 } while (0);
 #else
-	rt_request_timer((void *)rt_hard_RTAI_timer_handler, 0, 1);
+	rt_request_timer((void *)rt_rtai_timer_handler, 0, TIMER_TYPE);
 #endif
         return 0;
 }
