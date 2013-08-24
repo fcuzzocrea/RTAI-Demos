@@ -148,14 +148,12 @@ int init_module(void)
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
 #ifdef CONFIG_SMP
 do {
-	struct apic_timer_setup_data setup_data[NR_RT_CPUS];
-	int cpuid;
+	void *setup_data;
 	rt_request_irq(SCHED_IPI, (void *)sched_ipi_handler, NULL, 0);
-	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
-		setup_data[cpuid].mode = setup_data[cpuid].count = 0;
-	}
         rt_linux_hrt_next_shot = _rt_linux_hrt_next_shot;
+	setup_data = kzalloc(sizeof(struct apic_timer_setup_data)*num_online_cpus(), GFP_KERNEL);
 	rt_request_apic_timers((void *)rt_rtai_timer_handler, setup_data);
+	kfree(setup_data);
 } while (0);
 #else
 	rt_request_timer((void *)rt_rtai_timer_handler, 0, TIMER_TYPE);
