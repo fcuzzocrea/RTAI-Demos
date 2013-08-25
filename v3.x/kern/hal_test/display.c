@@ -72,7 +72,7 @@ int main(void)
 				printf("SCHED IPIs %d.\n", ipi_count+trepeat);
 			}
 			if (tmr_count) {
-				printf("RTAIorLINUX TIMERs IRQs %d.\n", tmr_count+trepeat);
+				printf("RTAIorLINUX TIMERs IRQs %d.\n", tmr_count);
 			}
 		}
 		if (poll(&kbrd, 1, 0)) {

@@ -44,7 +44,6 @@ static DECLARE_MUTEX_LOCKED(sem);
 
 static long long user_srq_handler(unsigned long req)
 {
-	static int ipi_toggle = 0;
 	int semret, cpyret;
 	long long time;
 
@@ -62,12 +61,11 @@ static long long user_srq_handler(unsigned long req)
 			return (long long)tmr_count;
 		}
 		case 4: {
-			ipi_toggle = 1 - ipi_toggle;
 #if DIAGIPI
-			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", ipi_toggle, rtai_rdtsc());
+			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", 1 - rtai_cpuid(), rtai_rdtsc());
 #endif
                 	rtai_cli();
-	                send_sched_ipi(ipi_toggle);
+	                send_sched_ipi(1<<(1 - rtai_cpuid()));
         	        rtai_sti();
 			return (long long)ipi_count;
 		}
