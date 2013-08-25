@@ -13,6 +13,7 @@ static int irq[] = {1, 12, 19};
 static int irq[] = {1, 10, 12};
 #endif
 static int cnt[] = {0, 0, 0};
+static int diag[] = {0, 0, 0};
 static char post_handler[NIRQ][20];
 static void *dev_id[NIRQ];
 
@@ -28,7 +29,9 @@ static int linux_post_handler(int irqa, void *dev_id, struct pt_regs *regs)
 {
 	int i;
 	i = (int)dev_id;
-	rt_printk("LINUX IRQ %d: %d %d %d\n", i, cnt[i-1], irqa, irq[i-1]);
+	if (diag[i-1]) {
+		rt_printk("# %d: LINUX IRQ %d/%d: COUNT: %d.\n", i, irqa, irq[i-1], cnt[i-1]);
+	}
 	return 1;
 }
 
@@ -54,6 +57,7 @@ void cleanup_module(void)
 	for (i = 0; i < nirq; i++) {
 		rt_release_irq(irq[i]);
 		rt_free_linux_irq(irq[i], dev_id[i]);
+		rt_printk("LINUX IRQ %d: COUNT: %d.\n", irq[i], cnt[i]);
 	}
 }
 
