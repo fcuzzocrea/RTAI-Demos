@@ -112,13 +112,15 @@ int _rt_linux_hrt_next_shot(unsigned long deltat, void *hrt_dev)
 static int ltcnt;
 static void rt_rtai_timer_handler(int irq)
 {
-#if DIAGHRTMR
         int cpuid = rtai_cpuid();
+#if DIAGHRTMR
         static int cnt[NR_RT_CPUS];
 	printk("RECVD RTAI TIMER(s) IRQ %d AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", irq, cpuid, ++cnt[cpuid], rtai_rdtsc());
 #endif
 	if (irq == LOCAL_TIMER_IPI) {
-		printk("<<< RECEIVED LOCAL_TIMER_IPI IRQ: %d, COUNT: %d >>>\n", irq, ++ltcnt);
+		printk("<<< CPU: %d, RECEIVED LOCAL_TIMER_IPI IRQ: %d, COUNT: %d >>>\n", cpuid, irq, ++ltcnt);
+		hal_pend_uncond(LOCAL_TIMER_IPI, cpuid);
+		return;
 	}
 	update_linux_timer(cpuid);
 	++tmr_count;
