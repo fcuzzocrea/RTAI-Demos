@@ -44,6 +44,7 @@ static DECLARE_MUTEX_LOCKED(sem);
 
 static long long user_srq_handler(unsigned long req)
 {
+	static int ipi_toggle = 0;
 	int semret, cpyret;
 	long long time;
 
@@ -61,15 +62,13 @@ static long long user_srq_handler(unsigned long req)
 			return (long long)tmr_count;
 		}
 		case 4: {
-#ifdef CONFIG_SMP
-			int cpuid = rtai_cpuid();
+			ipi_toggle = 1 - ipi_toggle;
 #if DIAGIPI
-			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", cpuid, cpuid ? 0 : 1, rtai_rdtsc());
+			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", ipi_toggle, rtai_rdtsc());
 #endif
                 	rtai_cli();
-	                send_sched_ipi(cpuid ? 1 : 2);
+	                send_sched_ipi(ipi_toggle);
         	        rtai_sti();
-#endif
 			return (long long)ipi_count;
 		}
 	}
@@ -123,7 +122,7 @@ static void rt_rtai_timer_handler(int irq)
 	if (irq == LOCAL_TIMER_IPI) {
 		printk("<<< RECEIVED LOCAL_TIMER_IPI IRQ %d >>>\n", ++ltcnt);
 	}
-	hal_pend_uncond(LOCAL_TIMER_IPI, cpuid);
+	update_linux_timer(cpuid);
 	++tmr_count;
 }
 
@@ -141,16 +140,16 @@ static void sched_ipi_handler(void)
 
 int init_module(void)
 {
-	printk("RTAI_APIC_TIMER_VECTOR %d, RTAI_APIC_TIMER_IPI %d, LOCAL_TIMER_VECTOR %d, LOCAL_TIMER_IPI %d, TIMER FREQ %lu.\n", RTAI_APIC_TIMER_VECTOR, RTAI_APIC_TIMER_IPI, LOCAL_TIMER_VECTOR, LOCAL_TIMER_IPI, TIMER_FREQ);
+	printk("RTAI_APIC_TIMER_VECTOR %d, RTAI_APIC_TIMER_IPI %d, LOCAL_TIMER_VECTOR %d, LOCAL_TIMER_IPI %d, TIMER FREQ %u.\n", RTAI_APIC_TIMER_VECTOR, RTAI_APIC_TIMER_IPI, LOCAL_TIMER_VECTOR, LOCAL_TIMER_IPI, (unsigned int)TIMER_FREQ);
 	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
+        rt_linux_hrt_next_shot = _rt_linux_hrt_next_shot;
 #ifdef CONFIG_SMP
 do {
 	void *setup_data;
 	rt_request_irq(SCHED_IPI, (void *)sched_ipi_handler, NULL, 0);
-        rt_linux_hrt_next_shot = _rt_linux_hrt_next_shot;
 	setup_data = kzalloc(sizeof(struct apic_timer_setup_data)*num_online_cpus(), GFP_KERNEL);
 	rt_request_apic_timers((void *)rt_rtai_timer_handler, setup_data);
 	kfree(setup_data);
@@ -165,9 +164,9 @@ void cleanup_module(void)
 {
         del_timer(&timer);
 	rt_free_srq(srq);
+        rt_linux_hrt_next_shot = NULL;
 #ifdef CONFIG_SMP
 	rt_release_irq(SCHED_IPI);
-        rt_linux_hrt_next_shot = NULL;
 	rt_free_apic_timers();
 #else
 	rt_free_timer();
