@@ -37,7 +37,7 @@ int main(void)
 {
 	struct pollfd kbrd = { 0, POLLIN };
 	int srq, jtick;
-	int tcount = 0, tnextcount = 0, trepeat, ipi_count = 0, tmr_count = 0;
+	int tcount = 0, tnextcount, trepeat, ipi_count = 0, tmr_count = 0;
 	struct sched_param mysched;
 	long long time0, time, dt;
 
@@ -58,7 +58,6 @@ int main(void)
 	tnextcount = trepeat  = (rtai_srq(srq, 2)*PRINT_PERCENT_OF_HZ)/100;
 	dt = time0;
 
-	trepeat = trepeat;
 	while (!end) {
 		tmr_count = rtai_srq(srq, 3);
 		ipi_count = rtai_srq(srq, 4);
@@ -66,13 +65,13 @@ int main(void)
 		tcount += jtick;
 		if (tcount > tnextcount) {
 			tnextcount += trepeat;
-			printf("# %d > JIFFIES TICK: %d, TIME: %lld (us), TIME DIFF: %lld (us);\n", tnextcount, jtick, time - time0, time - dt);
+			printf("# %d > JIFFIES TICK: %d, TIME: %lld (us), TIME DIFF: %lld (us);\n", tcount - 1, jtick, time - time0, time - dt);
 			dt = time;
 			if (ipi_count) {
-				printf("SCHED IPIs %d.\n", ipi_count+trepeat);
+				printf("SCHED IPIs %d.\n", ipi_count);
 			}
 			if (tmr_count) {
-				printf("RTAIorLINUX TIMERs IRQs %d.\n", tmr_count);
+				printf("RTAIorLINUX TIMERs IRQs %d.\n", tmr_count + trepeat);
 			}
 		}
 		if (poll(&kbrd, 1, 0)) {

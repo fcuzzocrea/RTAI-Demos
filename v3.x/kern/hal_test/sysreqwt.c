@@ -31,7 +31,7 @@ MODULE_LICENSE("GPL");
 
 #define DIAGSRQ   0  // diagnose srq arg values
 #define DIAGSLTMR 0  // diagnose if LINUX time is running
-#define DIAGIPI   0  // diagnose if IPIs are received
+#define DIAGIPI   1  // diagnose if IPIs are received
 #define DIAGHRTMR 0  // diagnose if RTAI hard time is running
 
 #define LINUX_HZ_PERCENT 100 // !!! 1 to 100 !!!
@@ -62,10 +62,10 @@ static long long user_srq_handler(unsigned long req)
 		}
 		case 4: {
 #if DIAGIPI
-			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", 1 - rtai_cpuid(), rtai_rdtsc());
+			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", rtai_cpuid(), rtai_cpuid() ? 0 : 1, rtai_rdtsc());
 #endif
                 	rtai_cli();
-	                send_sched_ipi(1<<(1 - rtai_cpuid()));
+	                send_sched_ipi(rtai_cpuid() ? 1 : 2);
         	        rtai_sti();
 			return (long long)ipi_count;
 		}
