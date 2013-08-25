@@ -8,12 +8,14 @@
 #define NIRQ 10
 static int nirq;
 #ifdef CONFIG_SMP
-static int irq[] = {1, 12, 19};
+// on one of my computers: timer (8254), keyboard, mouse, ethernet
+static int irq[] = {0, 1, 12, 19};
 #else
-static int irq[] = {1, 10, 12};
+// on one of my computers: timer (8254), keyboard, ethernet, mouse
+static int irq[] = {0, 1, 10, 12};
 #endif
-static int cnt[] = {0, 0, 0};
-static int diag[] = {0, 0, 0};
+static int cnt[] = {0, 0, 0, 0};
+static int diag[] = {0, 0, 0, 0};
 static char post_handler[NIRQ][20];
 static void *dev_id[NIRQ];
 
