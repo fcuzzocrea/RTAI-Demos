@@ -7,7 +7,11 @@
 
 #define NIRQ 10
 static int nirq;
+#ifdef CONFIG_SMP
 static int irq[] = {1, 12, 19};
+#else
+static int irq[] = {1, 10, 12};
+#endif
 static int cnt[] = {0, 0, 0};
 static char post_handler[NIRQ][20];
 static void *dev_id[NIRQ];

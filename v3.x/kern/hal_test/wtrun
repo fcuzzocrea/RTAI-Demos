@@ -15,7 +15,7 @@ MODULES=$prefix/modules
 echo
 echo "*** RTAI HAL TEST ***"
 echo "Press <enter> to load modules:"
-#read junk
+read junk
 echo
 echo "Now start the realtime process <enter>, <ctrl-C> to end it."
 echo "Press <enter> to remove the modules."
