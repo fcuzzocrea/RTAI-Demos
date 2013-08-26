@@ -125,7 +125,7 @@ static void sched_ipi_handler(void)
 
 int init_module(void)
 {
-	printk("RTAI_APIC_TIMER_VECTOR %d, RTAI_APIC_TIMER_IPI %d, LOCAL_TIMER_VECTOR %d, LOCAL_TIMER_IPI %d\n", RTAI_APIC_TIMER_VECTOR, RTAI_APIC_TIMER_IPI, LOCAL_TIMER_VECTOR, LOCAL_TIMER_IPI);
+	printk("RTAI_APIC_TIMER_VECTOR %d, RTAI_APIC_TIMER_IPI %d, LOCAL_TIMER_VECTOR %d, LOCAL_TIMER_IPI %d, TIMER FREQ %u.\n", RTAI_APIC_TIMER_VECTOR, RTAI_APIC_TIMER_IPI, LOCAL_TIMER_VECTOR, LOCAL_TIMER_IPI, (unsigned int)TIMER_FREQ);
 	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
