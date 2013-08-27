@@ -119,7 +119,7 @@ static void rt_rtai_timer_handler(int irq)
 #endif
 	if (irq == LOCAL_TIMER_IPI) {
 		printk("<<< CPU: %d, RECEIVED LOCAL_TIMER_IPI IRQ: %d, COUNT: %d >>>\n", cpuid, irq, ++ltcnt);
-		hal_pend_uncond(LOCAL_TIMER_IPI, cpuid);
+		update_linux_timer(cpuid);
 		return;
 	}
 	update_linux_timer(cpuid);
