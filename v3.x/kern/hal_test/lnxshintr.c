@@ -46,9 +46,9 @@ int init_module(void)
 	}
 	for (i = 0; i < nirq; i++) {
 		snprintf(post_handler[i], sizeof(post_handler[i]), "POST_HANDLER%d", i + 1);
-		dev_id[i] = (void *)(i+1);
+		dev_id[i] = (void *)(long)(i+1);
 		rt_request_linux_irq(irq[i], linux_post_handler, post_handler[i], dev_id[i]);
-		rt_request_irq(irq[i], (void *)(long)rtai_handler, (void *)(long)i, 0);
+		rt_request_irq(irq[i], (void *)rtai_handler, (void *)(long)i, 0);
 	}
 	return 0;
 }
