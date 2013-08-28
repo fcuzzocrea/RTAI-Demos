@@ -22,7 +22,7 @@ static void *dev_id[NIRQ];
 static void rtai_handler(int irqa, void *idx)
 {
 	int i;
-	i = (int)idx;
+	i = (long)idx;
 	cnt[i]++;	
 	rt_pend_linux_irq(irq[i]);
 }
@@ -30,7 +30,7 @@ static void rtai_handler(int irqa, void *idx)
 static int linux_post_handler(int irqa, void *dev_id, struct pt_regs *regs)
 {
 	int i;
-	i = (int)dev_id;
+	i = (long)dev_id;
 	if (diag[i-1]) {
 		rt_printk("# %d: LINUX IRQ %d/%d: COUNT: %d.\n", i, irqa, irq[i-1], cnt[i-1]);
 	}
@@ -48,7 +48,7 @@ int init_module(void)
 		snprintf(post_handler[i], sizeof(post_handler[i]), "POST_HANDLER%d", i + 1);
 		dev_id[i] = (void *)(i+1);
 		rt_request_linux_irq(irq[i], linux_post_handler, post_handler[i], dev_id[i]);
-		rt_request_irq(irq[i], (void *)rtai_handler, (void *)i, 0);
+		rt_request_irq(irq[i], (void *)(long)rtai_handler, (void *)(long)i, 0);
 	}
 	return 0;
 }
