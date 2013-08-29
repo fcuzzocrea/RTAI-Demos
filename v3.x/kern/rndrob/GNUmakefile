@@ -18,6 +18,9 @@ all:
 clean:
 	$(RM) $(LINUX_DIR)/.tmp_versions/*_rt.mod *.o *.ko *.mod.c .*.cmd *.order *.symvers
 
+clean:
+	$(RM) $(LINUX_DIR)/.tmp_versions/*_rt.mod *.o *.ko *.mod.c .*.cmd
+
 else
 
 MODULE_CFLAGS = $(shell rtai-config --module-cflags)
