@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/kthread.h>
 
 #include <rtai.h>
 #include <rtai_schedcore.h>
@@ -73,14 +74,16 @@ static void thread_fun(RT_TASK *task)
 		((void (*)(long))task->fun_args[1])(task->fun_args[2]);
 	}
 }
+
+static int end;
 static int soft_kthread_init(RT_TASK *task, long fun, long arg, int priority)
 {
 	task->magic = task->state = 0;
 	(task->fun_args = (long *)(task + 1))[1] = fun;
 	task->fun_args[2] = arg;
 	task->fun_args[3] = priority;
-	if (kernel_thread((void *)thread_fun, task, 0) > 0) {
-		while (task->state != (RT_SCHED_READY | RT_SCHED_SUSPENDED)) {
+	if (kthread_run((void *)thread_fun, task, "LINUX-KTASK") > 0) {
+		while (task->state != (RT_SCHED_READY | RT_SCHED_SUSPENDED) && !end) {
 			current->state = TASK_INTERRUPTIBLE;
 			schedule_timeout(HZ/10);
 		}
@@ -96,7 +99,8 @@ static int soft_kthread_delete(RT_TASK *task)
 	} else {
 		struct task_struct *lnxtsk = task->lnxtsk;
 		lnxtsk->state = TASK_INTERRUPTIBLE;
-		kill_proc(lnxtsk->pid, SIGTERM, 0);
+		end = 1;
+//		kill_proc(lnxtsk->pid, SIGTERM, 0);
 	}
 	return 0;
 }
