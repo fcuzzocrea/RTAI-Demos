@@ -13,7 +13,7 @@ fi
 MODULES=$prefix/modules
 
 echo
-echo "*** RTAI HAL TEST ***"
+echo "*** RTAI HAL TEST (checks: interrupt handling, timers, sysreqs) ***"
 echo "Press <enter> to load modules:"
 read junk
 echo

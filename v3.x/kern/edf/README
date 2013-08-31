@@ -8,4 +8,5 @@ So if they appear increasingly ordered on the screen EDF should be working.
 
 To run the example, type:
 
-$ make run
+make
+run
