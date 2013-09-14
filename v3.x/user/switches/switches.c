@@ -38,6 +38,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #define CPUMSK 0x1
 #define taskname(x) (1000 + (x))
 
+#define RT_MAKE_HARD_REAL_TIME() rt_make_hard_real_time()
+
 static pthread_t thread[NR_RT_TASKS];
 
 static RT_TASK *mytask[NR_RT_TASKS];
@@ -62,7 +64,7 @@ SCHED_FIFO, CPUMSK))) {
 	}
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
-	rt_make_hard_real_time();
+	RT_MAKE_HARD_REAL_TIME();
 	hrt[mytask_indx] = 1;
 	while (!end) {
 		switch (change) {
@@ -126,7 +128,7 @@ int main(void)
 	} while (s != NR_RT_TASKS);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	
-	rt_make_hard_real_time();
+	RT_MAKE_HARD_REAL_TIME();
 	tsr = rt_get_cpu_time_ns();
 	for (i = 0; i < LOOPS; i++) {
 		for (k = 0; k < NR_RT_TASKS; k++) {
