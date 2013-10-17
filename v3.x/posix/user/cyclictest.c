@@ -117,9 +117,9 @@ extern int clock_nanosleep(clockid_t __clock_id, int __flags,
 
 int enable_events;
 
-#define MAXDIM 10
+#define MAXDIM 100
 static double a[MAXDIM], b[MAXDIM];
-#define MAXIO 3
+#define MAXIO 2
 
 static double dot(double *a, double *b, int n)
 {
