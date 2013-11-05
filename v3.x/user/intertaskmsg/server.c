@@ -43,8 +43,8 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
+	start_rt_timer(0);
 	period = nano2count(1000000);
-	start_rt_timer(period);
 	rt_make_hard_real_time();
 	PRINTF("SRV starts (task = %p, pid = %d)\n", srv, my_pid);
 
