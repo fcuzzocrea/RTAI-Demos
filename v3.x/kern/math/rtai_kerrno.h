@@ -23,7 +23,8 @@
 
 #include <rtai_schedcore.h>
 
-#define kerrno (_rt_whoami()->kerrno)
+extern int libm_kerrno;
+#define kerrno (libm_kerrno)
 
 char *d2str(double d, int dgt, char *str);
 

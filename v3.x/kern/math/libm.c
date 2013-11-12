@@ -35,9 +35,12 @@ MODULE_LICENSE("GPL");
 
 int stderr = 2;
 
+int libm_kerrno;
+EXPORT_SYMBOL(libm_kerrno);
+
 int *__errno_location(void)
 {
-	return &(_rt_whoami()->kerrno);
+	return &(libm_kerrno);
 }
 
 void __assert_fail(const char *assertion, const char *file, int line, const char *function)

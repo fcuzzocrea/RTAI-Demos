@@ -21,18 +21,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <math.h>
 
-#include <rtai.h>
-#include "rtai_sched.h"
-#include "rtai_schedcore.h"
 #include "rtai_kerrno.h"
 
 MODULE_LICENSE("GPL");
 
-#define TICK_PERIOD 100000 // nanoseconds
-
-static RT_TASK mytask;
-
-static void tskfun(long task) 
+static void fun(void) 
 {
 	const int DGT = 9;
 	char str[30];
@@ -106,23 +99,17 @@ static void tskfun(long task)
 			printk("- EXP 1000000 %s KERRNO %d\n", str, kerrno);
 		break;
 		default:
-			rt_task_suspend(&mytask);	
+		break;
 		}
-		rt_task_wait_period();
 	}
-	rt_task_suspend(&mytask);	
 }
 
 int init_module(void)
 {
-	start_rt_timer(0);
-	rt_task_init(&mytask, tskfun, 0, 4096, 0, 1, 0);
-	rt_task_make_periodic(&mytask, rt_get_time(), nano2count(TICK_PERIOD));
+	fun();
 	return 0;
 }
 
 void cleanup_module(void)
 {
-	stop_rt_timer();
-        rt_task_delete(&mytask);
 }
