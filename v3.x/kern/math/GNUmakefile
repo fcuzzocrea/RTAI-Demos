@@ -16,6 +16,7 @@ all:: rtai_math.ko libm_rt.ko fp_rt.ko
 
 rtai_math.ko: libm_rt.ko
 	$(LD) -r -static -o $@ $< -L/usr/lib -lm 
+#	$(LD) -r -static -o $@ $< libm_32.a 
 
 fp_rt.ko: fp.c
 	@if test -e $(LINUX_DIR)/Module.symvers; then mv -f $(LINUX_DIR)/Module.symvers $(LINUX_DIR)/__Module.symvers; fi; if test -e $(LINUX_DIR)/vmlinux; then mv -f $(LINUX_DIR)/vmlinux $(LINUX_DIR)/__vmlinux; fi; \
