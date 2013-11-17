@@ -1,3 +1,5 @@
+insmod /usr/realtime/modules/rtai_hal.ko
+insmod /usr/realtime/modules/rtai_sched.ko
 insmod ./rtai_math.ko
 insmod ./fp_rt.ko
 ./rem

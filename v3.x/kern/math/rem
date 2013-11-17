@@ -1,2 +1,5 @@
 rmmod fp_rt
 rmmod libm_rt
+rmmod rtai_math
+rmmod rtai_sched
+rmmod rtai_hal
