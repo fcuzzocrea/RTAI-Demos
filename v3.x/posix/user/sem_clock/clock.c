@@ -300,7 +300,7 @@ int main(int argc, char* argv[])
 	printf("\nINIT MASTER TASK %p.\n", mytask);
 
 	OneUnit = nano2count(ONE_UNIT);
-	start_rt_timer((int)nano2count(TICK_PERIOD));
+	start_rt_timer(0);
 
 	if (!(Read = rt_thread_create(ClockChrono_Read, NULL, 10000))) { 
 		printf("ERROR IN CREATING ClockChrono_Read\n");
