@@ -24,17 +24,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 MODULE_LICENSE("GPL");
 
-#define TICK_PERIOD 100000 // nanoseconds
+#define DELAY 100000 // nanoseconds
 
 static RT_TASK mytask;
 
 static void tskfun(long task) 
 {
-	const int DGT = 6;
-	double r;
 #ifdef CONFIG_RTAI_MATH_KCOMPLEX
 	double complex cr;
 #endif
+	double r;
+	const int DGT = 6;
 	char str[40];
 	int i;
 
@@ -168,16 +168,15 @@ static void tskfun(long task)
 		default:
 			rt_task_suspend(&mytask);	
 		}
-		rt_task_wait_period();
+		rt_sleep(nano2count(DELAY));
 	}
-	rt_task_suspend(&mytask);	
 }
 
 int init_module(void)
 {
 	start_rt_timer(0);
 	rt_task_init(&mytask, tskfun, 0, 4096, 0, 1, 0);
-	rt_task_make_periodic(&mytask, rt_get_time(), nano2count(TICK_PERIOD));
+	rt_task_resume(&mytask);
 	return 0;
 }
 
