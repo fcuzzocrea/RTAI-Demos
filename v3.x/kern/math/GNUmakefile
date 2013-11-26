@@ -12,18 +12,9 @@ ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)) || $(
 
 LINUX_DIR = $(shell rtai-config --linux-dir)
 
-all:: rtai_math.ko libm_rt.ko fp_rt.ko
-
-rtai_math.ko: libm_rt.ko
-	$(LD) -r -static -o $@ $< -L/usr/lib -lm 
-#	$(LD) -r -static -o $@ $< libm_32.a 
+all:: fp_rt.ko
 
 fp_rt.ko: fp.c
-	@if test -e $(LINUX_DIR)/Module.symvers; then mv -f $(LINUX_DIR)/Module.symvers $(LINUX_DIR)/__Module.symvers; fi; if test -e $(LINUX_DIR)/vmlinux; then mv -f $(LINUX_DIR)/vmlinux $(LINUX_DIR)/__vmlinux; fi; \
-	$(MAKE) -C $(LINUX_DIR) CC=$(CC) SUBDIRS=$$PWD V=$(V) modules \
-	&& if test -e $(LINUX_DIR)/__Module.symvers; then mv -f $(LINUX_DIR)/__Module.symvers $(LINUX_DIR)/Module.symvers; fi && if test -e $(LINUX_DIR)/__vmlinux; then mv -f $(LINUX_DIR)/__vmlinux $(LINUX_DIR)/vmlinux; fi
-
-libm_rt.ko: libm.c
 	@if test -e $(LINUX_DIR)/Module.symvers; then mv -f $(LINUX_DIR)/Module.symvers $(LINUX_DIR)/__Module.symvers; fi; if test -e $(LINUX_DIR)/vmlinux; then mv -f $(LINUX_DIR)/vmlinux $(LINUX_DIR)/__vmlinux; fi; \
 	$(MAKE) -C $(LINUX_DIR) CC=$(CC) $(EXTRA_FLAGS) SUBDIRS=$$PWD V=$(V) modules \
 	&& if test -e $(LINUX_DIR)/__Module.symvers; then mv -f $(LINUX_DIR)/__Module.symvers $(LINUX_DIR)/Module.symvers; fi && if test -e $(LINUX_DIR)/__vmlinux; then mv -f $(LINUX_DIR)/__vmlinux $(LINUX_DIR)/vmlinux; fi
