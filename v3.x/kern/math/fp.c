@@ -111,7 +111,7 @@ static void tskfun(long task)
 		case 12:
 			d2str(r = pow(-10.000001, 6.0000001), DGT, str);
 			printk("- POW(-10.xxx, 6.xxx) = %s, FPKERR %d, KERRNO %d.\n", str, fpkerr(r), kerrno); 
-			d2str(r = powf(-10.000001, 6.0000001), DGT, str);
+			d2str(r = powf(-10.000001, 6.000001), DGT, str);
 			printk("- POWF(-10.xxx, 6.xxx) = %s, FPKERR %d, KERRNO %d.\n", str, fpkerr(r), kerrno); 
 		break;
 		case 13:
