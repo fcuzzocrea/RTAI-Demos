@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #define LOOPS  10000
 #define NR_RT_TASKS 10
-#define DISTRIBUTED -1
+#define DISTRIBUTED 0  // 1 half/half, 0 same cpu, -1 same cpu but the resumer
 #define RESUME_DELAY 1000
 #define taskname(x) (1000 + (x))
 
