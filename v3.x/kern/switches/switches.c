@@ -50,7 +50,7 @@ int stack_size = 4096;
 RTAI_MODULE_PARM(stack_size, int);
 MODULE_PARM_DESC(stack_size, "Task stack size in bytes (default: 2000)");
 
-#define DISTRIBUTED -1  // 1 half/half, 0 same cpu, -1 same cpu but the resumer
+#define DISTRIBUTED 0  // 1 half/half, 0 same cpu, -1 same cpu but the resumer
 #define RESUME_DELAY 1000
 
 #define SEM_TYPE (CNT_SEM | FIFO_Q)
