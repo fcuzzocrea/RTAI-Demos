@@ -38,25 +38,25 @@ clean::
 endif
 
 cmd: cmd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
+	$(CC) -I$(COMEDI_DIR)/include $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt
 
 insn: insn.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+	$(CC) -I$(COMEDI_DIR)/include $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 aocmd: aocmd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+	$(CC) -I$(COMEDI_DIR)/include $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 rminsn: rminsn.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+	$(CC) -I$(COMEDI_DIR)/include $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 rmcmd: rmcmd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+	$(CC) -I$(COMEDI_DIR)/include $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 rmaocmd: rmaocmd.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+	$(CC) -I$(COMEDI_DIR)/include $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 rmtest: rmtest.c
-	$(CC) $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
+	$(CC) -I$(COMEDI_DIR)/include $(LXRT_CFLAGS) -o $@ $< $(LXRT_LDFLAGS) -lkcomedilxrt -lm
 
 clean::
 	rm -f *.o cmd insn aocmd rminsn rmcmd rmaocmd rmtest modules.order Module.symvers
