@@ -8,6 +8,7 @@ CC = $(shell rtai-config --cc)
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 LXRT_CFLAGS += -D_GNU_SOURCE
 LXRT_LDFLAGS = $(shell rtai-config --lxrt-ldflags)
+COMEDI_DIR = $(shell rtai-config --comedi-dir)
 
 all:: cmd insn aocmd rminsn rmcmd rmaocmd rmtest
 
