@@ -42,7 +42,7 @@ RTAI_MODULE_PARM(overall, int);
 MODULE_PARM_DESC(overall,
 		 "Calculate overall (1) or per-loop (0) statistics (default: 1)");
 
-int period = 25000;
+int period = 50000;
 RTAI_MODULE_PARM(period, int);
 MODULE_PARM_DESC(period, "period in ns (default: 100000)");
 
@@ -83,7 +83,7 @@ struct sample {
 } samp;
 double dotres, refres, tdif;
 
-static int cpu_used[NR_RT_CPUS];
+static int cpu_used[RTAI_NR_CPUS];
 
 #define MAXDIM 10
 
@@ -162,7 +162,7 @@ fun(long thread)
 
 		average = 0;
 		for (i = 0; i < loops; i++) {
-			cpu_used[hard_cpu_id()]++;
+			cpu_used[rtai_cpuid()]++;
 			expected += period_counts;
 			rt_task_wait_period();
 
@@ -203,9 +203,19 @@ fun(long thread)
  *      our periodical measurement task.  
  */
 
+//#include <linux/module.h>
+//#include <linux/kernel.h>
+//#include <linux/init.h>
+//#include <linux/proc_fs.h>
+//#include <asm/uaccess.h>
+
 static int
 __latency_init(void)
 {
+
+        char *argv[] = {"/home/mante/prova", NULL };
+//        char *envp[] = {"HOME=/", "PATH=/sbin:/usr/sbin:/bin:/usr/bin", NULL };
+        char *envp[] = { NULL };
 
 	/* XXX check option ranges here */
 
@@ -239,16 +249,9 @@ __latency_init(void)
 
 	/* Test if we have to start the timer                                */
 	if (start_timer || (start_timer = !rt_is_hard_timer_running())) {
-		if (timer_mode) {
-			rt_set_periodic_mode();
-		} else {
-			rt_set_oneshot_mode();
-		}
-		rt_assign_irq_to_cpu(TIMER_8254_IRQ, TIMER_TO_CPU);
-		period_counts = start_rt_timer(nano2count(period));
-	} else {
-		period_counts = nano2count(period);
+		start_rt_timer(nano2count(period));
 	}
+	period_counts = nano2count(period);
 
 	loops = (1000000000*avrgtime)/period;
 
@@ -271,7 +274,6 @@ __latency_exit(void)
 
 	/* If we started the timer we have to revert this now. */
 	if (start_timer) {
-		rt_reset_irq_to_sym_mode(TIMER_8254_IRQ);
 		stop_rt_timer();
 	}
 
@@ -286,7 +288,7 @@ __latency_exit(void)
 
 	/* Output some statistics about CPU usage */
 	printk("\n\nCPU USE SUMMARY\n");
-	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
+	for (cpuid = 0; cpuid < RTAI_NR_CPUS; cpuid++) {
 		printk("# %d -> %d\n", cpuid, cpu_used[cpuid]);
 	}
 	printk("END OF CPU USE SUMMARY\n\n");
