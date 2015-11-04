@@ -20,6 +20,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
+#include <linux/stat.h>
 #include <linux/proc_fs.h>
 #include <asm/io.h>
 
@@ -105,8 +106,10 @@ static double dot(double *a, double *b, int n)
  */
 
 #ifdef CONFIG_PROC_FS
-static int proc_read(char *page, char **start, off_t off, 
-                     int count, int *eof, void *data)
+
+struct proc_dir_entry *rtai_latency_calibrate = NULL;
+
+static int PROC_READ_FUN(rtai_proc_latency_read)
 {
 	PROC_PRINT_VARS;
 	PROC_PRINT("\n## RTAI latency calibration tool ##\n");
@@ -119,6 +122,27 @@ static int proc_read(char *page, char **start, off_t off,
 	PROC_PRINT("\n");
 	PROC_PRINT_DONE;
 }
+
+PROC_READ_OPEN_OPS(rtai_latency_proc_fops, rtai_proc_latency_read);
+
+static int rtai_proc_register(void)
+{
+        struct proc_dir_entry *ent;
+
+	rtai_latency_calibrate = CREATE_PROC_ENTRY("kern_latency", S_IFDIR, NULL, &rtai_latency_proc_fops);
+        if (!rtai_latency_calibrate) {
+                printk(KERN_ERR "Unable to initialize /proc/kern_latency.\n");
+                return -1;
+        }
+
+        return 0;
+}
+
+static void rtai_proc_unregister(void)
+{
+        remove_proc_entry("kern_latency", rtai_latency_calibrate);
+}
+
 #endif
 
 
@@ -221,12 +245,7 @@ __latency_init(void)
 
 	/* register a proc entry */
 #ifdef CONFIG_PROC_FS
-	create_proc_read_entry("rtai/latency_calibrate", /* name             */
-	                       0,			 /* default mode     */
-	                       NULL, 			 /* parent dir       */
-			       proc_read, 		 /* function         */
-			       NULL			 /* client data      */
-	);
+	 rtai_proc_register();
 #endif
 
 	rtf_create(DEBUG_FIFO, 16000);	/* create a fifo length: 16000 bytes */
@@ -283,7 +302,7 @@ __latency_exit(void)
 
 	/* Remove proc dir entry */
 #ifdef CONFIG_PROC_FS
-	remove_proc_entry("rtai/latency_calibrate", NULL);
+	rtai_proc_unregister();
 #endif
 
 	/* Output some statistics about CPU usage */
