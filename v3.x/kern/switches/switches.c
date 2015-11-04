@@ -57,7 +57,7 @@ MODULE_PARM_DESC(stack_size, "Task stack size in bytes (default: 2000)");
 
 static RT_TASK *thread, task;
 
-static int cpu_used[NR_RT_CPUS];
+static int cpu_used[RTAI_NR_CPUS];
 
 static SEM sem;
 
@@ -81,7 +81,7 @@ static void pend_task (long t)
 				rt_return(rt_receive(NULL, &msg), 0);
 				break;
 		}
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 	}
 }
 
@@ -182,7 +182,7 @@ static int __switches_init(void)
 #if DISTRIBUTED > 0
 		e = rt_task_init_cpuid(thread + i, pend_task, i, stack_size, 0, use_fpu, 0,  i%2);
 #else
-		e = rt_task_init_cpuid(thread + i, pend_task, i, stack_size, 0, use_fpu, 0,  hard_cpu_id());
+		e = rt_task_init_cpuid(thread + i, pend_task, i, stack_size, 0, use_fpu, 0,  rtai_cpuid());
 #endif
 		if (e < 0) {
 		task_init_has_failed:
@@ -192,7 +192,7 @@ static int __switches_init(void)
 		    return -1;
 		}
 	}
-	e = rt_task_init_cpuid(&task, sched_task, i, stack_size, 1, 0, 0, DISTRIBUTED < 0 ? (hard_cpu_id() ? 2 : 1) : hard_cpu_id());
+	e = rt_task_init_cpuid(&task, sched_task, i, stack_size, 1, 0, 0, DISTRIBUTED < 0 ? (rtai_cpuid() ? 2 : 1) : rtai_cpuid());
 	if (e < 0)
 	    goto task_init_has_failed;
 	rt_task_resume(&task);
@@ -210,7 +210,7 @@ static void __switches_exit(void)
 	rt_task_delete(&task);
         kfree(thread);
 	printk("\nCPU USE SUMMARY\n");
-	for (i = 0; i < NR_RT_CPUS; i++) {
+	for (i = 0; i < RTAI_NR_CPUS; i++) {
 		printk("# %d -> %d\n", i, cpu_used[i]);
 	}
 	printk("END OF CPU USE SUMMARY\n\n");
