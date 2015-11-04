@@ -71,7 +71,7 @@ static void rt_fractionated_sleep(RTIME OneUnit)
 #define FRACT 100
 	int i = FRACT;
 	while (i--) {
-		rt_sleep(llimd(OneUnit, 1, FRACT));
+		rt_sleep(rtai_llimd(OneUnit, 1, FRACT));
 	}
 }
 
@@ -89,7 +89,7 @@ static void ClockChrono_Read(long t)
 	unsigned int run = 0;
 
 	while(1) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 		rt_sem_wait(&keybrd_sem);
 		rtf_get(Keyboard, &ch, 1);
 		ch = toupper(ch);
@@ -134,7 +134,7 @@ static void ClockChrono_Clock(long t)
 	MenageHmsh_Convert(hour, hundredthes, &hourChain);
 	Display_PutHour(hourChain);
 	while(1) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 		CommandClock_Get(&command);
 		switch(command) {
 			case 'R':
@@ -179,7 +179,7 @@ static void ClockChrono_Chrono(long t)
 	rt_receive(&read, &msg);
 	command = 'R';
 	while(1) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 		switch(command) {
 			case 'R':
 				MenageHmsh_Initialise(&times);
@@ -225,7 +225,7 @@ static void ClockChrono_Write(long t)
 	int i;
 
 	while(1) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 		Display_Get(&chain, &receiver);
 
 		if (receiver == destChrono) {
@@ -258,7 +258,7 @@ int init_module(void)
 	rt_task_init_cpuid(&chrono, ClockChrono_Chrono, 0, 2000, 0, 0, 0, 1 - rtai_cpuid());
 	rt_task_init_cpuid(&clock, ClockChrono_Clock, 0, 2000, 0, 0, 0, rtai_cpuid());
 	rt_task_init_cpuid(&write, ClockChrono_Write, 0, 2000, 0, 0, 0, 1 - rtai_cpuid());
-	start_rt_timer((int)nano2count(TICK_PERIOD));
+	start_rt_timer(0);
 	rt_task_resume(&read);
 	rt_task_resume(&chrono);
 	rt_task_resume(&clock);
@@ -269,7 +269,6 @@ int init_module(void)
 void cleanup_module(void)
 {
 	int cpuid;
-	rt_reset_irq_to_sym_mode(TIMER_8254_IRQ);
 	stop_rt_timer();
 	rt_busy_sleep(10000000);
 	rt_task_delete(&read);
@@ -279,7 +278,7 @@ void cleanup_module(void)
 	rtf_destroy(Keyboard);
 	rtf_destroy(Screen);
 	printk("\n\nCPU USE SUMMARY\n");
-	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
+	for (cpuid = 0; cpuid < RTAI_NR_CPUS; cpuid++) {
 		printk("# %d -> %d\n", cpuid, cpu_used[cpuid]);
 	}
 	printk("END OF CPU USE SUMMARY\n\n");

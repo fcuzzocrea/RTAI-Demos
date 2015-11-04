@@ -40,13 +40,13 @@ static RT_TASK thread[NTASKS];
 
 static RTIME tick_period;
 
-static int cpu_used[NR_RT_CPUS];
+static int cpu_used[RTAI_NR_CPUS];
 
 static void fun(long t)
 {
 	unsigned int loops = LOOPS;
 	while(loops--) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 		rt_printk("TASK %d %d\n", t, thread[t].priority);
 		if (t == (NTASKS - 1)) {
 			rt_printk("\n\n");
@@ -87,7 +87,7 @@ void cleanup_module(void)
 		rt_task_delete(&thread[i]);
 	}
 	printk("\n\nCPU USE SUMMARY\n");
-	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
+	for (cpuid = 0; cpuid < RTAI_NR_CPUS; cpuid++) {
 		printk("# %d -> %d\n", cpuid, cpu_used[cpuid]);
 	}
 	printk("END OF CPU USE SUMMARY\n\n");
