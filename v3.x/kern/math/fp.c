@@ -42,7 +42,7 @@ static void tskfun(long task)
 		kerrno = 0;
 		switch(i) {
 		case 1:
-			printk("***** REAL FUCTIONS *****\n"); 
+			printk("***** REAL FUNCTIONS *****\n"); 
 			d2str(r = sin(1.570796326794), DGT, str); 
 			printk("- SIN(Pi/2) = %s, FPKERR %d, KERRNO %d.\n", str, fpkerr(r), kerrno); 
 			d2str(r = sinf(1.570796326794), DGT, str); 
@@ -140,7 +140,7 @@ static void tskfun(long task)
 		break;
 #ifdef CONFIG_RTAI_MATH_KCOMPLEX
 		case 17:
-			printk("***** COMPLEX FUCTIONS *****\n"); 
+			printk("***** COMPLEX FUNCTIONS *****\n"); 
 			d2str(r = cabs(3 + I*4), DGT, str);
 			printk("- CABS(3 + 4j) = %s, FPKERR %d, KERRNO %d.\n", str, fpkerr(r), kerrno);
 			d2str(r = cabsf(3 + I*4), DGT, str);
@@ -153,16 +153,16 @@ static void tskfun(long task)
 			printk("- CEXPF(Pi/2)j = %s, CFPKERR %d, KERRNO %d.\n", str, cfpkerr(cr), kerrno);
 		break;
 		case 19:
-			cd2str(cr = csqrt(cpow(5 + I*10, 2)), DGT, str);
-			printk("- CSQRT(CPOW(5 + 10j, 2)) = %s, CFPKERR %d, KERRNO %d.\n", str, cfpkerr(cr), kerrno);
-			cd2str(cr = csqrtf(cpow(5 + I*10, 2)), DGT, str);
-			printk("- CSQRTF(CPOW(5 + 10j, 2)) = %s, CFPKERR %d, KERRNO %d.\n", str, cfpkerr(cr), kerrno);
-		break;
-		case 20:
 			cd2str(cr = cpow(1 + I*1, 2), DGT, str);
 			printk("- CPOW(1 + 1j, 2) = %s, CFPKERR %d, KERRNO %d.\n", str, cfpkerr(cr), kerrno);
 			cd2str(cr = cpowf(1 + I*1, 2), DGT, str);
 			printk("- CPOWF(1 + 1j, 2) = %s, CFPKERR %d, KERRNO %d.\n", str, cfpkerr(cr), kerrno);
+		break;
+		case 20:
+			cd2str(cr = csqrt(cpow(5 + I*10, 2)), DGT, str);
+			printk("- CSQRT(CPOW(5 + 10j, 2)) = %s, CFPKERR %d, KERRNO %d.\n", str, cfpkerr(cr), kerrno);
+			cd2str(cr = csqrtf(cpowf(5 + I*10, 2)), DGT, str);
+			printk("- CSQRTF(CPOW(5 + 10j, 2)) = %s, CFPKERR %d, KERRNO %d.\n", str, cfpkerr(cr), kerrno);
 		break;
 		case 21:
 			cd2str(cr = (1 + I*1)*(1 + I*1), DGT, str);
@@ -231,7 +231,7 @@ static void tskfun(long task)
 int init_module(void)
 {
 	start_rt_timer(0);
-	rt_task_init(&mytask, tskfun, 0, 4096, 0, 1, 0);
+	rt_task_init(&mytask, tskfun, 0, 8192, 0, 1, 0);
 	rt_task_resume(&mytask);
 	return 0;
 }
