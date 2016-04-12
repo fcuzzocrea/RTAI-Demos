@@ -1514,13 +1514,13 @@ static void print_stat(struct thread_param *par, int index, int verbose)
 		if (quiet != 1) {
 			char *fmt;
 			if (use_nsecs)
-                                fmt = "T:%2d (%5d) P:%2d I:%ld C:%7lu "
-					"Min:%7ld Act:%8ld Avg:%8ld Max:%8ld\n";
+                                fmt = "T:%2d (%5d) P:%2d I:%ld kC:%4lu "
+					"Min:%6ld Act:%7ld Avg:%6ld Max:%7ld\n";
 			else
-                                fmt = "T:%2d (%5d) P:%2d I:%ld C:%7lu "
-					"Min:%7ld Act:%5ld Avg:%5ld Max:%8ld\n";
+                                fmt = "T:%2d (%5d) P:%2d I:%ld kC:%4lu "
+					"Min:%6ld Act:%5ld Avg:%5ld Max:%8ld\n";
                         printf(fmt, index, stat->tid, par->prio,
-                               par->interval, stat->cycles, stat->min, stat->act,
+                               par->interval, stat->cycles/1000, stat->min, stat->act,
 			       stat->cycles ?
 			       (long)(stat->avg/stat->cycles) : 0, stat->max);
 		}
@@ -1590,7 +1590,7 @@ int main(int argc, char **argv)
 
 	if (check_clock_resolution) {
 		int clock;
-		uint64_t diff;
+		int64_t diff;
 		int k;
 		uint64_t min_non_zero_diff = UINT64_MAX;
 		struct timespec now;
