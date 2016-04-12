@@ -117,9 +117,9 @@ extern int clock_nanosleep(clockid_t __clock_id, int __flags,
 
 int enable_events;
 
-#define MAXDIM 100
+#define MAXDIM 50
 static double a[MAXDIM], b[MAXDIM];
-#define MAXIO 2
+#define MAXIO 4
 
 static double dot(double *a, double *b, int n)
 {
@@ -827,7 +827,7 @@ void *timerthread(void *param)
 
 	while (!shutdown) {
 
-		uint64_t diff;
+		int64_t diff;
 		int sigs, ret;
 		double s;
  
