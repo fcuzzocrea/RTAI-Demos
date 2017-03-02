@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <rtai_nam2num.h>
 #include <rtai_shm.h>
 
-#define SIZE 100000
+#define SIZE 65536
 
 int *gh;	
 

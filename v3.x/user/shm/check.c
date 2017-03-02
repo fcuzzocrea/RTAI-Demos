@@ -41,7 +41,8 @@ int main(void)
 	s = 0;
 	for (i = 1; i < vm[0]; i++) {
 		if ( vm[i] != km[i] || km[i] != ka[i] || ka[i] != kd[i] || kd[i] != gh[i] || gh[i] != (s += i)) {
-			printf("wrong at index %i\n", i);
+			printf("wrong at index %i, val %lu\n", i, s);
+			break;
 		}
 	}
 	rt_shm_free(nam2num("VM"));
