@@ -47,7 +47,8 @@ static pthread_t thread;
 
 int main(int argc, char *argv[])
 {
-	unsigned int player, msg, spknode, spkport, i;
+	unsigned long msg;
+	unsigned int player, spknode, spkport, i;
 	RT_TASK *plrtsk, *spktsk;
         struct sockaddr_in addr;
 	MBX *mbx;
