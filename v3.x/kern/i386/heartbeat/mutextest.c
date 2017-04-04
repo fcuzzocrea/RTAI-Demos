@@ -54,25 +54,31 @@ void task1(void *cookie)
 
 void task2(void *cookie)
 {
-	long i, max, varl;
+	long i, min, max, avrg, varl;
 	nanosecs_abs_t t, dt;
 
 	rt_printk("TESTING TIMING OUT TIMEDLOCK ...");
-	for (max = i = 0; i < LOOPS; i++) {
+	min = 1000000000;
+	for (max = avrg = i = 0; i < LOOPS; i++) {
 		t = rtdm_clock_read();
 		if (rtdm_mutex_timedlock(&mutex, DELAY, NULL) == -ETIMEDOUT) {
 			dt = rtdm_clock_read() - t - DELAY;
 			if (dt > max) {
 				max = dt;
 			}
+			if (dt < min) {
+				min = dt;
+			}
+                        avrg += dt;
 		} else {
+			rt_printk("TIMING OUT TIMEDLOCK FAILS.\n");
 			break;
 		}
 	}
 	if (i == LOOPS) {
-		rt_printk(" OK [%lu (ns)].\n", max);
+		rt_printk(" OK [MIN = %ld, MAX = %ld, AVRG = %ld (ns)].\n", min, max, avrg/LOOPS);
 	} else {
-		rt_printk(" NOT OK [MAXLAT %lu (ns)].\n", max);
+		rt_printk(" NOT OK [MIN = %ld, MAX = %ld, AVRG = %ld (ns)].\n", min, max, avrg/LOOPS);
 	}
 
 	rt_printk("TESTING FAILING TRY LOCK ...");
