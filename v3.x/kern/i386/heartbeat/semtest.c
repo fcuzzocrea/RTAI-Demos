@@ -37,25 +37,31 @@ void task1(void *cookie)
 
 void task2(void *cookie)
 {
-	long i, max;
+	long i, min, max, avrg;
 	nanosecs_abs_t t, dt;
 
 	rt_printk("TESTING TIMING OUT TIMEDDOWN ...");
-	for (max = i = 0; i < LOOPS; i++) {
+	min = 1000000000;
+	for (max = avrg = i = 0; i < LOOPS; i++) {
 		t = rtdm_clock_read();
 		if (rtdm_sem_timeddown(&sem2, DELAY, NULL) == -ETIMEDOUT) {
 			dt = rtdm_clock_read() - t - DELAY;
 			if (dt > max) {
 				max = dt;
 			}
+			if (dt < min) {
+				min = dt;
+			}
+			avrg += dt;
 		} else {
+			rt_printk("TIMING OUT TIMEDDOWN FAILS.\n");
 			break;
 		}
 	}
 	if (i == LOOPS) {
-		rt_printk(" OK [%lu (ns)].\n", max);
+		rt_printk(" OK [MIN = %ld, MAX = %ld, AVRG = %ld (ns)].\n", min, max, avrg/LOOPS);
 	} else {
-		rt_printk(" NOT OK [MAXLAT %lu (ns)].\n", max);
+		rt_printk(" NOT  OK [MIN = %ld, MAX = %ld, AVRG = %ld (ns)].\n", min, max, avrg);
 	}
 
 	rt_printk("TESTING FAILING TRY DOWN ...");
