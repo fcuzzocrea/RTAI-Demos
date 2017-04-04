@@ -4,6 +4,7 @@ rmmod semtest_rt
 rmmod semtest
 rmmod mutextest_rt
 rmmod mutextest
-rmmod evetest
+rmmod eventest_rt
+rmmod eventest
 rmmod rtai_rtdm
 ../../remod
