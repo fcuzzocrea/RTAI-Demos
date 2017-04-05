@@ -6,5 +6,7 @@ rmmod mutextest_rt
 rmmod mutextest
 rmmod eventest_rt
 rmmod eventest
+rmmod timertest_rt
+rmmod timertest
 rmmod rtai_rtdm
 ../../remod
