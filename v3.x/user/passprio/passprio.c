@@ -12,9 +12,10 @@ SEM     *sem[NTASKS];
 
 void *tskfun(void *tasknr)
 {
-	int tsknr, k, prio, bprio;
+	long tsknr;
+	int k, prio, bprio;
 
-	tsknr = (int)tasknr;
+	tsknr = (long)tasknr;
 	task[tsknr] = rt_task_init_schmod(0, NTASKS - tsknr - 1, 0, 0, SCHED_FIFO, CPUS_ALLOWED);
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 	rt_make_hard_real_time();
@@ -38,7 +39,8 @@ void *tskfun(void *tasknr)
 
 int main(void)
 {
-	int i, k, prio, bprio;
+	long i, k;
+	int prio, bprio;
 
 	task[0] = rt_task_init_schmod(0, NTASKS - 1, 0, 0, SCHED_FIFO, CPUS_ALLOWED);
 	mlockall(MCL_CURRENT | MCL_FUTURE);

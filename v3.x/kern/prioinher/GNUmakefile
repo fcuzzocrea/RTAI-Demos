@@ -8,8 +8,6 @@ CC = $(shell rtai-config --cc)
 
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 
-ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)) || $(findstring 3.,$(shell rtai-config --linux-version 3>/dev/null)),)
-
 LINUX_DIR = $(shell rtai-config --linux-dir)
 
 all::
@@ -19,22 +17,5 @@ all::
 
 clean:
 	$(RM) $(LINUX_DIR)/.tmp_versions/*_rt.mod *.o *.ko *.mod.c .*.cmd *.order *.symvers
-
-else
-
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
-
-all:: prioinher1.o prioinher2.o
-
-prioinher1.o: prioinher1.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-prioinher2.o: prioinher2.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-clean::
-	$(RM) *.o
-
-endif
 
 .PHONY: clean

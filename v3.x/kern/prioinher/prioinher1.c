@@ -42,7 +42,7 @@ RTAI_MODULE_PARM(SemType, int);
 
 void taskl_func(long tid)
 {
-	unsigned int msg = 0;
+	unsigned long msg = 0;
 	rt_receive(0, &msg);
 	rt_receive(0, &msg);
 	while (MUTEX_LOCK(&mutex) <= 1) {
@@ -66,7 +66,7 @@ void taskl_func(long tid)
 
 void taskm_func(long tid)
 {
-	unsigned int msg = 0;
+	unsigned long msg = 0;
 	rt_receive(0, &msg);
 	rt_send(&taskl, msg);
 	while (1) {
@@ -79,7 +79,7 @@ void taskm_func(long tid)
 void taskh_func(long tid)
 {
 	RTIME time;
-	unsigned int msg = 0, wait;
+	unsigned long msg = 0, wait;
 	rt_send(&taskm, msg);
 	rt_send(&taskl, msg);
 	while (1) {
