@@ -1,0 +1,4 @@
+rmmod rtdmtest
+rmmod timerbench
+rmmod rtai_rtdm
+../../remod
