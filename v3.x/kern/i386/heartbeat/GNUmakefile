@@ -6,8 +6,6 @@ endif
 
 CC = $(shell rtai-config --cc)
 
-ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)) || $(findstring 3.,$(shell rtai-config --linux-version 3>/dev/null)),)
-
 LINUX_DIR = $(shell rtai-config --linux-dir)
 
 all:
@@ -17,25 +15,5 @@ all:
 
 clean:
 	$(RM) $(LINUX_DIR)/.tmp_versions/*_rt.mod *.o *.ko *.mod.c .*.cmd *.order *.symvers
-
-else
-
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
-
-all: heartbeat.o semtest.o mutextest.o
-
-heartbeat.o: heartbeat.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-semtest.o: semtest.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-mutextest.o: mutextest.c
-	$(CC) $(MODULE_CFLAGS) -c $<
-
-clean:
-	rm -f *.o
-
-endif
 
 .PHONY: clean
