@@ -96,10 +96,10 @@ int main(int argc, char *argv[])
 	{
 		sprintf(buf, "%s", argv[1]);
 		size = rt_dev_write (device, (const void *)buf, strlen(buf) + 1);
-		printf("Write from device %s\t: %d bytes: %s\n", DEVICE_NAME, size, argv[1]);
+		printf("Write from device %s\t: %lu bytes: %s\n", DEVICE_NAME, size, argv[1]);
 	} else {
 		size = rt_dev_read (device, (void *)buf, 1024);
-		printf("Read in device %s\t: %d bytes: %s\n", DEVICE_NAME, size, buf);
+		printf("Read in device %s\t: %lu bytes: %s\n", DEVICE_NAME, size, buf);
 	}
 
 	/* close the device */
