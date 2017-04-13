@@ -68,12 +68,12 @@ int main(int argc, char *argv[])
 
 	/* first read */
 	size = rt_dev_read (device, (void *)buf, 1024);
-	printf("Read in device %s\t: %d bytes\n", DEVICE_NAME, size);
+	printf("Read in device %s\t: %lu bytes\n", DEVICE_NAME, size);
 
 	/* first write */
 	sprintf(buf, "HelloWorld!");
 	size = rt_dev_write (device, (const void *)buf, strlen(buf) + 1);
-	printf("Write from device %s\t: %d bytes\n", DEVICE_NAME, size);
+	printf("Write from device %s\t: %lu bytes\n", DEVICE_NAME, size);
 
 	/* second read */
 	size = rt_dev_read (device, (void *)buf, 1024);
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 
 	/* third read */
 	size = rt_dev_read (device, (void *)buf, 1024);
-	printf("Read in device %s\t: %d bytes\n", DEVICE_NAME, size);
+	printf("Read in device %s\t: %lu bytes\n", DEVICE_NAME, size);
 
 	/* close the device */
 	ret = rt_dev_close(device);
