@@ -94,7 +94,7 @@ int main(int argc, const char *argv[])
 	start = rt_timer_tsc();
 	check("close", rt_dev_close(dev), 0);
 	check("open", rt_dev_open(devname, O_RDWR), -EBUSY);
-	dev2 = check("open", rt_dev_open(devname2, O_RDWR), dev2);
+	dev2 = check("open", rt_dev_open(devname2, O_RDWR), dev);
 	check("close", rt_dev_close(dev2), 0);
 	usleep(300000);
 	dev = check("open", rt_dev_open(devname, O_RDWR), dev);
