@@ -8,6 +8,8 @@ fi
 
 MODULES=$prefix/modules
 
+trap "./rem" INT TERM HUP ALARM 
+
 echo
 echo "*** A METTLEY OF LATENCY MEASUREMENTs (user, kernel, kernel timers) ***"
 echo "Press <enter> to load modules:"
@@ -24,5 +26,3 @@ sync
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-./rem
-
