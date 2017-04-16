@@ -100,7 +100,7 @@ static inline void *rt_task_ext(long name, int prio, int cpus_allowed)
                 return 0;
         }
         rtai_iopl();
-	f = (float)name + (float)prio;
+	if ((f = (float)name + (float)prio));
 
         return (void *)rtai_lxrt(BIDX, SIZARG, LXRT_TASK_INIT, &arg).v[LOW];
 }
