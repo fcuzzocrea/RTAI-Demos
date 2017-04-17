@@ -9,6 +9,8 @@ fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
+trap "../remod" KILL INT TERM HUP
+
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** 2 INTERACTING TASKS USING MANY RTAI APIs WHILE FLOODING HARD/SOFT/HARD ***"
@@ -23,6 +25,5 @@ $SUDO ./master
 #while(`ps -a | grep -q master`); do sleep 1; done
 echo
 echo "Done. Press <enter> to remove the modules."
-read junk
 read junk
 ../remod
