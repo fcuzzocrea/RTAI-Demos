@@ -9,6 +9,8 @@ fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
+trap 'killall -9 display; killall -9 latwdisp; ../remod' INT TERM HUP ALARM
+
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** LATENCY MEASUREMENT WITH ALTERNATE DISPLAY THROUGH MQUEU (user) ***"
@@ -21,7 +23,6 @@ read junk
 $SUDO ./latwdisp &
 sleep 1
 $SUDO ./display &
-read junk
 read junk
 TASK=`ps -a |grep display | awk '{ print $1 }'`
 kill -9 $TASK
