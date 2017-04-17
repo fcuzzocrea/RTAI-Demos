@@ -10,6 +10,7 @@ fi
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
 trap "./rem" INT TERM HUP KILL 
+
 echo
 echo "*** LATENCY MEASUREMENT (user) ***"
 echo "Press <enter> to load LXRT modules:"
