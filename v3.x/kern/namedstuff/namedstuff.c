@@ -215,7 +215,7 @@ void cleanup_module(void)
 	checkt = rdtsc() - checkt;
 	checkj = jiffies - checkj;
 	stop_rt_timer();
-	printk("\n(JIFFIES COUNT CHECK: TRUE = %d, LINUX = %d)\n", (int)llimd(checkt, HZ, CPU_FREQ), checkj);
+	printk("\n(JIFFIES COUNT CHECK: TRUE = %d, LINUX = %d)\n", (int)rtai_llimd(checkt, HZ, RTAI_CLOCK_FREQ), checkj);
 #ifdef DELETE
 	do {
 		int i;
