@@ -279,7 +279,6 @@ int init_module(void)
 void cleanup_module(void)
 {
 	int cpuid;
-//	rt_reset_irq_to_sym_mode(TIMER_8254_IRQ);
 	stop_rt_timer();
 	rt_busy_sleep(10000000);
 	rt_task_delete(&read);

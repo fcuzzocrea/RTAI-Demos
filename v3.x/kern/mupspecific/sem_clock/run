@@ -19,22 +19,10 @@ echo
 echo "Now start the sem clock <enter>."
 read junk
 sync
-if [`rtai-config --linux-version | grep -q 2.6` -o `rtai-config --linux-version | grep -q 3.`];
-then
-
-insmod ./dispclk_rt.ko;
-insmod ./cmdclk_rt.ko;
-insmod ./cmdcrn_rt.ko;
-insmod ./clock_rt.ko;
-
-else
-
-insmod ./dispclk.o;
-insmod ./cmdclk.o;
-insmod ./cmdcrn.o;
-insmod ./clock.o;
-
-fi
+insmod ./dispclk.ko;
+insmod ./cmdclk.ko;
+insmod ./cmdcrn.ko;
+insmod ./clock.ko;
 ./keybrd
 echo
 echo "Done. Press <enter> to remove the modules."
