@@ -4,7 +4,7 @@
 //
 // Authors:             Trevor Woolven (trevw@zentropix.com)
 // Original date:       Thu 15 Jul 1999
-// Id:                  @(#)$Id: mod_stuff.c,v 1.3 2005/12/09 17:28:21 mante Exp $
+// Id:                  @(#)$Id: mod_stuff.c,v 1.4 2017/04/19 21:46:16 mante Exp $
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -67,7 +67,6 @@ int init_module(void) {
 //    init_z_apps(&parent_task);
     rt_set_runnable_on_cpus(&parent_task, RUN_ON_CPUS);
     tick_period = start_rt_timer((int)nano2count(TICK_PERIOD));
-    rt_assign_irq_to_cpu(TIMER_8254_IRQ, TIMER_TO_CPU);
     rt_linux_use_fpu(1);
     now = rt_get_time();
     rt_task_make_periodic(&parent_task, now + 2*tick_period, tick_period);
@@ -92,7 +91,6 @@ int init_module(void) {
 //------------------------------------------------------------------------------
 void cleanup_module(void) {
 
-  rt_reset_irq_to_sym_mode(TIMER_8254_IRQ);
   stop_rt_timer();
   printk("\n==== Posix Queues test program %s removed====\n", test_name);
 
