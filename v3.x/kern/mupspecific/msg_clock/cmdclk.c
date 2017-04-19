@@ -100,7 +100,7 @@ static void CommandClock_task(long t)
 	rt_return(get, command);
 
 	while(1) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 		switch (Clockstatus) {
 			case stopped:
 				rt_receive(put, &command);

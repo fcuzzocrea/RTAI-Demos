@@ -170,7 +170,7 @@ void Display_Get(MenageHmsh_tChain11 *chain, Display_tDest *receiver)
 	*receiver = chain->chain[0] == 't' ? destChrono : destClock; 
 }
 
-int cpu_used[NR_RT_CPUS];
+int cpu_used[RTAI_NR_CPUS];
 
 static void Display_task(long t)
 {
@@ -200,7 +200,7 @@ static void Display_task(long t)
 	rt_return(hput, command);
 
 	while(1) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 		task = rt_receive(0, &command);
 		if (task == tput || task == hput) {
 			rt_send(get, command);
