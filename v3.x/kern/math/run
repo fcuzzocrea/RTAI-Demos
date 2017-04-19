@@ -14,5 +14,7 @@ MODULES=$prefix/modules
 $insmod $MODULES/rtai_hal.ko;
 $insmod $MODULES/rtai_sched.ko;
 $insmod $MODULES/rtai_math.ko;
-insmod ./fp_rt.ko
+insmod ./fp.ko
+echo "Wait till it ends, then type <enter> to remove the modules"
+read junk
 ./rem

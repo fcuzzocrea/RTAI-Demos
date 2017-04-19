@@ -8,8 +8,6 @@ CC = $(shell rtai-config --cc)
 
 LXRT_CFLAGS = $(shell rtai-config --lxrt-cflags)
 
-ifneq ($(findstring 2.6.,$(shell rtai-config --linux-version 2>/dev/null)) || $(findstring 3.,$(shell rtai-config --linux-version 3>/dev/null)),)
-
 LINUX_DIR = $(shell rtai-config --linux-dir)
 
 all:: fp_rt.ko
@@ -21,20 +19,5 @@ fp_rt.ko: fp.c
 
 clean::
 	$(RM) $(LINUX_DIR)/.tmp_versions/*_rt.mod *.o *.ko *.mod.c .*.cmd *.order *.symvers
-
-else
-
-MODULE_CFLAGS = $(shell rtai-config --module-cflags)
-
-all:: fp_rt.o
-
-fp_rt.o: fp.c
-	$(CC) $(MODULE_CFLAGS) -c $< -o _$@
-	$(LD) -r -static -o $@ _$@ -L/usr/lib -lm
-
-clean::
-	$(RM) *.o
-
-endif
 
 .PHONY: clean
