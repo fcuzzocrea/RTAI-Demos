@@ -35,7 +35,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("trem");
 
-#define SIZE_MAX		1024
+#define DATA_SIZE_MAX		1024
 #define DEVICE_NAME		"tut01-skeleton-drv01"
 #define SOME_SUB_CLASS		4711
 
@@ -48,7 +48,7 @@ MODULE_AUTHOR("trem");
  */
 typedef struct buffer_s {
 	int size;
-	char data[SIZE_MAX];
+	char data[DATA_SIZE_MAX];
 } buffer_t;
 
 /**
@@ -110,7 +110,7 @@ static ssize_t simple_rtdm_write_nrt(struct rtdm_dev_context *context,
 {
 	buffer_t * buffer = (buffer_t *) context->dev_private;
 
-	buffer->size = (nbyte > SIZE_MAX) ? SIZE_MAX : nbyte;
+	buffer->size = (nbyte > DATA_SIZE_MAX) ? DATA_SIZE_MAX : nbyte;
 	if (rtdm_safe_copy_from_user(user_info, buffer->data, buf, buffer->size))
 		rtdm_printk("ERROR : can't copy data to driver\n");
 

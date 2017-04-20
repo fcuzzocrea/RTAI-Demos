@@ -1,5 +1,3 @@
-rmmod tut01-skeleton-drv_rt
-rmmod tut02-skeleton-drv_rt
 rmmod tut01-skeleton-drv
 rmmod tut02-skeleton-drv
 rmmod rtai_rtdm
