@@ -20,5 +20,5 @@ cd ..; ./ldmod; cd -
 echo
 echo "Now start the realtime process, <Ctrl C> to end"
 read junk
-$SUDO ./switch
+$SUDO ./switch -h
 ../remod
