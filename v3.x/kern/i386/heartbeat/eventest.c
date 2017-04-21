@@ -123,7 +123,6 @@ void task2(void *cookie)
 int init_module(void)
 {
 	printk("TESTING RTDM EVENTs [LOOPs %d, TIMEOUTs %d (ns)].\n", LOOPS, DELAY);
-	start_rt_timer(0);
 	rtdm_event_init(&event1, 0);    
 	rtdm_event_init(&event2, 0);    
 	rtdm_task_init_cpuid(&stask1, "task1", task1, NULL, 0, 0, 0);
@@ -138,5 +137,4 @@ void cleanup_module(void)
 	rtdm_task_destroy(&stask2);
 	rtdm_event_destroy(&event1);    
 	rtdm_event_destroy(&event2);    
-	stop_rt_timer();
 }
