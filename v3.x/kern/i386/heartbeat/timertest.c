@@ -42,7 +42,7 @@ void timer_handler(rtdm_timer_t *timer)
 	}
 	t = rtdm_clock_read();
 	if (loops++ < LOOPS) {
-		printk("LOOP: %d, PERIOD: %lld (us).\n", loops, (t - tp + 499)/1000);
+		printk("LOOP: %d, PERIOD: %lld (us).\n", loops, rtai_llimd((t - tp + 499),1,1000));
 	}
 	tp = t;
 }
