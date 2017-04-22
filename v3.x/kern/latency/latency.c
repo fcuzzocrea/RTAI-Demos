@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2000 Paolo Mantegazza <mantegazza@aero.polimi.it>
+ * Copyright (C) 2000-2017 Paolo Mantegazza <mantegazza@aero.polimi.it>
  *               2002  Robert Schwebel  <robert@schwebel.de>
  *
  * This program is free software; you can redistribute it and/or
@@ -33,7 +33,6 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Latency measurement tool for RTAI");
 MODULE_AUTHOR("Paolo Mantegazza <mantegazza@aero.polimi.it>, Robert Schwebel <robert@schwebel.de>");
 
-
 /*
  *	command line parameters
  */
@@ -52,21 +51,7 @@ int avrgtime = 1;
 RTAI_MODULE_PARM(avrgtime, int);
 MODULE_PARM_DESC(avrgtime, "Averages are calculated for <avrgtime (s)> runs (default: 1)");
 
-int use_fpu = 1;
-RTAI_MODULE_PARM(use_fpu, int);
-MODULE_PARM_DESC(use_fpu, "do we want to use the FPU? (default: 0)");
-
-int start_timer = 1;
-RTAI_MODULE_PARM(start_timer, int);
-MODULE_PARM_DESC(start_timer,
-		 "declares if the timer should be started or not (default: 1)");
-
-int timer_mode = 0;
-RTAI_MODULE_PARM(timer_mode, int);
-MODULE_PARM_DESC(timer_mode, "timer running mode: 0-oneshot, 1-periodic");
-
 #define DEBUG_FIFO 3
-#define TIMER_TO_CPU 3		// < 0  || > 1 to maintain a symmetric processed timer.
 #define RUNNABLE_ON_CPUS 1	// 1: on cpu 0 only, 2: on cpu 1 only, 3: on any;
 #define RUN_ON_CPUS (num_online_cpus() > 1 ? RUNNABLE_ON_CPUS : 1)
 
@@ -82,13 +67,10 @@ struct sample {
 	long long max;
 	int index;
 } samp;
-double dotres, refres, tdif;
 
 static int cpu_used[RTAI_NR_CPUS];
 
 #define MAXDIM 10
-
-#ifdef CONFIG_RTAI_FPU_SUPPORT
 static double a[MAXDIM], b[MAXDIM];
 
 static double dot(double *a, double *b, int n)
@@ -99,7 +81,6 @@ static double dot(double *a, double *b, int n)
 	}
 	return s;
 }
-#endif
 
 /* 
  *	/proc/rtai/latency_calibrate entry
@@ -107,18 +88,16 @@ static double dot(double *a, double *b, int n)
 
 #ifdef CONFIG_PROC_FS
 
-struct proc_dir_entry *rtai_latency_calibrate = NULL;
+extern struct proc_dir_entry *rtai_proc_root;
 
 static int PROC_READ_FUN(rtai_proc_latency_read)
 {
 	PROC_PRINT_VARS;
-	PROC_PRINT("\n## RTAI latency calibration tool ##\n");
-	PROC_PRINT("# period = %i (ns) \n", period);
-	PROC_PRINT("# avrgtime = %i (s)\n", avrgtime);
-	PROC_PRINT("# check %s worst case\n", overall ? "overall" : "each average");
-	PROC_PRINT("#%suse the FPU\n", use_fpu ? " " : " do not " );
-	PROC_PRINT("#%sstart the timer\n", start_timer ? " " : " do not ");
-	PROC_PRINT("# timer_mode is %s\n", timer_mode ? "periodic" : "oneshot");
+	PROC_PRINT("\n## RTAI kernel latency (possible calibration tool) ##\n");
+	PROC_PRINT("# period = %i (ns).\n", period);
+	PROC_PRINT("# avrgtime = %i (s).\n", avrgtime);
+	PROC_PRINT("# check %s worst case.\n", overall ? "overall" : "each average");
+	PROC_PRINT("# timer_mode is oneshot.\n");
 	PROC_PRINT("\n");
 	PROC_PRINT_DONE;
 }
@@ -127,20 +106,22 @@ PROC_READ_OPEN_OPS(rtai_latency_proc_fops, rtai_proc_latency_read);
 
 static int rtai_proc_register(void)
 {
-        struct proc_dir_entry *ent;
+	struct proc_dir_entry *rtai_latency_calibrate;
 
-	rtai_latency_calibrate = CREATE_PROC_ENTRY("kern_latency", S_IFDIR, NULL, &rtai_latency_proc_fops);
+	rtai_latency_calibrate = CREATE_PROC_ENTRY("kern_latency", S_IFREG|S_IRUGO|S_IWUSR, rtai_proc_root, &rtai_latency_proc_fops);
         if (!rtai_latency_calibrate) {
                 printk(KERN_ERR "Unable to initialize /proc/kern_latency.\n");
                 return -1;
         }
+	SET_PROC_READ_ENTRY(rtai_latency_calibrate, rtai_proc_latency_read);
 
         return 0;
 }
 
 static void rtai_proc_unregister(void)
 {
-        remove_proc_entry("kern_latency", rtai_latency_calibrate);
+	remove_proc_entry("kern_latency", rtai_proc_root);
+//        remove_proc_entry("rtai_kern_latency", NULL);
 }
 
 #endif
@@ -153,13 +134,9 @@ static void rtai_proc_unregister(void)
 void
 fun(long thread)
 {
-
-	int diff = 0;
-	int i;
-	int average;
 	int min_diff = 0;
 	int max_diff = 0;
-	RTIME t, svt;
+	double refres;
 
 	/* If we want to make overall statistics */
 	/* we have to reset min/max here         */
@@ -167,17 +144,10 @@ fun(long thread)
 		min_diff =  1000000000;
 		max_diff = -1000000000;
 	}
-#ifdef CONFIG_RTAI_FPU_SUPPORT
-	if (use_fpu) {
-		for(i = 0; i < MAXDIM; i++) {
-			a[i] = b[i] = 3.141592;
-		}
-	}
 	refres = dot(a, b, MAXDIM);
-#endif
-	svt = rt_get_cpu_time_ns();
 	while (1) {
-
+		int i, diff, average;
+		double dotres, tdif;
 		/* Not overall statistics: reset min/max */
 		if (!overall) {
 			min_diff =  1000000000;
@@ -190,34 +160,24 @@ fun(long thread)
 			expected += period_counts;
 			rt_task_wait_period();
 
-			if (timer_mode) {
-				diff = (int) ((t = rt_get_cpu_time_ns()) - svt - period);
-				svt = t;
-			} else {
-				diff = (int) count2nano(rt_get_time() - expected);
-			}
+			diff = (int) count2nano(rt_get_time() - expected);
 
 			if (diff < min_diff) { min_diff = diff; }
 			if (diff > max_diff) { max_diff = diff; }
 			average += diff;
-#ifdef CONFIG_RTAI_FPU_SUPPORT
-			if (use_fpu) {
-				dotres = dot(a, b, MAXDIM);
-                        	if ((tdif = dotres/refres - 1.0) < 0.0) {
-                        		tdif = -tdif;
-				}
-	                        if (tdif > 1.0e-16) {
-      	                          	rt_printk("\nDOT PRODUCT ERROR\n");
-                	                return;
-                        	}
+			dotres = dot(a, b, MAXDIM);
+                       	if ((tdif = dotres/refres - 1.0) < 0.0) {
+                       		tdif = -tdif;
 			}
-#endif
+                        if (tdif > 1.0e-16) {
+				rt_printk("\nDOT PRODUCT ERROR\n");
+                	        return;
+                       	}
 		}
 		samp.min = min_diff;
 		samp.max = max_diff;
 		samp.index = average / loops;
 		rtf_put(DEBUG_FIFO, &samp, sizeof (samp));
-//while(1);
 	}
 }
 
@@ -227,29 +187,14 @@ fun(long thread)
  *      our periodical measurement task.  
  */
 
-//#include <linux/module.h>
-//#include <linux/kernel.h>
-//#include <linux/init.h>
-//#include <linux/proc_fs.h>
-//#include <asm/uaccess.h>
-
-static int
-__latency_init(void)
+static int __latency_init(void)
 {
-
-        char *argv[] = {"/home/mante/prova", NULL };
-//        char *envp[] = {"HOME=/", "PATH=/sbin:/usr/sbin:/bin:/usr/bin", NULL };
-        char *envp[] = { NULL };
-
-	/* XXX check option ranges here */
-
 	/* register a proc entry */
 #ifdef CONFIG_PROC_FS
 	 rtai_proc_register();
 #endif
 
 	rtf_create(DEBUG_FIFO, 16000);	/* create a fifo length: 16000 bytes */
-	rt_linux_use_fpu(use_fpu);	/* declare if we use the FPU         */
 
 	rt_task_init(			/* create our measuring task         */
 			    &thread,	/* poiter to our RT_TASK             */
@@ -257,7 +202,7 @@ __latency_init(void)
 			    0,		/* we could transfer data -> task    */
 			    3000,	/* stack size                        */
 			    0,		/* priority                          */
-			    use_fpu,	/* do we use the FPU?                */
+			    1,		/* do we use the FPU?                */
 			    0		/* signal? XXX                       */
 	);
 
@@ -266,17 +211,13 @@ __latency_init(void)
 		RUN_ON_CPUS
 	);
 
-	/* Test if we have to start the timer                                */
-	if (start_timer || (start_timer = !rt_is_hard_timer_running())) {
-		start_rt_timer(nano2count(period));
-	}
 	period_counts = nano2count(period);
 
 	loops = (1000000000*avrgtime)/period;
 
 	/* Calculate the start time for the task. */
 	/* We set this to "now plus 10 periods"   */
-	expected = rt_get_time() + 10 * period_counts;
+	expected = rt_get_time() + 10*period_counts;
 	rt_task_make_periodic(&thread, expected, period_counts);
 	return 0;
 }
@@ -290,11 +231,6 @@ static void
 __latency_exit(void)
 {
 	int cpuid;
-
-	/* If we started the timer we have to revert this now. */
-	if (start_timer) {
-		stop_rt_timer();
-	}
 
 	/* Now delete our task and remove the FIFO. */
 	rt_task_delete(&thread);
