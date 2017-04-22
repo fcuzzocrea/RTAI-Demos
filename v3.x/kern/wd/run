@@ -15,16 +15,13 @@ echo "*** SIMPLE WD CHECK (kernel) ***"
 echo "Press <enter> to load modules:"
 read junk
 cd ..; ./ldmod; cd -
-if [`rtai-config --linux-version | grep -q 2.6` -o `rtai-config --linux-version | grep -q 3.`];
-then insmod $MODULES/rtai_wd.ko wd_OneShot=1;
-else insmod $MODULES/rtai_wd.o wd_OneShot=1; fi
+insmod $MODULES/rtai_wd.ko
 echo
 echo "Now start the realtime process <enter>:"
 read junk
 sync
-if [`rtai-config --linux-version | grep -q 2.6` -o `rtai-config --linux-version | grep -q 3.`];
-then insmod ./wd_rt.ko;
-else insmod ./wd.o; fi
+insmod ./wd.ko
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
+./rem
