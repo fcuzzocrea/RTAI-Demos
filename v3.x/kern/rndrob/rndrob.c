@@ -32,7 +32,7 @@ MODULE_LICENSE("GPL");
 
 #define EXECTIME 500000000LL
 
-#define RR_QUANTUM 0
+#define RR_QUANTUM 25000
 
 int SchedPolicy = RT_SCHED_RR;
 RTAI_MODULE_PARM(SchedPolicy, int);
@@ -60,7 +60,6 @@ int init_module(void)
 	int i;
 
 	rt_sem_init(&sync, 0);
-	start_rt_timer(0);
 	for (i = 0; i < NTASKS; i++) {
 		rt_task_init_cpuid(&thread[i], fun, i, STACK_SIZE, 0, 0, 0, 0);
 		rt_set_sched_policy(&thread[i], SchedPolicy, RR_QUANTUM);
@@ -79,7 +78,6 @@ void cleanup_module(void)
 {
 	int i;
 
-	stop_rt_timer();
 	rt_sem_delete(&sync);
 	rt_printk("EXECUTION COUNTERS:\n");
 	for (i = 0; i < NTASKS; i++) {
