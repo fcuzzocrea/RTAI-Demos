@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <linux/module.h>
 #include <linux/kernel.h>
 
+MODULE_LICENSE("GPL");
+
 #include <rtai_netrpc.h>
 
 static char *ComNode = "127.0.0.1";

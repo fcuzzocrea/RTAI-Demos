@@ -1,5 +1,4 @@
 #!/bin/sh
-#!/bin/sh
 
 prefix=`rtai-config --prefix`
 
@@ -9,6 +8,8 @@ exit
 fi
 
 MODULES=$prefix/modules
+
+trap "./rem" INT HUP TERM ALARM
 
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
@@ -20,25 +21,11 @@ echo
 echo "Now start the realtime process <enter> and wait for its end."
 read junk
 sync
-if [`rtai-config --linux-version | grep -q 2.6` -o `rtai-config --linux-version | grep -q 3.`];
-then
-
 insmod $MODULES/rtai_netrpc.ko ThisNode="127.0.0.1";
 sync
-insmod ./comnode_rt.ko;
-insmod ./task_code_rt.ko ComNode="127.0.0.1";
-insmod ./start_task_rt.ko ComNode="127.0.0.1" TaskNode="127.0.0.1";
-
-else
-
-insmod $MODULES/rtai_netrpc.o ThisNode="127.0.0.1";
-sync
-insmod ./comnode.o;
-insmod ./task_code.o ComNode="127.0.0.1";
-insmod ./start_task.o ComNode="127.0.0.1" TaskNode="127.0.0.1";
-
-fi
-
+insmod ./comnode.ko;
+insmod ./task_code.ko ComNode="127.0.0.1";
+insmod ./start_task.ko ComNode="127.0.0.1" TaskNode="127.0.0.1";
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
