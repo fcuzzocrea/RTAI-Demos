@@ -132,7 +132,9 @@ static void CommandChrono_task(long t)
 				command = R;
 				break;
 		}
-		rt_send(get, command);
+		if (rt_send(get, command) <= RTE_HIGERR) {
+			return;
+		}
 	}
 }
 

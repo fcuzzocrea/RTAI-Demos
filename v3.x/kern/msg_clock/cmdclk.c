@@ -107,7 +107,9 @@ static void CommandClock_task(long t)
 				}
 				break;
 		}
-		rt_send(get, command);
+		if (rt_send(get, command) <= RTE_HIGERR) {
+			return;
+		}
 	}
 }
 
