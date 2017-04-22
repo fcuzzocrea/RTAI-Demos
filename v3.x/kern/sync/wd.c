@@ -49,8 +49,8 @@ static double dot(double *a, double *b, int n)
 
 static void fun(long none)
 {
-	volatile double s, a[MAXDIM], b[MAXDIM];
-	long msg;
+	double s, a[MAXDIM], b[MAXDIM];
+	unsigned long msg;
 	RTIME period, wait_delay, sync_time, aim_time; 
 	*worst_lat = -2000000000;
 	wait_delay = nano2count(WAIT_DELAY); 
@@ -82,16 +82,14 @@ static RT_TASK *task;
 
 int init_module(void)
 {
-	start_rt_timer(0);
 	worst_lat = rt_shm_alloc(nam2num("WSTLAT"), sizeof(RTIME), USE_VMALLOC);
-	task = rt_named_task_init_cpuid("LOOPER", fun, 0, 100000, 0, 1, 0, 1);
+	task = rt_named_task_init_cpuid("LOOPER", fun, 0, 100000, 0, 1, 0, 0);
 	rt_task_resume(task);
 	return 0;
 }
 
 void cleanup_module(void)
 {
-	stop_rt_timer();
 	rt_shm_free(nam2num("WSTLAT"));
 	rt_named_task_delete(task);
 }

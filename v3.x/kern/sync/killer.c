@@ -18,25 +18,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 
 #include <sys/poll.h>
+#include <signal.h>
 
 #include <rtai_lxrt.h>
 #include <rtai_shm.h>
 #include <rtai_msg.h>
 
+static volatile int end;
+void endme(int sig) { end = 1; }
 
 int main (void)
 { 
 	long *worst_lat;
         struct pollfd ufds = { 0, POLLIN, };
 
+	signal(SIGHUP,  endme);
+	signal(SIGINT,  endme);
+	signal(SIGKILL, endme);
+	signal(SIGTERM, endme);
+
 	rt_allow_nonroot_hrt();
-	rt_task_init_schmod(nam2num("KILLER"), 1, 0, 0, SCHED_FIFO, 0xF);
+	rt_task_init_schmod(nam2num("KILLER"), 1, 0, 0, SCHED_FIFO, 0x1);
         worst_lat = rt_shm_alloc(nam2num("WSTLAT"), sizeof(RTIME), USE_VMALLOC);
 	if (rt_get_adr(nam2num("LOOPER"))) {
-		while (1) {
+		while (!end) {
 	                if (poll(&ufds, 1, 1000)) {
-				getchar();
-				rt_send(rt_get_adr(nam2num("LOOPER")), 1UL);
+				if (!end) {
+					getchar();
+					rt_send(rt_get_adr(nam2num("LOOPER")), 1UL);
+				}
 				printf("KILLER ENDS NEVER ENDING TASK.\n");
 				break;
 			}

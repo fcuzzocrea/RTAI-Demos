@@ -9,6 +9,17 @@ fi
 
 MODULES=$prefix/modules
 
+libpath=`rtai-config --library-dir`
+
+if [ "$libpath" == "" ]; then
+echo "ERROR: please set your PATH variable to <rtai-install>/bin"
+exit
+fi
+
+export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
+
+trap "./rem" INT TERM HUP KILL
+
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** SIMPLE WD CHECK (kernel) ***"
@@ -19,10 +30,9 @@ echo
 echo "Now start the realtime process <enter>:"
 read junk
 sync
-if (`rtai-config --linux-version | grep -q 2.6`);
-then insmod ./wd_rt.ko;
-else insmod ./wd.o; fi
+insmod ./wd.ko
+./killer
 echo
 echo "Done. Press <enter> to remove the modules."
 read junk
-#./rem
+./rem
