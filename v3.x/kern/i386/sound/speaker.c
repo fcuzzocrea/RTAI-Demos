@@ -28,7 +28,7 @@ MODULE_LICENSE("GPL");
 
 static RT_TASK thread;
 
-static int cpu_used[NR_RT_CPUS];
+static int cpu_used[RTAI_NR_CPUS];
 
 static unsigned char vl_tab[256];
 
@@ -58,7 +58,7 @@ static void intr_handler(long t)
 	while(1) {
 		if (!(--divisor)) {
 			divisor = DIVISOR;
-			cpu_used[hard_cpu_id()]++;
+			cpu_used[rtai_cpuid()]++;
 			go = rtf_get(0, &data, 1) > 0;
 		} else {
 			go = 0;
@@ -109,11 +109,7 @@ int init_module(void)
 	rtf_create(0, 2000);
 	rt_task_init(&thread, intr_handler, 0, STACK_SIZE, 0, 0, 0);
 	rt_set_runnable_on_cpus(&thread, RUN_ON_CPUS);
-#ifdef ONESHOT
-	rt_set_oneshot_mode();
-#endif
-	rt_assign_irq_to_cpu(TIMER_8254_IRQ, TIMER_TO_CPU);
-	tick_period = start_rt_timer(nano2count(TICK_PERIOD));
+	tick_period = nano2count(TICK_PERIOD);
 	now = rt_get_time() + 10*tick_period;
 	rt_task_make_periodic(&thread, now, tick_period);
 
@@ -124,13 +120,11 @@ int init_module(void)
 void cleanup_module(void)
 {
 	int cpuid;
-	rt_reset_irq_to_sym_mode(TIMER_8254_IRQ);
-	stop_rt_timer();
 	rt_busy_sleep(10000000);
 	rt_task_delete(&thread);
 	rtf_destroy(0);
 	printk("\n\nCPU USE SUMMARY\n");
-	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
+	for (cpuid = 0; cpuid < RTAI_NR_CPUS; cpuid++) {
 		printk("# %d -> %d\n", cpuid, cpu_used[cpuid]);
 	}
 	printk("END OF CPU USE SUMMARY\n\n");
