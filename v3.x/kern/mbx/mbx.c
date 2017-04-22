@@ -37,7 +37,7 @@ MODULE_LICENSE("GPL");
 #define STACK_SIZE  2000
 
 static volatile int PREMATURE = 1;
-static volatile int cpu_used[NR_RT_CPUS];
+static volatile int cpu_used[RTAI_NR_CPUS];
 static volatile int premature;
 
 static RT_TASK mtask[2], btask;
@@ -59,7 +59,7 @@ static void mfun(long t)
 
 	while (1) {
 		time = rt_get_cpu_time_ns();
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 
 		mstat[t] = 's';
 		if ((size = rt_mbx_send_timed(&smbx, &name[t], sizeof(long long), nano2count(TIMEOUT)))) {
@@ -97,7 +97,7 @@ static void bfun(long t)
 	unsigned long long name = 0xccccccccccccccccLL;
 
 	while (1) {
-		cpu_used[hard_cpu_id()]++;
+		cpu_used[rtai_cpuid()]++;
 
 		msg = 0LL;
 		bstat = 'r';
@@ -129,8 +129,6 @@ int init_module(void)
 	rt_task_init(&btask, bfun, 0, STACK_SIZE, 0, 0, 0);
 	rt_task_init(&mtask[0], mfun, 0, STACK_SIZE, 1, 0, 0);
 	rt_task_init(&mtask[1], mfun, 1, STACK_SIZE, 1, 0, 0);
-	rt_set_oneshot_mode();
-	start_rt_timer(nano2count(SLEEP_TIME));
 	rt_task_resume(&btask);
 	rt_task_resume(&mtask[0]);
 	rt_task_resume(&mtask[1]);
@@ -145,12 +143,11 @@ void cleanup_module(void)
 	rt_mbx_delete(&smbx);
 	rt_mbx_delete(&rmbx[0]);
 	rt_mbx_delete(&rmbx[1]);
-	stop_rt_timer();
 	rt_task_delete(&mtask[0]);
 	rt_task_delete(&mtask[1]);
 	rt_task_delete(&btask);
 	printk("\n\nCPU USE SUMMARY (AVRG WAIT TIME):\n");
-	for (cpuid = 0; cpuid < NR_RT_CPUS; cpuid++) {
+	for (cpuid = 0; cpuid < RTAI_NR_CPUS; cpuid++) {
 		printk("# %d -> %d (%d)\n", cpuid, cpu_used[cpuid], meant[cpuid]);
 	}
 	printk("END OF CPU USE SUMMARY\n\n");

@@ -1,3 +1,2 @@
-rmmod mbxdel_rt
 rmmod mbxdel
 ../remod
