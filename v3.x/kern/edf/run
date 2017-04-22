@@ -9,10 +9,7 @@ echo
 echo "Now start the realtime process <enter>, <enter> again to end it."
 read junk
 sync
-if [`rtai-config --linux-version | grep -q 2.6` -o `rtai-config --linux-version | grep -q 3.`];
-then insmod ./edf_rt.ko;
-else insmod ./edf.o; fi
-echo
+insmod ./edf.ko
 echo "Done. Press <enter> to remove the modules."
 read junk
 ./rem
