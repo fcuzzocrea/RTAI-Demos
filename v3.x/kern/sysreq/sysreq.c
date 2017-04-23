@@ -48,12 +48,12 @@ static long long user_srq_handler(unsigned long whatever)
 		return (long long)scount;
 	}
 
-	down_interruptible(&sem);
+	if (down_interruptible(&sem));
 
 // let's show how to communicate. Copy to and from user shall allow any kind of
 // data interchange and service.
-	time = llimd(rtai_rdtsc(), 1000000, CPU_FREQ);
-	copy_to_user((long long *)whatever, &time, sizeof(long long));
+	time = rtai_llimd(rtai_rdtsc(), 1000000, RTAI_CLOCK_FREQ);
+	if (copy_to_user((long long *)whatever, &time, sizeof(long long)));
 	return time;
 }
 
