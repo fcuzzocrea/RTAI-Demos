@@ -36,7 +36,7 @@ MODULE_AUTHOR("Wolfgang Grandegger <wg@denx.de>");
 MODULE_LICENSE("GPL");
 
 #define STACK_SIZE    4000
-#define TICK_PERIOD   100000
+#define TICK_PERIOD   200000
 #define PERIOD_COUNT  1
 
 #define MEGS    4

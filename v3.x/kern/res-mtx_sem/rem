@@ -1,3 +1,2 @@
-rmmod res-mtx_sem_rt
 rmmod res-mtx_sem
 ../remod
