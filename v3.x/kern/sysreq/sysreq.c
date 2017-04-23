@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 1999-2013 Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 1999-2017 Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
