@@ -59,7 +59,7 @@ int main(void)
 		scount = rtai_srq(srq, 2);
 		rtai_srq(srq, (unsigned long)&time);
 		if (++tcount > tnextcount) {
-			tnextcount += 1; //trepeat;
+			tnextcount += 1; // trepeat;
 			printf("# %d > TICK: %d, TIME: %lld, DTOT: %lld;\n", tnextcount, tick, time - time0, time - dt);
 			dt = time;
 			if (scount) {

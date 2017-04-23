@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include <asm/uaccess.h>
 
 #include <asm/rtai.h>
-#include <rtai_wrappers.h>
 
 MODULE_LICENSE("GPL");
 
