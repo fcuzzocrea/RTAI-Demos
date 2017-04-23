@@ -78,7 +78,7 @@ static long long user_srq_handler(unsigned long req)
 
 // let's show how to communicate. Copy to and from user shall allow any kind of
 // data interchange and service.
-	time = llimd(rtai_rdtsc(), 1000000, CPU_FREQ);
+	time = rtai_llimd(rtai_rdtsc(), 1000000, RTAI_CLOCK_FREQ);
 	cpyret = copy_to_user((long long *)req, &time, sizeof(long long));
 	return time;
 }
@@ -125,24 +125,24 @@ static void sched_ipi_handler(void)
 
 int init_module(void)
 {
-	printk("RTAI_APIC_TIMER_VECTOR %d, RTAI_APIC_TIMER_IPI %d, LOCAL_TIMER_VECTOR %d, LOCAL_TIMER_IPI %d, TIMER FREQ %u.\n", RTAI_APIC_TIMER_VECTOR, RTAI_APIC_TIMER_IPI, LOCAL_TIMER_VECTOR, LOCAL_TIMER_IPI, (unsigned int)TIMER_FREQ);
+	printk("TIMER_IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, TIMER_FREQ);
 	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
-	rt_request_irq(LOCAL_TIMER_IPI, (void *)rt_hard_linux_timer_handler, NULL, 0);
+	rt_request_irq(rtai_tunables.timer_irq, (void *)rt_hard_linux_timer_handler, NULL, 0);
 #ifdef CONFIG_SMP
-	rt_request_irq(SCHED_IPI, (void *)sched_ipi_handler, NULL, 0);
+	rt_request_irq(RTAI_RESCHED_IRQ, (void *)sched_ipi_handler, NULL, 0);
 #endif
         return 0;
 }
 
 void cleanup_module(void)
 {
-	rt_release_irq(LOCAL_TIMER_IPI);
+	rt_release_irq(rtai_tunables.timer_irq);
         del_timer(&timer);
 	rt_free_srq(srq);
 #ifdef CONFIG_SMP
-	rt_release_irq(SCHED_IPI);
+	rt_release_irq(RTAI_RESCHED_IRQ);
 #endif
 }
