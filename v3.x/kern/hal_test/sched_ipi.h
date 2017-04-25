@@ -29,16 +29,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 static inline void SEND_SCHED_IPI(void) 
 {
 #ifdef CONFIG_SMP
-	int cpu, thiscpu = rtai_cpuid();
-	for (cpu = 0; cpu < RTAI_NR_CPUS; cpu++) {
-		if (cpu != thiscpu) {
-                	rtai_cli();
-	                send_sched_ipi(1 << cpu);
-       		        rtai_sti();
-		}
+	static int cpu = 0;
+	rtai_cli();
+	if (cpu != rtai_cpuid()) {
+		send_sched_ipi(1 << cpu);
+	} else {
+		apic->send_IPI_self(ipipe_apic_irq_vector(RTAI_RESCHED_IRQ));
+	}
+	rtai_sti();
+	if (++cpu >= RTAI_NR_CPUS) {
+		cpu = 0;
 	}
 #else 
+	rtai_cli();
 	apic->send_IPI_self(ipipe_apic_irq_vector(RTAI_RESCHED_IRQ));
+	rtai_sti();
 #endif
 	return;
 }
