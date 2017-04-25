@@ -12,18 +12,19 @@ fi
 
 MODULES=$prefix/modules
 
+trap "./rem" INT TERM HUP ALARM
+
 echo
 echo "*** RTAI HAL TEST ***"
 echo "Press <enter> to load modules:"
 read junk
 echo
 echo "Now start the realtime process <enter>, <ctrl-C> to end it."
-echo "Press <enter> to remove the modules."
+echo "To stop and remove the modules press <enter> or <CTRL^C>."
 read junk
 sync
 insmod $MODULES/rtai_hal.ko; 
-#insmod $MODULES/rtai_sched.ko; 
-insmod ./sysreqwt_rt.ko;
-insmod ./lnxshintr_rt.ko;
+insmod ./sysreqwt.ko;
+insmod ./lnxshintr.ko;
 ./display
 ./rem

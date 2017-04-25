@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2013 Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2013-2017 Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -25,14 +25,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <asm/rtai.h>
 #include <rtai_schedcore.h>
-#include <rtai_wrappers.h>
 
 MODULE_LICENSE("GPL");
 
-#define DIAGSRQ  0  // diagnose srq arg values
-#define DIAGSLTMR 0  // diagnose if LINUX time is running
-#define DIAGIPI  0  // diagnose if IPIs are received
-#define DIAGHLTMR 0  // diagnose if RTAI time is running
+#define DIAGSRQ   0  // diagnose srq arg values
+#define DIAGSLTMR 0  // diagnose if the soft LINUX timer is running
+#define DIAGIPI   0  // diagnose if sched IPIs are received
+#define DIAGHLTMR 0  // diagnose if the RTAI timer, intercepting the LINUX one, is running
 
 #define LINUX_HZ_PERCENT 100 // !!! 1 to 100 !!!
 
@@ -62,13 +61,17 @@ static long long user_srq_handler(unsigned long req)
 		}
 		case 4: {
 #ifdef CONFIG_SMP
-			int cpuid = rtai_cpuid();
+			int i, cpuid = rtai_cpuid();
 #if DIAGIPI
 			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", cpuid, cpuid ? 0 : 1, rtai_rdtsc());
 #endif
-                	rtai_cli();
-	                send_sched_ipi(cpuid ? 1 : 2);
-        	        rtai_sti();
+			for (i = 0; i < RTAI_NR_CPUS; i++) {
+				if (i != cpuid) {
+		                	rtai_cli();
+			                send_sched_ipi(1 << i);
+        			        rtai_sti();
+				}
+			}
 #endif
 			return (long long)ipi_count;
 		}
@@ -109,7 +112,11 @@ static void rt_hard_linux_timer_handler(int irq)
         int cpuid = rtai_cpuid();
 	printk("RECVD LINUX IRQ AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", cpuid, ++cnt[cpuid], rtai_rdtsc());
 #endif
+#if 0
 	hal_pend_uncond(irq, cpuid);
+#else
+	update_linux_timer(cpuid);
+#endif
 	++ltmr_count;
 }
 
@@ -130,7 +137,7 @@ int init_module(void)
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
-	rt_request_irq(rtai_tunables.timer_irq, (void *)rt_hard_linux_timer_handler, NULL, 0);
+	rt_request_irq(rtai_tunables.linux_timer_irq, (void *)rt_hard_linux_timer_handler, NULL, 0);
 #ifdef CONFIG_SMP
 	rt_request_irq(RTAI_RESCHED_IRQ, (void *)sched_ipi_handler, NULL, 0);
 #endif
@@ -139,7 +146,7 @@ int init_module(void)
 
 void cleanup_module(void)
 {
-	rt_release_irq(rtai_tunables.timer_irq);
+	rt_release_irq(rtai_tunables.linux_timer_irq);
         del_timer(&timer);
 	rt_free_srq(srq);
 #ifdef CONFIG_SMP

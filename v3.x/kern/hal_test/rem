@@ -2,5 +2,4 @@ sync
 rmmod lnxshintr
 rmmod sysreq
 rmmod sysreqwt
-rmmod rtai_sched
 rmmod rtai_hal
