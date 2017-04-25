@@ -108,8 +108,8 @@ static void rt_soft_linux_timer_handler(unsigned long none)
 static void rt_hard_linux_timer_handler(int irq)
 {
 #if DIAGHLTMR
-        static int cnt[NR_RT_CPUS];
         int cpuid = rtai_cpuid();
+        static int cnt[NR_RT_CPUS];
 	printk("RECVD LINUX IRQ AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", cpuid, ++cnt[cpuid], rtai_rdtsc());
 #endif
 #if 0
@@ -132,7 +132,6 @@ static void sched_ipi_handler(void)
 
 int init_module(void)
 {
-	printk("TIMER_IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, TIMER_FREQ);
 	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
@@ -141,6 +140,7 @@ int init_module(void)
 #ifdef CONFIG_SMP
 	rt_request_irq(RTAI_RESCHED_IRQ, (void *)sched_ipi_handler, NULL, 0);
 #endif
+	printk("TIMER_IRQ %d, LINUX TIMER IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, rtai_tunables.linux_timer_irq, TIMER_FREQ);
         return 0;
 }
 
@@ -152,4 +152,5 @@ void cleanup_module(void)
 #ifdef CONFIG_SMP
 	rt_release_irq(RTAI_RESCHED_IRQ);
 #endif
+	printk("*** RESCHED IPIs: %d, RTAI-LINUX HARD IRQs %d ***\n", ipi_count, ltmr_count);
 }

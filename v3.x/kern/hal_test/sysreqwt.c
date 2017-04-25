@@ -105,6 +105,7 @@ static void rt_soft_linux_timer_handler(unsigned long none)
 	return;
 }
 
+#if 0
 extern void *rt_linux_hrt_next_shot;
 
 int _rt_linux_hrt_next_shot(unsigned long deltat, void *hrt_dev)
@@ -114,18 +115,18 @@ int _rt_linux_hrt_next_shot(unsigned long deltat, void *hrt_dev)
 	rtai_sti();
 	return 0;
 }
+#endif
 
-static int ltcnt;
 static void rt_rtai_timer_handler(int irq)
 {
-        int cpuid = rtai_cpuid();
 #if DIAGHRTMR
+        int cpuid = rtai_cpuid();
         static int cnt[NR_RT_CPUS];
 	printk("RECVD RTAI TIMER(s) IRQ %d AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", irq, cpuid, ++cnt[cpuid], rtai_rdtsc());
-#endif
 	if (irq == rtai_tunables.timer_irq) {
-		printk("<<< CPU: %d, RECEIVED TIMER_IRQ: %d, COUNT: %d >>>\n", cpuid, irq, ++ltcnt);
+		printk("<<< CPU: %d, RECEIVED TIMER_IRQ: %d, COUNT: %d >>>\n", cpuid, irq, tmr_count);
 	}
+#endif
 	update_linux_timer(cpuid);
 	++tmr_count;
 	return;
@@ -145,7 +146,6 @@ static void sched_ipi_handler(void)
 
 int init_module(void)
 {
-	printk("TIMER_IRQ %d, LINUX TIMER IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, rtai_tunables.linux_timer_irq, TIMER_FREQ);
 	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
@@ -158,6 +158,7 @@ do {
 #else
 	rt_request_timers((void *)rt_rtai_timer_handler);
 #endif
+	printk("TIMER_IRQ %d, LINUX TIMER IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, rtai_tunables.linux_timer_irq, TIMER_FREQ);
         return 0;
 }
 
@@ -165,12 +166,11 @@ void cleanup_module(void)
 {
         del_timer(&timer);
 	rt_free_srq(srq);
-	rt_linux_hrt_next_shot = NULL;
 #ifdef CONFIG_SMP
 	rt_release_irq(RTAI_RESCHED_IRQ);
 	rt_release_irq(rtai_tunables.timer_irq);
 #else
 	rt_free_timers();
 #endif
-	printk("*** TOTAL RECEIVED LOCAL_TIMER_IPI IRQ %d ***\n", ltcnt);
+	printk("*** RESCHED IPIs: %d, RTAI-LINUX HARD IRQs %d ***\n", ipi_count, tmr_count);
 }
