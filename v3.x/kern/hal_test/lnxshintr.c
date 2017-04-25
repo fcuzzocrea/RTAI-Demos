@@ -25,7 +25,7 @@ MODULE_LICENSE("GPL");
 
 #define MAX_NIRQ 10
 static int nirq;
-static int irq[] = {0, 1, 12, 26};
+static int irq[] = {0, 1, 12, 26};  // WATCH OUT: to be assigned on a per machine base
 static int level[] = {0, 0, 0, 0};
 static int cnt[] = {0, 0, 0, 0};
 static char post_handler[MAX_NIRQ][20];
