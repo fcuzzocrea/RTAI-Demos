@@ -31,7 +31,7 @@ MODULE_LICENSE("GPL");
 #define DIAGSRQ   0  // diagnose srq arg values
 #define DIAGSLTMR 0  // diagnose if the soft LINUX timer is running
 #define DIAGIPI   0  // diagnose if sched IPIs are received
-#define DIAGHLTMR 0  // diagnose if the RTAI timer, intercepting the LINUX one, is running
+#define DIAGHLTMR 0  // diagnose if the hard RTAI timer handler, intercepting the LINUX one, is running
 
 #define LINUX_HZ_PERCENT 100 // !!! 1 to 100 !!!
 
@@ -47,7 +47,7 @@ static long long user_srq_handler(unsigned long req)
 	long long time;
 
 #if DIAGSRQ
-	printk("WHATEVER %lu\n", req);
+	printk("SRQ REQUEST %lu\n", req);
 #endif
 	switch (req) {
 		case 1: {
@@ -61,14 +61,14 @@ static long long user_srq_handler(unsigned long req)
 		}
 		case 4: {
 #ifdef CONFIG_SMP
-			int i, cpuid = rtai_cpuid();
+			int cpu, thiscpu = rtai_cpuid();
 #if DIAGIPI
 			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", cpuid, cpuid ? 0 : 1, rtai_rdtsc());
 #endif
-			for (i = 0; i < RTAI_NR_CPUS; i++) {
-				if (i != cpuid) {
+			for (cpu = 0; cpu < RTAI_NR_CPUS; cpu++) {
+				if (cpu != thiscpu) {
 		                	rtai_cli();
-			                send_sched_ipi(1 << i);
+			                send_sched_ipi(1 << cpu);
         			        rtai_sti();
 				}
 			}

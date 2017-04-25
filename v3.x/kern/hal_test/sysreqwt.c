@@ -1,5 +1,5 @@
 /*
-COPYRIGHT (C) 2013 Paolo Mantegazza (mantegazza@aero.polimi.it)
+COPYRIGHT (C) 2013-2017 Paolo Mantegazza (mantegazza@aero.polimi.it)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -25,14 +25,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <asm/rtai.h>
 #include <rtai_schedcore.h>
-#include <rtai_wrappers.h>
 
 MODULE_LICENSE("GPL");
 
 #define DIAGSRQ   0  // diagnose srq arg values
-#define DIAGSLTMR 0  // diagnose if LINUX time is running
-#define DIAGIPI   0  // diagnose if IPIs are received
-#define DIAGHRTMR 0  // diagnose if RTAI hard time is running
+#define DIAGSLTMR 0  // diagnose if the soft LINUX timer is running
+#define DIAGIPI   0  // diagnose if sched IPIs are received
+#define DIAGHRTMR 0  // diagnose if the hard RTAI timer handler, intercepting the LINUX one, is running
 
 #define LINUX_HZ_PERCENT 100 // !!! 1 to 100 !!!
 
@@ -61,12 +60,19 @@ static long long user_srq_handler(unsigned long req)
 			return (long long)tmr_count;
 		}
 		case 4: {
+#ifdef CONFIG_SMP
+			int cpu, thiscpu = rtai_cpuid();
 #if DIAGIPI
-			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", rtai_cpuid(), rtai_cpuid() ? 0 : 1, rtai_rdtsc());
+			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", cpuid, cpuid ? 0 : 1, rtai_rdtsc());
 #endif
-                	rtai_cli();
-	                send_sched_ipi(rtai_cpuid() ? 1 : 2);
-        	        rtai_sti();
+			for (cpu = 0; cpu < RTAI_NR_CPUS; cpu++) {
+				if (cpu != thiscpu) {
+		                	rtai_cli();
+			                send_sched_ipi(1 << cpu);
+        			        rtai_sti();
+				}
+			}
+#endif
 			return (long long)ipi_count;
 		}
 	}
@@ -75,7 +81,7 @@ static long long user_srq_handler(unsigned long req)
 
 // let's show how to communicate. Copy to and from user shall allow any kind of
 // data interchange and service.
-	time = llimd(rtai_rdtsc(), 1000000, CPU_FREQ);
+	time = rtai_llimd(rtai_rdtsc(), 1000000, RTAI_CLOCK_FREQ);
 	cpyret = copy_to_user((long long *)req, &time, sizeof(long long));
 	return time;
 }
@@ -104,7 +110,7 @@ extern void *rt_linux_hrt_next_shot;
 int _rt_linux_hrt_next_shot(unsigned long deltat, void *hrt_dev)
 {
 	rtai_cli();
-	rt_set_timer_delay(imuldiv(deltat, TIMER_FREQ, 1000000000));
+	rt_set_timer_delay(rtai_imuldiv(deltat, TIMER_FREQ, 1000000000));
 	rtai_sti();
 	return 0;
 }
@@ -117,13 +123,12 @@ static void rt_rtai_timer_handler(int irq)
         static int cnt[NR_RT_CPUS];
 	printk("RECVD RTAI TIMER(s) IRQ %d AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", irq, cpuid, ++cnt[cpuid], rtai_rdtsc());
 #endif
-	if (irq == LOCAL_TIMER_IPI) {
-		printk("<<< CPU: %d, RECEIVED LOCAL_TIMER_IPI IRQ: %d, COUNT: %d >>>\n", cpuid, irq, ++ltcnt);
-		update_linux_timer(cpuid);
-		return;
+	if (irq == rtai_tunables.timer_irq) {
+		printk("<<< CPU: %d, RECEIVED TIMER_IRQ: %d, COUNT: %d >>>\n", cpuid, irq, ++ltcnt);
 	}
 	update_linux_timer(cpuid);
 	++tmr_count;
+	return;
 }
 
 #ifdef CONFIG_SMP
@@ -140,22 +145,18 @@ static void sched_ipi_handler(void)
 
 int init_module(void)
 {
-	printk("RTAI_APIC_TIMER_VECTOR %d, RTAI_APIC_TIMER_IPI %d, LOCAL_TIMER_VECTOR %d, LOCAL_TIMER_IPI %d, TIMER FREQ %u.\n", RTAI_APIC_TIMER_VECTOR, RTAI_APIC_TIMER_IPI, LOCAL_TIMER_VECTOR, LOCAL_TIMER_IPI, (unsigned int)TIMER_FREQ);
+	printk("TIMER_IRQ %d, LINUX TIMER IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, rtai_tunables.linux_timer_irq, TIMER_FREQ);
 	srq = rt_request_srq(0xbeffa, rtai_srq_handler, user_srq_handler);
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
-        rt_linux_hrt_next_shot = _rt_linux_hrt_next_shot;
 #ifdef CONFIG_SMP
 do {
-	void *setup_data;
-	rt_request_irq(SCHED_IPI, (void *)sched_ipi_handler, NULL, 0);
-	setup_data = kzalloc(sizeof(struct apic_timer_setup_data)*num_online_cpus(), GFP_KERNEL);
-	rt_request_apic_timers((void *)rt_rtai_timer_handler, setup_data);
-	kfree(setup_data);
+	rt_request_irq(RTAI_RESCHED_IRQ, (void *)sched_ipi_handler, NULL, 0);
+	rt_request_irq(rtai_tunables.timer_irq, (void *)rt_rtai_timer_handler, NULL, 0);
 } while (0);
 #else
-	rt_request_timer((void *)rt_rtai_timer_handler, 0, TIMER_TYPE);
+	rt_request_timers((void *)rt_rtai_timer_handler);
 #endif
         return 0;
 }
@@ -164,12 +165,12 @@ void cleanup_module(void)
 {
         del_timer(&timer);
 	rt_free_srq(srq);
-        rt_linux_hrt_next_shot = NULL;
+	rt_linux_hrt_next_shot = NULL;
 #ifdef CONFIG_SMP
-	rt_release_irq(SCHED_IPI);
-	rt_free_apic_timers();
+	rt_release_irq(RTAI_RESCHED_IRQ);
+	rt_release_irq(rtai_tunables.timer_irq);
 #else
-	rt_free_timer();
+	rt_free_timers();
 #endif
 	printk("*** TOTAL RECEIVED LOCAL_TIMER_IPI IRQ %d ***\n", ltcnt);
 }
