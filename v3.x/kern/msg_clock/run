@@ -9,6 +9,8 @@ fi
 
 export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
+trap "./rem" INT KILL TERM HUP ALARM
+
 if [ $UID != 0 ]; then SUDO="sudo "; else SUDO=""; fi
 echo
 echo "*** INTERTASK MSG BASED DIGITAL CLOCK (kernel) ***"
