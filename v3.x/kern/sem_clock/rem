@@ -3,3 +3,4 @@ rmmod cmdclk
 rmmod cmdcrn
 rmmod dispclk
 ../remod
+reset

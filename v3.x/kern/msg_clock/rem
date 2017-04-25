@@ -7,3 +7,4 @@ rmmod cmdcrn
 rmmod dispclk_rt
 rmmod dispclk
 ../remod
+reset
