@@ -33,6 +33,10 @@ static volatile int end;
 
 static void endme(int dummy) { end = 1; }
 
+#define INT 7
+
+#define RTAI_DO_INT(i)  do { __asm__ __volatile__ ( __rtai_do_trap(i)); } while (0)
+
 int main(void)
 {
 	struct pollfd kbrd = { 0, POLLIN };
@@ -40,6 +44,9 @@ int main(void)
 	int tcount = 0, tnextcount, trepeat, ipi_count = 0, tmr_count = 0;
 	struct sched_param mysched;
 	long long time0, time, dt;
+
+//	RTAI_DO_INT(INT);
+//	__asm__ __volatile__ ("int $7"); 
 
 	signal (SIGINT, endme);
 	signal (SIGTERM, endme);

@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 #include <asm/rtai.h>
 #include <rtai_schedcore.h>
+#include "sched_ipi.h"
 
 MODULE_LICENSE("GPL");
 
@@ -60,19 +61,10 @@ static long long user_srq_handler(unsigned long req)
 			return (long long)tmr_count;
 		}
 		case 4: {
-#ifdef CONFIG_SMP
-			int cpu, thiscpu = rtai_cpuid();
 #if DIAGIPI
-			printk("SEND IPI FROM CPU: %d, TO CPU: %d, AT TSCTIME: %lld\n", cpuid, cpuid ? 0 : 1, rtai_rdtsc());
+			printk("SEND IPI FROM CPU: %d, AT TSCTIME: %lld\n", rtai_cpuid(), rtai_rdtsc());
 #endif
-			for (cpu = 0; cpu < RTAI_NR_CPUS; cpu++) {
-				if (cpu != thiscpu) {
-		                	rtai_cli();
-			                send_sched_ipi(1 << cpu);
-        			        rtai_sti();
-				}
-			}
-#endif
+			SEND_SCHED_IPI();
 			return (long long)ipi_count;
 		}
 	}
@@ -96,7 +88,7 @@ static struct timer_list timer;
 static void rt_soft_linux_timer_handler(unsigned long none)
 {
 #if DIAGSLTMR
-	static int cnt[NR_RT_CPUS];
+	static int cnt[RTAI_NR_CPUS];
 	int cpuid = rtai_cpuid();
 	rt_printk("LINUX TIMER TICK: CPU %d, %d\n", cpuid, ++cnt[cpuid]);
 #endif
@@ -121,7 +113,7 @@ static void rt_rtai_timer_handler(int irq)
 {
 #if DIAGHRTMR
         int cpuid = rtai_cpuid();
-        static int cnt[NR_RT_CPUS];
+        static int cnt[RTAI_NR_CPUS];
 	printk("RECVD RTAI TIMER(s) IRQ %d AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", irq, cpuid, ++cnt[cpuid], rtai_rdtsc());
 	if (irq == rtai_tunables.timer_irq) {
 		printk("<<< CPU: %d, RECEIVED TIMER_IRQ: %d, COUNT: %d >>>\n", cpuid, irq, tmr_count);
@@ -136,7 +128,7 @@ static void rt_rtai_timer_handler(int irq)
 static void sched_ipi_handler(void)
 {
 #if DIAGIPI
-        static int cnt[NR_RT_CPUS];
+        static int cnt[RTAI_NR_CPUS];
         int cpuid = rtai_cpuid();
 	printk("RECVD IPI AT CPU: %d, CNT: %d, AT TSCTIME: %lld\n", cpuid, ++cnt[cpuid], rtai_rdtsc());
 #endif

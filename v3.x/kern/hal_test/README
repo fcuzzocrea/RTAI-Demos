@@ -1,3 +1,6 @@
 Basic tests for the HAL, irqs, srqs, timers and ipis.
 Useful for checking basic things with new kernels and patches.
 Check UP/SMP setting of interrupts relayed by RTAI to linux in lnxshintr.c.
+Evaluate interrupt pmòy latencies using reschedule ipis (it may not be the
+best way, but it shows that a significant part of the task level latency
+does depends on the hardware)

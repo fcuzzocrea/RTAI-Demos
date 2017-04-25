@@ -1,4 +1,5 @@
 sync
+rmmod intgen
 rmmod lnxshintr
 rmmod sysreq
 rmmod sysreqwt

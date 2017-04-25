@@ -1,0 +1,29 @@
+#!/bin/sh
+./rem
+
+prefix=`rtai-config --prefix`
+arch=`rtai-config --arch`
+insmod=/sbin/insmod
+
+if [ "$prefix" == "" ]; then
+echo "ERROR: please set your PATH variable to <rtai-install>/bin"
+exit
+fi
+
+MODULES=$prefix/modules
+
+trap "./rem" INT TERM HUP ALARM
+
+echo
+echo "*** RTAI RESCHED IPI LATENCY ***"
+echo "Press <enter> to load modules:"
+read junk
+echo
+echo "Now start the realtime process <enter>, <ctrl-C> to end it."
+echo "To stop and remove the modules press <enter> or <CTRL^C>."
+read junk
+sync
+insmod $MODULES/rtai_hal.ko; 
+insmod ./intgen.ko;
+read junk
+./rem
