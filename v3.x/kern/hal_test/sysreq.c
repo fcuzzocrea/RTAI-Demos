@@ -129,9 +129,7 @@ int init_module(void)
         timer.function = rt_soft_linux_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
 	rt_request_irq(rtai_tunables.linux_timer_irq, (void *)rt_hard_linux_timer_handler, NULL, 0);
-#ifdef CONFIG_SMP
 	rt_request_irq(RTAI_RESCHED_IRQ, (void *)sched_ipi_handler, NULL, 0);
-#endif
 	printk("TIMER_IRQ %d, LINUX TIMER IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, rtai_tunables.linux_timer_irq, TIMER_FREQ);
         return 0;
 }
@@ -141,8 +139,6 @@ void cleanup_module(void)
 	rt_release_irq(rtai_tunables.linux_timer_irq);
         del_timer(&timer);
 	rt_free_srq(srq);
-#ifdef CONFIG_SMP
 	rt_release_irq(RTAI_RESCHED_IRQ);
-#endif
 	printk("*** RESCHED IPIs: %d, RTAI-LINUX HARD IRQs %d ***\n", ipi_count, ltmr_count);
 }

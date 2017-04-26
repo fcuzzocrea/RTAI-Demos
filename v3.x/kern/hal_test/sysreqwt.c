@@ -97,17 +97,15 @@ static void rt_soft_linux_timer_handler(unsigned long none)
 	return;
 }
 
-#if 0
 extern void *rt_linux_hrt_next_shot;
 
 int _rt_linux_hrt_next_shot(unsigned long deltat, void *hrt_dev)
 {
 	rtai_cli();
-	rt_set_timer_delay(rtai_imuldiv(deltat, TIMER_FREQ, 1000000000));
+	rt_set_timer_delay(rtai_llimd(deltat, 1000000000, rtai_tunables.clock_freq));
 	rtai_sti();
 	return 0;
 }
-#endif
 
 static void rt_rtai_timer_handler(int irq)
 {
@@ -142,14 +140,9 @@ int init_module(void)
         init_timer(&timer);
         timer.function = rt_soft_linux_timer_handler;
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
-#ifdef CONFIG_SMP
-do {
 	rt_request_irq(RTAI_RESCHED_IRQ, (void *)sched_ipi_handler, NULL, 0);
-	rt_request_irq(rtai_tunables.timer_irq, (void *)rt_rtai_timer_handler, NULL, 0);
-} while (0);
-#else
-	rt_request_timers((void *)rt_rtai_timer_handler);
-#endif
+	rt_linux_hrt_next_shot = _rt_linux_hrt_next_shot;
+	rt_request_timers(rt_rtai_timer_handler);
 	printk("TIMER_IRQ %d, LINUX TIMER IRQ %d, TIMER FREQ %lu.\n", rtai_tunables.timer_irq, rtai_tunables.linux_timer_irq, TIMER_FREQ);
         return 0;
 }
@@ -158,11 +151,7 @@ void cleanup_module(void)
 {
         del_timer(&timer);
 	rt_free_srq(srq);
-#ifdef CONFIG_SMP
 	rt_release_irq(RTAI_RESCHED_IRQ);
-	rt_release_irq(rtai_tunables.timer_irq);
-#else
 	rt_free_timers();
-#endif
 	printk("*** RESCHED IPIs: %d, RTAI-LINUX HARD IRQs %d ***\n", ipi_count, tmr_count);
 }
