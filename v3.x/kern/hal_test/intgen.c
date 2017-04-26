@@ -58,9 +58,9 @@ static void timer_handler(unsigned long none)
 	if (ipi_count > (ipi_echo + ipi_sample)) {
 		long lmin, lmax, lavrg;
 		ipi_echo = ipi_count;
-		lmin = rtai_llimd(min, 1000000000, rtai_tunables.clock_freq);
-		lmax = rtai_llimd(max, 1000000000, rtai_tunables.clock_freq);
-		lavrg = rtai_llimd(avrg/ipi_count, 1000000000, rtai_tunables.clock_freq);
+		lmin  = counts2nanos(min);
+		lmax  = counts2nanos(max);
+		lavrg = counts2nanos(avrg/ipi_count);
 		printk("*** RESCHED IPIs: %d, MIN %ld, MAX %ld, AVRG %ld ***\n", ipi_count, lmin, lmax, lavrg);
 	}
 	mod_timer(&timer, jiffies + (HZ/LINUX_TIMER_FREQ));
@@ -99,8 +99,8 @@ void cleanup_module(void)
 {
         del_timer(&timer);
 	rt_release_irq(RTAI_RESCHED_IRQ);
-	min = rtai_llimd(min, 1000000000, rtai_tunables.clock_freq);
-	max = rtai_llimd(max, 1000000000, rtai_tunables.clock_freq);
-	avrg = rtai_llimd(avrg/ipi_count, 1000000000, rtai_tunables.clock_freq);
+	min  = counts2nanos(min);
+	max  = counts2nanos(max);
+	avrg = counts2nanos(avrg/ipi_count);
 	printk("*** RESCHED IPIs: %d, MIN %ld, MAX %ld, AVRG %ld ***\n", ipi_count, min, max, avrg);
 }

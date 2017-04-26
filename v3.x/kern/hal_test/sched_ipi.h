@@ -48,4 +48,15 @@ static inline void SEND_SCHED_IPI(void)
 	return;
 }
 
+static inline RTIME counts2nanos(RTIME counts)
+{
+        return (counts >= 0 ? rtai_llimd(counts, 1000000000, RTAI_CLOCK_FREQ) : -rtai_llimd(-counts, 1000000000, RTAI_CLOCK_FREQ));
+}
+
+
+static inline RTIME nanos2counts(RTIME ns)
+{
+        return (ns >= 0 ? rtai_llimd(ns, RTAI_CLOCK_FREQ, 1000000000) : -rtai_llimd(-ns, RTAI_CLOCK_FREQ, 1000000000));
+}
+
 #endif /* _SCHED_IPI_ */

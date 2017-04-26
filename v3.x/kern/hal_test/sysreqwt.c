@@ -102,7 +102,7 @@ extern void *rt_linux_hrt_next_shot;
 int _rt_linux_hrt_next_shot(unsigned long deltat, void *hrt_dev)
 {
 	rtai_cli();
-	rt_set_timer_delay(rtai_llimd(deltat, 1000000000, rtai_tunables.clock_freq));
+	rt_set_timer_delay(nanos2counts(deltat));
 	rtai_sti();
 	return 0;
 }
