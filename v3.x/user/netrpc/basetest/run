@@ -12,19 +12,15 @@ export LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH
 
 MODULES=$prefix/modules
 
+trap "./rem" INT TERM HUP
+
 echo
 echo "*** BASE REMOTE RTAI SERVICES DEMONSTRATOR (user) ***"
 echo "Press <enter> to load modules:"
 read junk
 cd ../..; ./ldmod; cd -
 sync
-if [`rtai-config --linux-version | grep -q 2.6` -o `rtai-config --linux-version | grep -q 3.`];
-then insmod $MODULES/rtai_netrpc.ko ThisNode="127.0.0.1";
-#insmod ../../../share/scrambler/scrambler_rt.ko;
-else 
-insmod $MODULES/rtai_netrpc.o ThisNode="127.0.0.1";
-#insmod ../../../share/scrambler/scrambler_rt.o;
-fi
+insmod $MODULES/rtai_netrpc.ko ThisNode="127.0.0.1";
 echo
 echo "Now start the realtime process"
 echo "<enter>, then wait for its end."
