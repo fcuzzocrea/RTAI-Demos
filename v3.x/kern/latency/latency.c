@@ -131,19 +131,29 @@ static void rtai_proc_unregister(void)
  *	Periodic realtime thread 
  */
  
-void
-fun(long thread)
+void fun(long dummy)
 {
+	int i;
 	int min_diff = 0;
 	int max_diff = 0;
 	double refres;
 
+	for(i = 0; i < MAXDIM; i++) {
+		a[i] = b[i] = 3.141592;
+	}
 	/* If we want to make overall statistics */
 	/* we have to reset min/max here         */
 	if (overall) {
 		min_diff =  1000000000;
 		max_diff = -1000000000;
 	}
+#ifdef CONFIG_RTAI_FPU_SUPPORT
+	if (thread.uses_fpu) {
+		for(i = 0; i < MAXDIM; i++) {
+			a[i] = b[i] = 3.141592;
+		}
+	}
+#endif
 	refres = dot(a, b, MAXDIM);
 	while (1) {
 		int i, diff, average;
@@ -165,14 +175,18 @@ fun(long thread)
 			if (diff < min_diff) { min_diff = diff; }
 			if (diff > max_diff) { max_diff = diff; }
 			average += diff;
-			dotres = dot(a, b, MAXDIM);
-                       	if ((tdif = dotres/refres - 1.0) < 0.0) {
-                       		tdif = -tdif;
+#ifdef CONFIG_RTAI_FPU_SUPPORT
+			if (thread.uses_fpu) {
+				dotres = dot(a, b, MAXDIM);
+        	               	if ((tdif = dotres/refres - 1.0) < 0.0) {
+                	       		tdif = -tdif;
+				}
+	                        if (tdif > 1.0e-16) {
+					rt_printk("\nDOT PRODUCT ERROR.\n");
+                		        return;
+	                       	}
 			}
-                        if (tdif > 1.0e-16) {
-				rt_printk("\nDOT PRODUCT ERROR\n");
-                	        return;
-                       	}
+#endif
 		}
 		samp.min = min_diff;
 		samp.max = max_diff;
