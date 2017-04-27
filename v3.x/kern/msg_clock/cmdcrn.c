@@ -121,7 +121,7 @@ static void CommandChrono_task(long t)
 				command = R;
 				break;
 		}
-		if (rt_send(get, command) <= RTE_HIGERR) {
+		if ((void *)rt_send(get, command) <= (void *)RTE_HIGERR) {
 			return;
 		}
 	}
